@@ -16,7 +16,7 @@ void input_poll(Input *input)
     SceCtrlData pad = {0};
     input->horizontal = 0;
     input->vertical = 0;
-    input->confirm = input->cancel = 0;
+    input->confirm = input->cancel = input->details = 0;
     if (sceCtrlPeekBufferPositive(&pad, 1) <= 0) {
         return;
     }
@@ -28,4 +28,5 @@ void input_poll(Input *input)
     previous = pad.Buttons;
     input->confirm = (pressed & PSP_CTRL_CROSS) != 0;
     input->cancel = (pressed & PSP_CTRL_CIRCLE) != 0;
+    input->details = (pressed & PSP_CTRL_SELECT) != 0;
 }

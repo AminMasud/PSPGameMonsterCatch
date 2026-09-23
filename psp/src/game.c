@@ -31,6 +31,7 @@ void game_update(Game *g, const Input *input, float seconds)
         battle_update(&g->battle,input);
         if(g->battle.phase==BATTLE_DONE) {
             g->in_battle=0;
+            g->partner=g->battle.ally; /* Preserve species, XP, levels, and chosen moves. */
             /* Phase 4 testing rule: every battle restores HP and move uses.
                Persistent attrition and healing locations arrive with RPG systems. */
             battler_restore(&g->partner);
@@ -42,6 +43,14 @@ void game_update(Game *g, const Input *input, float seconds)
     if (g->dialogue.active) {
         if (input->cancel) g->dialogue.active = 0;
         else if (input->confirm) dialogue_advance(&g->dialogue);
+        return;
+    }
+    if(input->details && !g->player.moving) {
+        char summary[160];
+        snprintf(summary,sizeof(summary),"LEVEL %d %s - HP %d\nATK %d DEF %d SPEED %d\nXP %d - NEXT IN %d",g->partner.level,
+                 element_name(g->partner.element),g->partner.max_hp,g->partner.attack,
+                 g->partner.defense,g->partner.speed,g->partner.experience,creature_xp_remaining(&g->partner));
+        dialogue_open(&g->dialogue,creature_name(&g->partner),summary,species_get(g->partner.species)->description);
         return;
     }
     if (input->confirm && !g->player.moving) {
@@ -65,7 +74,7 @@ void game_update(Game *g, const Input *input, float seconds)
         EncounterResult result;
         int area = map_encounter_area(g->map_id,g->player.tile_x,g->player.tile_y);
         if (encounter_step(&g->encounter,area,&result)) {
-            battle_begin(&g->battle,&g->partner,result.name,result.level,g->encounter.random);
+            battle_begin(&g->battle,&g->partner,result.species,result.level,g->encounter.random);
             g->in_battle=1;
         }
     }
@@ -80,7 +89,7 @@ void game_draw(const Game *g)
         world_actor_draw(&g->npcs.people[i].actor,&g->camera,1);
     graphics_rectangle(0,0,480,15,GU_RGBA(18,27,30,255));
     text_draw(6,4,map_name(g->map_id),GU_RGBA(241,212,150,255),1);
-    text_draw(290,4,"X TALK   O CLOSE",GU_RGBA(210,221,211,255),1);
+    text_draw(290,4,"X TALK  SELECT PARTNER",GU_RGBA(210,221,211,255),1);
     if (g->dialogue.active) {
         graphics_rectangle(6,167,468,99,GU_RGBA(184,150,96,255));
         graphics_rectangle(8,169,464,95,GU_RGBA(21,30,36,255));

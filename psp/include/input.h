@@ -5,6 +5,7 @@ typedef struct {
     int horizontal;
     int vertical;
     int confirm, cancel;
+    int details;
 } Input;
 
 int input_init(void);

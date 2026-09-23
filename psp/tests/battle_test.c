@@ -5,12 +5,12 @@
 
 static void press(Battle *b)
 {
-    battle_update(b,&(Input){0,0,1,0});
+    battle_update(b,&(Input){0,0,1,0,0});
 }
 static void start(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
-    battle_begin(b,&ally,"MOSSLET",3,seed);
+    battle_begin(b,&ally,SPECIES_MOSSLET,3,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)
@@ -43,7 +43,7 @@ int main(void)
     assert(b.result==BATTLE_WIN && b.enemy.hp==0);
     finish_messages(&b);
     assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
-    battle_update(&b,&(Input){0,0,1,0}); assert(b.phase==BATTLE_DONE);
+    battle_update(&b,&(Input){0,0,1,0,0}); assert(b.phase==BATTLE_DONE);
 
     start(&b,12);
     b.ally.hp=1; b.enemy.speed=999;
@@ -54,13 +54,13 @@ int main(void)
 
     start(&b,12);
     b.cursor=0; press(&b);
-    battle_update(&b,&(Input){0,0,0,1});
+    battle_update(&b,&(Input){0,0,0,1,0});
     assert(b.phase==BATTLE_MENU && b.enemy.hp==b.enemy.max_hp);
     /* Menu navigation advances once per new direction, not once per frame. */
-    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0});
+    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0,0});
     assert(b.cursor==1);
     battle_update(&b,&(Input){0});
-    battle_update(&b,&(Input){0,1,0,0}); assert(b.cursor==2);
+    battle_update(&b,&(Input){0,1,0,0,0}); assert(b.cursor==2);
     for(int i=1;i<=3;++i) {
         b.cursor=i; press(&b); assert(b.phase==BATTLE_MESSAGE);
         finish_messages(&b);

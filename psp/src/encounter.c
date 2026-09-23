@@ -1,7 +1,7 @@
 #include "encounter.h"
-typedef struct { const char *name; int weight, minimum, maximum; } Entry;
-static const Entry forest[] = {{"MOSSLET",60,2,4},{"TWIGLINT",30,3,5},{"GLOWMOTH",10,4,6}};
-static const Entry cave[] = {{"FLINTLING",60,3,5},{"DUSKWISP",30,4,6},{"ECHOCRAG",10,5,7}};
+typedef struct { SpeciesId species; int weight, minimum, maximum; } Entry;
+static const Entry forest[] = {{SPECIES_MOSSLET,60,2,4},{SPECIES_TWIGLINT,30,3,5},{SPECIES_GLOWMOTH,10,4,6}};
+static const Entry cave[] = {{SPECIES_FLINTLING,60,3,5},{SPECIES_DUSKWISP,30,4,6},{SPECIES_ECHOCRAG,10,5,7}};
 static uint32_t next(Encounter *e)
 {
     uint32_t x = e->random;
@@ -24,7 +24,8 @@ int encounter_step(Encounter *e, int area, EncounterResult *result)
         roll -= table[index].weight;
         ++index;
     }
-    result->name = table[index].name;
+    result->species = table[index].species;
+    result->name = species_get(result->species)->name;
     result->level = table[index].minimum +
         (int)(next(e)%(table[index].maximum-table[index].minimum+1));
     e->safe_steps = 4;

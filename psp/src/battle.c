@@ -8,41 +8,15 @@ static uint32_t random_next(Battle *b)
     x^=x<<13; x^=x>>17; x^=x<<5;
     return b->random=x;
 }
-void battler_restore(Battler *b)
-{
-    b->hp=b->max_hp;
-    for(int i=0;i<BATTLE_MOVES;++i) b->uses[i]=attack_get(b->moves[i])->uses;
-}
-static void create(Battler *b,const char *name,Element type,int level)
-{
-    *b=(Battler){0};
-    b->name=name; b->element=type;
-    b->level=level<1?1:level>100?100:level;
-    b->max_hp=24+b->level*5;
-    b->attack=10+b->level*3; b->defense=10+b->level*2;
-    b->speed=8+b->level*2;
-    b->moves[0]=MOVE_NUDGE;
-    b->moves[1]=type==ELEMENT_EMBER?MOVE_CINDER:type==ELEMENT_GROVE?MOVE_LEAF:
-                type==ELEMENT_STONE?MOVE_PEBBLE:MOVE_GUST;
-    b->moves[2]=MOVE_LUNGE; b->moves[3]=MOVE_NUDGE;
-    battler_restore(b);
-}
-void battler_starter(Battler *b)
-{
-    create(b,"CINDLET",ELEMENT_EMBER,5);
-    b->moves[3]=MOVE_GUST; battler_restore(b);
-}
-void battle_begin(Battle *b,const Battler *ally,const char *name,int level,uint32_t seed)
+void battler_restore(Battler *b) { creature_restore(b); }
+void battler_starter(Battler *b) { creature_create(b,SPECIES_CINDLET,5); }
+void battle_begin(Battle *b,const Battler *ally,SpeciesId species,int level,uint32_t seed)
 {
     *b=(Battle){0};
     b->ally=*ally; b->random=seed?seed:0x3291u;
-    Element type=ELEMENT_GROVE;
-    if(!strcmp(name,"FLINTLING") || !strcmp(name,"ECHOCRAG")) type=ELEMENT_STONE;
-    if(!strcmp(name,"GLOWMOTH") || !strcmp(name,"DUSKWISP")) type=ELEMENT_WIND;
-    create(&b->enemy,name,type,level);
-    /* Three distinct wild moves, with a fourth reserve basic attack slot. */
+    creature_create(&b->enemy,species,level);
     b->phase=BATTLE_MESSAGE; b->after=AFTER_MENU;
-    snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\nCINDLET IS READY.\nX CONTINUE",name);
+    snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
 {
@@ -77,13 +51,13 @@ static void next_action(Battle *b)
     if(slot>=0) --a->uses[slot];
     int hit=(int)(random_next(b)%100)<move->accuracy;
     if(!hit) {
-        snprintf(b->message,sizeof(b->message),"%s USED %s.\nTHE ATTACK MISSED.",a->name,move->name);
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\nTHE ATTACK MISSED.",creature_name(a),move->name);
     } else {
         int damage=battle_damage(a,d,move,90+(int)(random_next(b)%11));
         if(damage>d->hp) damage=d->hp;
         d->hp-=damage;
         int effect=attack_effectiveness(move->element,d->element);
-        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",a->name,move->name,damage,
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",creature_name(a),move->name,damage,
                  effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
     }
     b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;
@@ -107,18 +81,80 @@ static int navigation(Battle *b,const Input *input)
     b->previous_direction=direction;
     return edge?direction:0;
 }
+static void growth_next(Battle *b)
+{
+    if(b->growth_stage==0) {
+        b->growth_stage=1;
+        if(b->growth.old_level!=b->ally.level) {
+            snprintf(b->message,sizeof(b->message),"LEVEL UP. %d TO %d\nHP %d  ATTACK %d\nDEFENSE %d  SPEED %d",b->growth.old_level,b->ally.level,
+                     b->ally.max_hp,b->ally.attack,b->ally.defense,b->ally.speed);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+    }
+    if(b->growth_stage==1) {
+        b->growth_stage=2;
+        if(b->growth.old_species!=b->ally.species) {
+            snprintf(b->message,sizeof(b->message),"EVOLUTION.\n%s BECAME %s.\nA NEW FORM. A STRONGER PARTNER.",
+                     species_get(b->growth.old_species)->name,b->ally.name);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+    }
+    while(b->growth_move<b->growth.move_count) {
+        int move=b->growth.moves[b->growth_move];
+        int empty=-1,known=0;
+        for(int i=0;i<4;++i) {
+            if(b->ally.moves[i]==move) known=1;
+            if(b->ally.moves[i]<0 && empty<0) empty=i;
+        }
+        if(known) { ++b->growth_move;continue; }
+        if(empty>=0) {
+            creature_learn(&b->ally,move,empty);++b->growth_move;
+            snprintf(b->message,sizeof(b->message),"%s LEARNED\n%s.",creature_name(&b->ally),attack_get(move)->name);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+        b->learn_cursor=4; /* Default to KEEP CURRENT MOVES; no silent replacement. */
+        b->phase=BATTLE_LEARN;return;
+    }
+    message(b,"PARTNER RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
+}
 void battle_update(Battle *b,const Input *input)
 {
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
+    if(b->phase==BATTLE_LEARN) {
+        if(nav) b->learn_cursor=(b->learn_cursor+nav+5)%5;
+        if(input->cancel || (input->confirm && b->learn_cursor==4)) {
+            ++b->growth_move;growth_next(b);return;
+        }
+        if(input->confirm) {
+            int move=b->growth.moves[b->growth_move++];
+            const char *old=attack_get(b->ally.moves[b->learn_cursor])->name;
+            creature_learn(&b->ally,move,b->learn_cursor);
+            snprintf(b->message,sizeof(b->message),"%s LEARNED %s.\nREPLACED %s.",creature_name(&b->ally),attack_get(move)->name,old);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
+        }
+        return;
+    }
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
         if(b->after==AFTER_DONE) { b->phase=BATTLE_DONE; return; }
         if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
+        if(b->after==AFTER_GROWTH) { growth_next(b);return; }
         if(b->result==BATTLE_WIN) {
-            message(b,"VICTORY.\nTHE WILD VEYLING RETREATS.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+            if(!b->reward_given) {
+                int old_xp=b->ally.experience;
+                b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
+                creature_gain_xp(&b->ally,b->experience_reward,&b->growth);
+                b->experience_reward=b->ally.experience-old_xp;
+                b->reward_given=1;
+            }
+            snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL %d\n%d XP TO NEXT LEVEL",b->experience_reward,
+                     creature_name(&b->ally),b->ally.level,creature_xp_remaining(&b->ally));
+            if(b->ally.level==100)
+                snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL 100\nMAX LEVEL REACHED",b->experience_reward,creature_name(&b->ally));
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
-            message(b,"CINDLET NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOUR PARTNER NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
         } else next_action(b);
         return;
     }
@@ -143,7 +179,7 @@ void battle_update(Battle *b,const Input *input)
     case 1:
         message(b,"CAPTURE IS NOT AVAILABLE YET.\nIT ARRIVES IN PHASE 6.",AFTER_MENU); break;
     case 2:
-        message(b,"CINDLET IS YOUR ONLY PARTNER.\nTEAM SWITCHING ARRIVES IN PHASE 6.",AFTER_MENU); break;
+        message(b,"YOU HAVE ONE PARTNER.\nTEAM SWITCHING ARRIVES IN PHASE 6.",AFTER_MENU); break;
     case 3:
         message(b,"YOUR ITEM BAG IS EMPTY.\nITEMS ARRIVE IN PHASE 7.",AFTER_MENU); break;
     default:

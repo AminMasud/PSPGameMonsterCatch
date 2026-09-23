@@ -14,7 +14,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves'):
+for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner'):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'

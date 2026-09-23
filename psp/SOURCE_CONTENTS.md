@@ -1,4 +1,4 @@
-# Complete Phase 4 source contents
+# Complete Phase 5 source contents
 
 ## .gitattributes
 
@@ -22,7 +22,7 @@ previews/
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -35,7 +35,7 @@ LIBS = -lpspgu -lpspge -lpspdisplay -lpspctrl
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 4
+PSP_EBOOT_TITLE = Emberwake - Phase 5
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -53,27 +53,28 @@ PARAM.SFO: Makefile
 ## README.md
 
 ````text
-# Emberwake — Phase 4
+# Emberwake — Phase 5
 
 Original PSP homebrew RPG prototype in C / PSPSDK. The creatures are called
-**Veylings**. Phase 4 adds turn-based battles to the existing connected world. Maps, NPCs,
-dialogue, and exploration remain available.
+**Veylings**. Phase 5 adds species data, experience, levels, learned attacks, and evolution.
+The existing world, dialogue, and turn-based battles remain available.
 
 ## Play this build
 
-The verified build is **EBOOT-PHASE4.PBP**. Use this explicitly named artifact;
-older EBOOT files are retained and are not the Phase 4 build.
+The verified build is **EBOOT-PHASE5.PBP**. Use this explicitly named artifact;
+older EBOOT files are retained and are not the Phase 5 build.
 
-Copy EBOOT-PHASE4.PBP to the Memory Stick, naming the destination:
+Copy EBOOT-PHASE5.PBP to the Memory Stick, naming the destination:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
-Launch **Emberwake - Phase 4** from Game > Memory Stick.
+Launch **Emberwake - Phase 5** from Game > Memory Stick.
 
 - D-pad: smooth four-direction tile movement; horizontal wins when two directions
   are held. Release finishes the current tile.
 - X: speak to a stationary NPC in the tile you face; advance/close dialogue.
 - Circle: close dialogue immediately.
+- Select: view partner stats, experience, and species description while stationary.
 - HOME: system exit menu, as in earlier phases.
 
 X and Circle use new-press detection, so holding a button does not skip pages.
@@ -119,13 +120,13 @@ The grace counter counts completed steps on any terrain.
 | Woods tall grass | Mosslet, level 2-4 | Twiglint, level 3-5 | Glowmoth, level 4-6 |
 | Cave rough floor | Flintling, level 3-5 | Duskwisp, level 4-6 | Echocrag, level 5-7 |
 
-Encounters now enter the battle screen. Encounter entries and battle stats remain
-small prototype definitions; the full species database, experience, and evolution
-are Phase 5. Capture, team switching, inventory, and saves remain future work.
+Encounters reference stable species IDs in the creature database. Wild creatures
+use species-specific stats and up to four attacks unlocked at their level.
+Capture, team switching, inventory, and saves remain future work.
 
 ## Battle prototype
 
-Your partner is **Cindlet**, a level 5 Ember Veyling with four attacks. Wild
+Your partner starts as **Cindlet**, a level 5 Ember Veyling with four attacks. Wild
 opponents come from the existing woods/cave tables. Battles display both
 creatures, names, levels, elements, numeric HP, and HP bars.
 
@@ -158,12 +159,14 @@ RUN has a 70% escape chance and is guaranteed on the third attempt. A failed
 escape allows exactly one enemy action. CAPTURE, CREATURES, and ITEMS show clear
 not-yet-available messages and do not spend a turn.
 
-**Temporary Phase 4 rule:** your partner's HP and attack uses refill after every
+**Temporary Phase 5 rule:** your partner's HP and attack uses refill after every
 battle, including escape. Victory or escape returns to the same exploration
 position. Defeat returns you to Hearth Clearing at the original starting tile.
 All outcomes grant four safe steps before another encounter can roll. This rule
 makes battle testing repeatable before later inventory/healing systems.
-There are no experience awards, level increases, or captures in Phase 4.
+Experience, levels, evolution, and chosen attacks are retained through subsequent
+battles and map transitions in this running session. Quitting or restarting resets
+progress: Memory Stick saves are planned for Phase 8. Capture is still Phase 6.
 
 Additional PSP checks:
 1. Enter woods tall grass and try all four attacks across multiple battles.
@@ -173,6 +176,65 @@ Additional PSP checks:
 5. Win a battle and confirm you return to the same place with a fresh partner.
 6. Lose against a stronger cave opponent and confirm return to the clearing.
 7. Test HOME > Cancel/Quit during both menus and battle messages.
+
+## Creature progression
+
+Each immutable species definition has a stable ID, name, description, element,
+base HP/attack/defense/speed, experience yield, evolution threshold and target,
+learnset, and sprite references. Individual creatures track species, nickname,
+level, cumulative experience, current HP, derived stats, four learned attack
+slots, and remaining uses. Nicknames are supported in the data model; a rename
+interface is not part of this phase. Graphics are still original placeholders.
+
+| ID | Species | Element | Evolution |
+| --- | --- | --- | --- |
+| 0 | Cindlet | Ember | Emberlyn at level 8 |
+| 1 | Emberlyn | Ember | Final form |
+| 2 | Mosslet | Grove | Mosshorn at level 8 |
+| 3 | Mosshorn | Grove | Final form |
+| 4 | Twiglint | Grove | No evolution |
+| 5 | Glowmoth | Wind | No evolution |
+| 6 | Flintling | Stone | Flintaur at level 9 |
+| 7 | Flintaur | Stone | Final form |
+| 8 | Duskwisp | Wind | No evolution |
+| 9 | Echocrag | Stone | No evolution |
+
+The encounter tables keep their six wild species. Cindlet is the starter, and
+three evolved forms complete the ten-species test database. Other species'
+progression paths are implemented and tested but cannot yet be collected.
+
+A victory awards enemy species experience-yield multiplied by enemy level.
+Escaping or losing grants no XP. XP is awarded once per battle. The cumulative
+threshold for level L is 20 * (L - 1)^2, with a level cap of 100. Excess XP carries
+toward the next level; multiple level gains from one award are supported.
+Stat formulas are base HP + 5*level, base attack + 3*level, base defense + 2*level,
+and base speed + 2*level. Evolution uses the new species' bases.
+
+Cindlet begins at level 5 with 320 cumulative XP:
+- Level 6 (500 XP): offers HEAT SPIRAL.
+- Level 8 (980 XP): evolves into Emberlyn and offers eligible attacks for its new form.
+- Level 9 (1280 XP): offers FLARE CREST.
+
+Empty attack slots fill automatically. If all four are occupied, D-pad selects
+an existing attack to replace; X confirms. KEEP CURRENT MOVES is selected by
+default, and Circle declines. Each newly eligible attack is offered separately.
+Evolution can offer unknown attacks from the evolved learnset, including moves
+you previously declined or replaced. Existing attacks are never silently removed.
+
+Level-up, evolution, and learned/replaced attacks each receive a message.
+Evolution updates stats, displayed species name, and the placeholder silhouette.
+The battle menu reports XP remaining. Select in the overworld shows your
+partner's stats/total XP, followed by its species description. Progress survives
+battles and changing maps within the session, not quitting the game.
+
+Phase 5 PSP test:
+1. Press Select while standing still; check Cindlet's level, XP, and description.
+2. Win forest battles and verify total XP increases; escape once and confirm no XP.
+3. Reach level 6, choose a move to replace with HEAT SPIRAL, and use it next battle.
+4. Reach level 8 and check the Emberlyn name, new silhouette, and increased stats.
+5. Try declining an offered attack without losing existing moves.
+6. Enter/leave the lodge and check that level, species, XP, and attacks are retained.
+7. Confirm HOME exit still works; relaunch intentionally starts a fresh session.
 
 ## Architecture and exact source tree
 
@@ -191,6 +253,7 @@ Additional PSP checks:
         attacks.h
         battle.h
         camera.h
+        creature.h
         dialogue.h
         encounter.h
         game.h
@@ -207,6 +270,7 @@ Additional PSP checks:
         battle.c
         battle_draw.c
         camera.c
+        creature.c
         dialogue.c
         encounter.c
         game.c
@@ -220,6 +284,7 @@ Additional PSP checks:
       tests/
         host/pspgu.h
         battle_test.c
+        creature_test.c
         overworld_test.c
         world_systems_test.c
         preview.py
@@ -266,8 +331,10 @@ tile away from the return trigger. Unknown codes/out-of-bounds locations block
 movement. All maps and graphics are embedded in the EBOOT.
 
 attacks.c defines attack power, accuracy, type, and uses. battle.c owns battle
-stats, turn sequencing, results, escape logic, and damage. battle_draw.c owns the
-battle screen and original placeholder creature graphics.
+turn sequencing, results, escape logic, and damage. battle_draw.c owns the
+battle screen and original placeholder creature graphics. creature.c owns the
+immutable species database and reusable individual-creature data, stat calculation,
+experience thresholds, evolution, and attack learning.
 
 To add a map, add its rows, ID, dimensions, name, portal connections, and optional
 NPC definitions / encounter terrain. Keep coordinates within the declared map
@@ -277,13 +344,13 @@ and extend tests for new dimensions if they exceed the current test grid.
 
 This machine uses the existing Ubuntu/WSL PSPDEV environment.
 
-From PowerShell, build the Phase 4 artifact:
+From PowerShell, build the Phase 5 artifact:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE5.PBP EXTRA_TARGETS=EBOOT-PHASE5.PBP'
 
 In a configured Linux/WSL shell, from the psp directory:
 
-    make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP
+    make PSP_EBOOT=EBOOT-PHASE5.PBP EXTRA_TARGETS=EBOOT-PHASE5.PBP
 
 For the conventional EBOOT.PBP output when that file is not open elsewhere:
 
@@ -298,7 +365,7 @@ From the psp directory in Linux/WSL:
 
     sh tests/run.sh
 
-All three test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
+All four test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
 Checks include Phase 2 regression coverage plus portal reachability and all six
 transitions, valid/non-trigger arrival tiles, NPC collisions in both directions,
 patrol limits, dialogue pause/advance/cancel, no stationary encounters, weighted
@@ -306,11 +373,16 @@ table level ranges, encounter grace steps, text bounds, and drawing budget.
 Battle checks additionally cover turn order, accuracy, elemental damage, spent
 moves, fallback attacks, win/loss, no retaliation after knockout, menu controls,
 escape success/failure, battle freezing the world, and defeat returning home.
+Creature checks cover all ten species at levels 1-100, distinct known attacks,
+XP boundaries, large awards, the level cap, evolution, nickname preservation,
+replacement/decline controls, and rewards being applied only once. Integration
+checks carry an evolved partner and chosen attacks through world transitions.
 The host test renders the real draw functions into software pixel buffers;
 tests/preview.py converts those buffers to PNG without third-party dependencies.
 
 Software previews are saved in previews/dialogue.png, previews/encounter.png,
-previews/battle-menu.png, and previews/battle-moves.png.
+previews/battle-menu.png, previews/battle-moves.png, previews/learn-move.png,
+previews/evolution.png, and previews/partner.png.
 They are not emulator or hardware screenshots.
 
 Only visible terrain is drawn (at most 160 tiles). The GU list reserves 1 MiB for
@@ -319,10 +391,10 @@ tile, actor, and bitmap text commands. The tested scenes stay below a conservati
 The main loop retains its 50 ms elapsed-time cap and HOME callback service.
 
 Host regression/integration tests passed. The PSP compiler and linker passed
-with -Wall -Wextra -Werror, and the Phase 4 PBP was packaged successfully.
+with -Wall -Wextra -Werror, and the Phase 5 PBP was packaged successfully.
 Real PSP visuals, performance, and input/exit behavior still require your test.
 
-Stop here before Phase 5.
+Stop here before Phase 6.
 
 ## Official references
 
@@ -424,7 +496,8 @@ Stop here before Phase 5.
 #ifndef EMBERWAKE_ATTACKS_H
 #define EMBERWAKE_ATTACKS_H
 typedef enum { ELEMENT_PLAIN, ELEMENT_GROVE, ELEMENT_EMBER, ELEMENT_STONE, ELEMENT_WIND } Element;
-typedef enum { MOVE_NUDGE, MOVE_CINDER, MOVE_LEAF, MOVE_PEBBLE, MOVE_GUST, MOVE_LUNGE, MOVE_COUNT } MoveId;
+typedef enum { MOVE_NUDGE, MOVE_CINDER, MOVE_LEAF, MOVE_PEBBLE, MOVE_GUST, MOVE_LUNGE,
+               MOVE_HEAT, MOVE_FLARE, MOVE_VINE, MOVE_FAULT, MOVE_TEMPEST, MOVE_COUNT } MoveId;
 typedef struct { const char *name; int power, accuracy; Element element; int uses; } Attack;
 const Attack *attack_get(int id);
 const char *element_name(Element element);
@@ -440,16 +513,12 @@ int attack_effectiveness(Element attack, Element defender); /* 1 half, 2 normal,
 #include <stdint.h>
 #include "input.h"
 #include "attacks.h"
+#include "creature.h"
 #define BATTLE_MOVES 4
-typedef struct {
-    const char *name;
-    Element element;
-    int level, max_hp, hp, attack, defense, speed;
-    int moves[BATTLE_MOVES], uses[BATTLE_MOVES];
-} Battler;
-typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_DONE } BattlePhase;
+typedef Creature Battler;
+typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_DONE } BattlePhase;
 typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED } BattleResult;
-typedef enum { AFTER_MENU, AFTER_TURN, AFTER_DONE } BattleAfter;
+typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_DONE } BattleAfter;
 typedef struct {
     Battler ally, enemy;
     BattlePhase phase;
@@ -459,11 +528,13 @@ typedef struct {
     int cursor, move_cursor, previous_direction;
     int choices[2], order[2], turn_index;
     int escape_attempts;
+    CreatureGrowth growth;
+    int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;
     char message[160];
 } Battle;
 void battler_starter(Battler *b);
 void battler_restore(Battler *b);
-void battle_begin(Battle *b,const Battler *ally,const char *enemy_name,int level,uint32_t seed);
+void battle_begin(Battle *b,const Battler *ally,SpeciesId species,int level,uint32_t seed);
 void battle_update(Battle *b,const Input *input);
 int battle_damage(const Battler *attacker,const Battler *defender,const Attack *attack,int variation);
 void battle_draw(const Battle *b);
@@ -478,6 +549,54 @@ void battle_draw(const Battle *b);
 #include "player.h"
 typedef struct { int x, y; } Camera;
 void camera_update(Camera *camera, const Player *player, const Map *map);
+#endif
+````
+
+## include/creature.h
+
+````text
+#ifndef EMBERWAKE_CREATURE_H
+#define EMBERWAKE_CREATURE_H
+#include "attacks.h"
+#define CREATURE_MOVES 4
+#define CREATURE_MAX_LEVEL 100
+typedef enum {
+    SPECIES_CINDLET, SPECIES_EMBERLYN, SPECIES_MOSSLET, SPECIES_MOSSHORN,
+    SPECIES_TWIGLINT, SPECIES_GLOWMOTH, SPECIES_FLINTLING, SPECIES_FLINTAUR,
+    SPECIES_DUSKWISP, SPECIES_ECHOCRAG, SPECIES_COUNT
+} SpeciesId;
+typedef struct { int level, move; } LearnMove;
+typedef struct {
+    SpeciesId id;
+    const char *name, *description;
+    Element element;
+    int base_hp, base_attack, base_defense, base_speed, experience_yield;
+    int evolution_level, evolved_species;
+    int overworld_sprite, battle_sprite;
+    LearnMove learnset[8];
+    int learn_count;
+} Species;
+typedef struct {
+    SpeciesId species;
+    char nickname[20];
+    const char *name; /* Derived cache of immutable species data, not save data. */
+    Element element;
+    int level, experience, max_hp, hp, attack, defense, speed;
+    int moves[CREATURE_MOVES], uses[CREATURE_MOVES];
+} Creature;
+typedef struct {
+    int old_level;
+    SpeciesId old_species;
+    int moves[MOVE_COUNT], move_count;
+} CreatureGrowth;
+const Species *species_get(int id);
+const char *creature_name(const Creature *c);
+void creature_create(Creature *c,int species,int level);
+void creature_restore(Creature *c);
+int creature_xp_for_level(int level);
+int creature_xp_remaining(const Creature *c);
+void creature_gain_xp(Creature *c,int amount,CreatureGrowth *growth);
+int creature_learn(Creature *c,int move,int slot);
 #endif
 ````
 
@@ -503,8 +622,9 @@ void dialogue_advance(Dialogue *d);
 #ifndef EMBERWAKE_ENCOUNTER_H
 #define EMBERWAKE_ENCOUNTER_H
 #include <stdint.h>
+#include "creature.h"
 typedef struct { uint32_t random; int safe_steps; } Encounter;
-typedef struct { const char *name; int level; } EncounterResult;
+typedef struct { const char *name; int level; SpeciesId species; } EncounterResult;
 void encounter_init(Encounter *e, uint32_t seed);
 int encounter_step(Encounter *e, int area, EncounterResult *result);
 #endif
@@ -567,6 +687,7 @@ typedef struct {
     int horizontal;
     int vertical;
     int confirm, cancel;
+    int details;
 } Input;
 
 int input_init(void);
@@ -671,7 +792,12 @@ static const Attack attacks[MOVE_COUNT] = {
     {"LEAF LASH",40,95,ELEMENT_GROVE,12},
     {"PEBBLE BURST",42,90,ELEMENT_STONE,12},
     {"WHIRL CUT",38,100,ELEMENT_WIND,12},
-    {"BOLD LUNGE",55,75,ELEMENT_PLAIN,8}
+    {"BOLD LUNGE",55,75,ELEMENT_PLAIN,8},
+    {"HEAT SPIRAL",55,95,ELEMENT_EMBER,10},
+    {"FLARE CREST",70,90,ELEMENT_EMBER,8},
+    {"VINE SWEEP",58,95,ELEMENT_GROVE,10},
+    {"FAULT DRUM",62,90,ELEMENT_STONE,10},
+    {"TEMPEST THREAD",56,100,ELEMENT_WIND,10}
 };
 const Attack *attack_get(int id)
 {
@@ -707,8 +833,10 @@ int attack_effectiveness(Element a,Element d)
 #include "text.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
 
-static void creature_draw(int x,int y,Element element,int back)
+static void creature_draw(int x,int y,const Battler *unit,int back)
 {
+    Element element=unit->element;
+    int sprite=species_get(unit->species)->battle_sprite;
     unsigned int body=element==ELEMENT_EMBER?C(224,123,67):
         element==ELEMENT_GROVE?C(114,167,92):element==ELEMENT_STONE?C(141,149,174):C(155,140,208);
     graphics_rectangle(x-6,y+48,78,8,C(33,45,53));
@@ -730,6 +858,24 @@ static void creature_draw(int x,int y,Element element,int back)
         graphics_rectangle(x-14,y+15,24,12,C(185,169,226));
         graphics_rectangle(x+52,y+15,24,12,C(185,169,226));
     }
+    /* Species references select small original silhouette details. */
+    if(sprite==1) { /* Emberlyn: large mane and crown. */
+        graphics_rectangle(x-2,y+18,8,25,C(245,171,80));
+        graphics_rectangle(x+56,y+18,8,25,C(245,171,80));
+        graphics_rectangle(x+24,y-9,9,17,C(255,210,104));
+    } else if(sprite==3) { /* Mosshorn */
+        graphics_rectangle(x+2,y-8,7,24,C(191,177,112));
+        graphics_rectangle(x+49,y-8,7,24,C(191,177,112));
+    } else if(sprite==7) { /* Flintaur */
+        graphics_rectangle(x-6,y+16,14,30,C(107,121,151));
+        graphics_rectangle(x+52,y+16,14,30,C(107,121,151));
+    } else if(sprite==4) {
+        graphics_rectangle(x+23,y-10,5,19,C(162,185,96));
+    } else if(sprite==8) {
+        graphics_rectangle(x+21,y-8,20,10,C(208,192,234));
+    } else if(sprite==9) {
+        graphics_rectangle(x+23,y-9,15,17,C(158,174,197));
+    }
     if(!back) {
         graphics_rectangle(x+17,y+23,6,7,C(23,31,41));
         graphics_rectangle(x+38,y+23,6,7,C(23,31,41));
@@ -742,7 +888,7 @@ static void status(const Battler *unit,int x,int y,int width)
 {
     char line[64];
     graphics_rectangle(x,y,width,58,C(25,35,45));
-    snprintf(line,sizeof(line),"%s  LV %d",unit->name,unit->level);
+    snprintf(line,sizeof(line),"%s  LV %d",creature_name(unit),unit->level);
     text_draw(x+8,y+7,line,C(241,232,207),1);
     text_draw(x+8,y+20,element_name(unit->element),C(174,192,188),1);
     int bar_width=width-16;
@@ -759,19 +905,33 @@ void battle_draw(const Battle *b)
     graphics_rectangle(0,88,480,88,C(65,81,77));
     graphics_rectangle(0,0,480,15,C(19,28,36));
     text_draw(10,4,"WILD VEYLING ENCOUNTER",C(241,204,145),1);
-    creature_draw(325,38,b->enemy.element,0);
-    creature_draw(65,104,b->ally.element,1);
+    creature_draw(325,38,&b->enemy,0);
+    creature_draw(65,104,&b->ally,1);
     status(&b->enemy,18,24,202);
     status(&b->ally,253,109,210);
     graphics_rectangle(6,176,468,90,C(177,144,94));
     graphics_rectangle(8,178,464,86,C(21,30,38));
-    if(b->phase==BATTLE_MESSAGE || b->phase==BATTLE_DONE) {
+    if(b->phase==BATTLE_LEARN) {
+        const Attack *move=attack_get(b->growth.moves[b->growth_move]);
+        text_draw(18,188,"LEARN A NEW ATTACK?",C(244,198,118),1);
+        text_draw(18,205,move->name,C(236,236,218),1);
+        char detail[64];
+        snprintf(detail,sizeof(detail),"POWER %d  ACCURACY %d",move->power,move->accuracy);
+        text_draw(18,220,detail,C(188,204,190),1);
+        text_draw(18,239,"X REPLACE   O DECLINE",C(188,204,190),1);
+        for(int i=0;i<5;++i) {
+            if(i==b->learn_cursor) graphics_rectangle(290,182+i*15,174,14,C(79,92,86));
+            text_draw(296,186+i*15,i==4?"KEEP CURRENT MOVES":attack_get(b->ally.moves[i])->name,C(239,227,200),1);
+        }
+    } else if(b->phase==BATTLE_MESSAGE || b->phase==BATTLE_DONE) {
         text_draw(18,188,b->message,C(236,236,218),2);
         text_draw(18,251,"X CONTINUE",C(167,194,180),1);
     } else if(b->phase==BATTLE_MENU) {
         text_draw(18,191,"CHOOSE YOUR NEXT MOVE.",C(236,236,218),1);
         text_draw(18,210,"D-PAD SELECT   X CONFIRM",C(167,194,180),1);
-        text_draw(18,230,"CINDLET - EMBER PARTNER",C(233,173,115),1);
+        char growth[64];
+        snprintf(growth,sizeof(growth),"%s - NEXT LEVEL IN %d XP",creature_name(&b->ally),creature_xp_remaining(&b->ally));
+        text_draw(18,230,growth,C(233,173,115),1);
         const char *const options[]={"FIGHT","CAPTURE","CREATURES","ITEMS","RUN"};
         for(int i=0;i<5;++i) {
             if(i==b->cursor) graphics_rectangle(302,182+i*15,158,14,C(79,92,86));
@@ -788,7 +948,7 @@ void battle_draw(const Battle *b)
                 char line[64];
                 const Attack *move=attack_get(b->ally.moves[i]);
                 if(i==b->move_cursor) graphics_rectangle(14,183+i*15,261,14,C(79,92,86));
-                snprintf(line,sizeof(line),"%s  %d/%d",move->name,b->ally.uses[i],move->uses);
+                snprintf(line,sizeof(line),"%s  %d/%d",b->ally.moves[i]<0?"EMPTY":move->name,b->ally.uses[i],b->ally.moves[i]<0?0:move->uses);
                 text_draw(20,187+i*15,line,b->ally.uses[i]?C(239,227,200):C(155,155,155),1);
             }
             const Attack *selected=attack_get(b->ally.moves[b->move_cursor]);
@@ -817,41 +977,15 @@ static uint32_t random_next(Battle *b)
     x^=x<<13; x^=x>>17; x^=x<<5;
     return b->random=x;
 }
-void battler_restore(Battler *b)
-{
-    b->hp=b->max_hp;
-    for(int i=0;i<BATTLE_MOVES;++i) b->uses[i]=attack_get(b->moves[i])->uses;
-}
-static void create(Battler *b,const char *name,Element type,int level)
-{
-    *b=(Battler){0};
-    b->name=name; b->element=type;
-    b->level=level<1?1:level>100?100:level;
-    b->max_hp=24+b->level*5;
-    b->attack=10+b->level*3; b->defense=10+b->level*2;
-    b->speed=8+b->level*2;
-    b->moves[0]=MOVE_NUDGE;
-    b->moves[1]=type==ELEMENT_EMBER?MOVE_CINDER:type==ELEMENT_GROVE?MOVE_LEAF:
-                type==ELEMENT_STONE?MOVE_PEBBLE:MOVE_GUST;
-    b->moves[2]=MOVE_LUNGE; b->moves[3]=MOVE_NUDGE;
-    battler_restore(b);
-}
-void battler_starter(Battler *b)
-{
-    create(b,"CINDLET",ELEMENT_EMBER,5);
-    b->moves[3]=MOVE_GUST; battler_restore(b);
-}
-void battle_begin(Battle *b,const Battler *ally,const char *name,int level,uint32_t seed)
+void battler_restore(Battler *b) { creature_restore(b); }
+void battler_starter(Battler *b) { creature_create(b,SPECIES_CINDLET,5); }
+void battle_begin(Battle *b,const Battler *ally,SpeciesId species,int level,uint32_t seed)
 {
     *b=(Battle){0};
     b->ally=*ally; b->random=seed?seed:0x3291u;
-    Element type=ELEMENT_GROVE;
-    if(!strcmp(name,"FLINTLING") || !strcmp(name,"ECHOCRAG")) type=ELEMENT_STONE;
-    if(!strcmp(name,"GLOWMOTH") || !strcmp(name,"DUSKWISP")) type=ELEMENT_WIND;
-    create(&b->enemy,name,type,level);
-    /* Three distinct wild moves, with a fourth reserve basic attack slot. */
+    creature_create(&b->enemy,species,level);
     b->phase=BATTLE_MESSAGE; b->after=AFTER_MENU;
-    snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\nCINDLET IS READY.\nX CONTINUE",name);
+    snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
 {
@@ -886,13 +1020,13 @@ static void next_action(Battle *b)
     if(slot>=0) --a->uses[slot];
     int hit=(int)(random_next(b)%100)<move->accuracy;
     if(!hit) {
-        snprintf(b->message,sizeof(b->message),"%s USED %s.\nTHE ATTACK MISSED.",a->name,move->name);
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\nTHE ATTACK MISSED.",creature_name(a),move->name);
     } else {
         int damage=battle_damage(a,d,move,90+(int)(random_next(b)%11));
         if(damage>d->hp) damage=d->hp;
         d->hp-=damage;
         int effect=attack_effectiveness(move->element,d->element);
-        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",a->name,move->name,damage,
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",creature_name(a),move->name,damage,
                  effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
     }
     b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;
@@ -916,18 +1050,80 @@ static int navigation(Battle *b,const Input *input)
     b->previous_direction=direction;
     return edge?direction:0;
 }
+static void growth_next(Battle *b)
+{
+    if(b->growth_stage==0) {
+        b->growth_stage=1;
+        if(b->growth.old_level!=b->ally.level) {
+            snprintf(b->message,sizeof(b->message),"LEVEL UP. %d TO %d\nHP %d  ATTACK %d\nDEFENSE %d  SPEED %d",b->growth.old_level,b->ally.level,
+                     b->ally.max_hp,b->ally.attack,b->ally.defense,b->ally.speed);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+    }
+    if(b->growth_stage==1) {
+        b->growth_stage=2;
+        if(b->growth.old_species!=b->ally.species) {
+            snprintf(b->message,sizeof(b->message),"EVOLUTION.\n%s BECAME %s.\nA NEW FORM. A STRONGER PARTNER.",
+                     species_get(b->growth.old_species)->name,b->ally.name);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+    }
+    while(b->growth_move<b->growth.move_count) {
+        int move=b->growth.moves[b->growth_move];
+        int empty=-1,known=0;
+        for(int i=0;i<4;++i) {
+            if(b->ally.moves[i]==move) known=1;
+            if(b->ally.moves[i]<0 && empty<0) empty=i;
+        }
+        if(known) { ++b->growth_move;continue; }
+        if(empty>=0) {
+            creature_learn(&b->ally,move,empty);++b->growth_move;
+            snprintf(b->message,sizeof(b->message),"%s LEARNED\n%s.",creature_name(&b->ally),attack_get(move)->name);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+        b->learn_cursor=4; /* Default to KEEP CURRENT MOVES; no silent replacement. */
+        b->phase=BATTLE_LEARN;return;
+    }
+    message(b,"PARTNER RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
+}
 void battle_update(Battle *b,const Input *input)
 {
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
+    if(b->phase==BATTLE_LEARN) {
+        if(nav) b->learn_cursor=(b->learn_cursor+nav+5)%5;
+        if(input->cancel || (input->confirm && b->learn_cursor==4)) {
+            ++b->growth_move;growth_next(b);return;
+        }
+        if(input->confirm) {
+            int move=b->growth.moves[b->growth_move++];
+            const char *old=attack_get(b->ally.moves[b->learn_cursor])->name;
+            creature_learn(&b->ally,move,b->learn_cursor);
+            snprintf(b->message,sizeof(b->message),"%s LEARNED %s.\nREPLACED %s.",creature_name(&b->ally),attack_get(move)->name,old);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
+        }
+        return;
+    }
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
         if(b->after==AFTER_DONE) { b->phase=BATTLE_DONE; return; }
         if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
+        if(b->after==AFTER_GROWTH) { growth_next(b);return; }
         if(b->result==BATTLE_WIN) {
-            message(b,"VICTORY.\nTHE WILD VEYLING RETREATS.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+            if(!b->reward_given) {
+                int old_xp=b->ally.experience;
+                b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
+                creature_gain_xp(&b->ally,b->experience_reward,&b->growth);
+                b->experience_reward=b->ally.experience-old_xp;
+                b->reward_given=1;
+            }
+            snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL %d\n%d XP TO NEXT LEVEL",b->experience_reward,
+                     creature_name(&b->ally),b->ally.level,creature_xp_remaining(&b->ally));
+            if(b->ally.level==100)
+                snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL 100\nMAX LEVEL REACHED",b->experience_reward,creature_name(&b->ally));
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
-            message(b,"CINDLET NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOUR PARTNER NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
         } else next_action(b);
         return;
     }
@@ -952,7 +1148,7 @@ void battle_update(Battle *b,const Input *input)
     case 1:
         message(b,"CAPTURE IS NOT AVAILABLE YET.\nIT ARRIVES IN PHASE 6.",AFTER_MENU); break;
     case 2:
-        message(b,"CINDLET IS YOUR ONLY PARTNER.\nTEAM SWITCHING ARRIVES IN PHASE 6.",AFTER_MENU); break;
+        message(b,"YOU HAVE ONE PARTNER.\nTEAM SWITCHING ARRIVES IN PHASE 6.",AFTER_MENU); break;
     case 3:
         message(b,"YOUR ITEM BAG IS EMPTY.\nITEMS ARRIVE IN PHASE 7.",AFTER_MENU); break;
     default:
@@ -990,6 +1186,139 @@ void camera_update(Camera *camera, const Player *player, const Map *map)
 }
 ````
 
+## src/creature.c
+
+````text
+#include <limits.h>
+#include <string.h>
+#include "creature.h"
+#define L(l,m) {l,m}
+static const Species species[SPECIES_COUNT] = {
+ {SPECIES_CINDLET,"CINDLET","A SMALL HEARTH DWELLER.\nITS EARS GLOW LIKE WARM COALS.",ELEMENT_EMBER,
+  24,10,10,8,24,8,SPECIES_EMBERLYN,0,0,
+  {L(1,MOVE_NUDGE),L(2,MOVE_CINDER),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_HEAT),L(9,MOVE_FLARE)},6},
+ {SPECIES_EMBERLYN,"EMBERLYN","ITS COAL MANE KEEPS TRAVELERS\nWARM THROUGH LONG WINTER NIGHTS.",ELEMENT_EMBER,
+  35,18,16,14,45,0,-1,1,1,
+  {L(1,MOVE_NUDGE),L(2,MOVE_CINDER),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_HEAT),L(8,MOVE_PEBBLE),L(9,MOVE_FLARE)},7},
+ {SPECIES_MOSSLET,"MOSSLET","IT GATHERS DEW IN A SOFT MOSS COAT.\nIT SLEEPS BENEATH FALLEN LEAVES.",ELEMENT_GROVE,
+  25,8,12,6,22,8,SPECIES_MOSSHORN,2,2,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(6,MOVE_VINE)},4},
+ {SPECIES_MOSSHORN,"MOSSHORN","BRANCHING HORNS SHELTER SEEDLINGS.\nIT WALKS SOFTLY THROUGH THE WOODS.",ELEMENT_GROVE,
+  39,15,22,8,44,0,-1,3,3,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(6,MOVE_VINE),L(9,MOVE_PEBBLE)},5},
+ {SPECIES_TWIGLINT,"TWIGLINT","THIS NIMBLE BRANCH DWELLER HIDES\nIN PATCHES OF SHIFTING SUNLIGHT.",ELEMENT_GROVE,
+  20,12,8,14,27,0,-1,4,4,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_GUST),L(7,MOVE_VINE)},4},
+ {SPECIES_GLOWMOTH,"GLOWMOTH","ITS DUSTY WINGS SHIMMER WHEN\nNIGHT BREEZES CROSS THE CANOPY.",ELEMENT_WIND,
+  22,11,9,16,34,0,-1,5,5,
+  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_LUNGE),L(7,MOVE_TEMPEST)},4},
+ {SPECIES_FLINTLING,"FLINTLING","IT TAPS STONES TO LEAVE SPARKING\nTRAILS THROUGH THE DARK.",ELEMENT_STONE,
+  27,12,15,5,28,9,SPECIES_FLINTAUR,6,6,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(7,MOVE_FAULT)},4},
+ {SPECIES_FLINTAUR,"FLINTAUR","A HEAVY CAVE WANDERER WITH\nRIDGES OF POLISHED FLINT.",ELEMENT_STONE,
+  43,22,25,7,48,0,-1,7,7,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(7,MOVE_FAULT),L(9,MOVE_CINDER)},5},
+ {SPECIES_DUSKWISP,"DUSKWISP","A PALE DRIFTER THAT FOLLOWS\nTHE QUIET AIR INSIDE CAVERNS.",ELEMENT_WIND,
+  20,14,8,17,31,0,-1,8,8,
+  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_CINDER),L(7,MOVE_TEMPEST)},4},
+ {SPECIES_ECHOCRAG,"ECHOCRAG","ITS HOLLOW CREST CARRIES SOUND\nACROSS UNDERGROUND CHAMBERS.",ELEMENT_STONE,
+  33,14,18,4,38,0,-1,9,9,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(6,MOVE_FAULT)},4}
+};
+const Species *species_get(int id)
+{
+    return &species[id>=0 && id<SPECIES_COUNT?id:SPECIES_CINDLET];
+}
+const char *creature_name(const Creature *c) { return c->nickname[0]?c->nickname:c->name; }
+int creature_xp_for_level(int level)
+{
+    if(level<1) level=1;
+    if(level>CREATURE_MAX_LEVEL) level=CREATURE_MAX_LEVEL;
+    return 20*(level-1)*(level-1);
+}
+int creature_xp_remaining(const Creature *c)
+{
+    return c->level>=CREATURE_MAX_LEVEL?0:creature_xp_for_level(c->level+1)-c->experience;
+}
+static void recalculate(Creature *c)
+{
+    const Species *s=species_get(c->species);
+    int old_max=c->max_hp,old_hp=c->hp;
+    c->name=s->name; c->element=s->element;
+    c->max_hp=s->base_hp+c->level*5;
+    c->attack=s->base_attack+c->level*3;
+    c->defense=s->base_defense+c->level*2;
+    c->speed=s->base_speed+c->level*2;
+    c->hp=old_hp>0?old_hp+c->max_hp-old_max:0;
+    if(c->hp>c->max_hp) c->hp=c->max_hp;
+}
+void creature_restore(Creature *c)
+{
+    c->hp=c->max_hp;
+    for(int i=0;i<4;++i) c->uses[i]=c->moves[i]<0?0:attack_get(c->moves[i])->uses;
+}
+static int knows(const Creature *c,int move)
+{
+    for(int i=0;i<4;++i) if(c->moves[i]==move) return 1;
+    return 0;
+}
+int creature_learn(Creature *c,int move,int slot)
+{
+    if(move<0 || move>=MOVE_COUNT || slot<0 || slot>=4 || knows(c,move)) return 0;
+    c->moves[slot]=move; c->uses[slot]=attack_get(move)->uses;
+    return 1;
+}
+void creature_create(Creature *c,int id,int level)
+{
+    *c=(Creature){0};
+    c->species=species_get(id)->id;
+    c->level=level<1?1:level>100?100:level;
+    c->experience=creature_xp_for_level(c->level);
+    for(int i=0;i<4;++i) c->moves[i]=-1;
+    recalculate(c);
+    const Species *s=species_get(c->species);
+    int slot=0;
+    for(int i=0;i<s->learn_count;++i)
+        if(s->learnset[i].level<=c->level && !knows(c,s->learnset[i].move)) {
+            /* Fresh wild creatures use their latest four unlocked attacks. */
+            if(slot==4) {
+                for(int j=0;j<3;++j) c->moves[j]=c->moves[j+1];
+                slot=3;
+            }
+            c->moves[slot++]=s->learnset[i].move;
+        }
+    creature_restore(c);
+}
+static void queue_moves(const Creature *c,const Species *s,int exact,CreatureGrowth *g)
+{
+    for(int i=0;i<s->learn_count;++i) {
+        LearnMove learned=s->learnset[i];
+        if((exact?learned.level!=c->level:learned.level>c->level) || knows(c,learned.move)) continue;
+        int duplicate=0;
+        for(int j=0;j<g->move_count;++j) if(g->moves[j]==learned.move) duplicate=1;
+        if(!duplicate && g->move_count<MOVE_COUNT) g->moves[g->move_count++]=learned.move;
+    }
+}
+void creature_gain_xp(Creature *c,int amount,CreatureGrowth *g)
+{
+    *g=(CreatureGrowth){0};
+    g->old_level=c->level;g->old_species=c->species;
+    if(amount<=0 || c->level>=100) return;
+    int cap=creature_xp_for_level(100);
+    c->experience=amount>=cap-c->experience?cap:c->experience+amount;
+    while(c->level<100 && c->experience>=creature_xp_for_level(c->level+1)) {
+        ++c->level;
+        const Species *s=species_get(c->species);
+        queue_moves(c,s,1,g);
+        if(s->evolution_level>0 && c->level>=s->evolution_level) {
+            c->species=(SpeciesId)s->evolved_species;
+            queue_moves(c,species_get(c->species),0,g);
+        }
+        recalculate(c);
+    }
+}
+````
+
 ## src/dialogue.c
 
 ````text
@@ -1015,9 +1344,9 @@ void dialogue_advance(Dialogue *d)
 
 ````text
 #include "encounter.h"
-typedef struct { const char *name; int weight, minimum, maximum; } Entry;
-static const Entry forest[] = {{"MOSSLET",60,2,4},{"TWIGLINT",30,3,5},{"GLOWMOTH",10,4,6}};
-static const Entry cave[] = {{"FLINTLING",60,3,5},{"DUSKWISP",30,4,6},{"ECHOCRAG",10,5,7}};
+typedef struct { SpeciesId species; int weight, minimum, maximum; } Entry;
+static const Entry forest[] = {{SPECIES_MOSSLET,60,2,4},{SPECIES_TWIGLINT,30,3,5},{SPECIES_GLOWMOTH,10,4,6}};
+static const Entry cave[] = {{SPECIES_FLINTLING,60,3,5},{SPECIES_DUSKWISP,30,4,6},{SPECIES_ECHOCRAG,10,5,7}};
 static uint32_t next(Encounter *e)
 {
     uint32_t x = e->random;
@@ -1040,7 +1369,8 @@ int encounter_step(Encounter *e, int area, EncounterResult *result)
         roll -= table[index].weight;
         ++index;
     }
-    result->name = table[index].name;
+    result->species = table[index].species;
+    result->name = species_get(result->species)->name;
     result->level = table[index].minimum +
         (int)(next(e)%(table[index].maximum-table[index].minimum+1));
     e->safe_steps = 4;
@@ -1084,6 +1414,7 @@ void game_update(Game *g, const Input *input, float seconds)
         battle_update(&g->battle,input);
         if(g->battle.phase==BATTLE_DONE) {
             g->in_battle=0;
+            g->partner=g->battle.ally; /* Preserve species, XP, levels, and chosen moves. */
             /* Phase 4 testing rule: every battle restores HP and move uses.
                Persistent attrition and healing locations arrive with RPG systems. */
             battler_restore(&g->partner);
@@ -1095,6 +1426,14 @@ void game_update(Game *g, const Input *input, float seconds)
     if (g->dialogue.active) {
         if (input->cancel) g->dialogue.active = 0;
         else if (input->confirm) dialogue_advance(&g->dialogue);
+        return;
+    }
+    if(input->details && !g->player.moving) {
+        char summary[160];
+        snprintf(summary,sizeof(summary),"LEVEL %d %s - HP %d\nATK %d DEF %d SPEED %d\nXP %d - NEXT IN %d",g->partner.level,
+                 element_name(g->partner.element),g->partner.max_hp,g->partner.attack,
+                 g->partner.defense,g->partner.speed,g->partner.experience,creature_xp_remaining(&g->partner));
+        dialogue_open(&g->dialogue,creature_name(&g->partner),summary,species_get(g->partner.species)->description);
         return;
     }
     if (input->confirm && !g->player.moving) {
@@ -1118,7 +1457,7 @@ void game_update(Game *g, const Input *input, float seconds)
         EncounterResult result;
         int area = map_encounter_area(g->map_id,g->player.tile_x,g->player.tile_y);
         if (encounter_step(&g->encounter,area,&result)) {
-            battle_begin(&g->battle,&g->partner,result.name,result.level,g->encounter.random);
+            battle_begin(&g->battle,&g->partner,result.species,result.level,g->encounter.random);
             g->in_battle=1;
         }
     }
@@ -1133,7 +1472,7 @@ void game_draw(const Game *g)
         world_actor_draw(&g->npcs.people[i].actor,&g->camera,1);
     graphics_rectangle(0,0,480,15,GU_RGBA(18,27,30,255));
     text_draw(6,4,map_name(g->map_id),GU_RGBA(241,212,150,255),1);
-    text_draw(290,4,"X TALK   O CLOSE",GU_RGBA(210,221,211,255),1);
+    text_draw(290,4,"X TALK  SELECT PARTNER",GU_RGBA(210,221,211,255),1);
     if (g->dialogue.active) {
         graphics_rectangle(6,167,468,99,GU_RGBA(184,150,96,255));
         graphics_rectangle(8,169,464,95,GU_RGBA(21,30,36,255));
@@ -1245,7 +1584,7 @@ void input_poll(Input *input)
     SceCtrlData pad = {0};
     input->horizontal = 0;
     input->vertical = 0;
-    input->confirm = input->cancel = 0;
+    input->confirm = input->cancel = input->details = 0;
     if (sceCtrlPeekBufferPositive(&pad, 1) <= 0) {
         return;
     }
@@ -1257,6 +1596,7 @@ void input_poll(Input *input)
     previous = pad.Buttons;
     input->confirm = (pressed & PSP_CTRL_CROSS) != 0;
     input->cancel = (pressed & PSP_CTRL_CIRCLE) != 0;
+    input->details = (pressed & PSP_CTRL_SELECT) != 0;
 }
 ````
 
@@ -1737,12 +2077,12 @@ void world_draw(const Map *map, const Player *player, const Camera *camera)
 
 static void press(Battle *b)
 {
-    battle_update(b,&(Input){0,0,1,0});
+    battle_update(b,&(Input){0,0,1,0,0});
 }
 static void start(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
-    battle_begin(b,&ally,"MOSSLET",3,seed);
+    battle_begin(b,&ally,SPECIES_MOSSLET,3,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)
@@ -1775,7 +2115,7 @@ int main(void)
     assert(b.result==BATTLE_WIN && b.enemy.hp==0);
     finish_messages(&b);
     assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
-    battle_update(&b,&(Input){0,0,1,0}); assert(b.phase==BATTLE_DONE);
+    battle_update(&b,&(Input){0,0,1,0,0}); assert(b.phase==BATTLE_DONE);
 
     start(&b,12);
     b.ally.hp=1; b.enemy.speed=999;
@@ -1786,13 +2126,13 @@ int main(void)
 
     start(&b,12);
     b.cursor=0; press(&b);
-    battle_update(&b,&(Input){0,0,0,1});
+    battle_update(&b,&(Input){0,0,0,1,0});
     assert(b.phase==BATTLE_MENU && b.enemy.hp==b.enemy.max_hp);
     /* Menu navigation advances once per new direction, not once per frame. */
-    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0});
+    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0,0});
     assert(b.cursor==1);
     battle_update(&b,&(Input){0});
-    battle_update(&b,&(Input){0,1,0,0}); assert(b.cursor==2);
+    battle_update(&b,&(Input){0,1,0,0,0}); assert(b.cursor==2);
     for(int i=1;i<=3;++i) {
         b.cursor=i; press(&b); assert(b.phase==BATTLE_MESSAGE);
         finish_messages(&b);
@@ -1840,6 +2180,112 @@ int main(void)
 }
 ````
 
+## tests/creature_test.c
+
+````text
+#include <assert.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+#include "battle.h"
+
+static void confirm(Battle *b) { battle_update(b,&(Input){0,0,1,0,0}); }
+static void victory(Battle *b,Creature *c)
+{
+    battle_begin(b,c,SPECIES_MOSSLET,3,42);
+    b->enemy.hp=1;b->ally.speed=999;
+    confirm(b);confirm(b);confirm(b); /* Intro, fight, basic attack. */
+    assert(b->result==BATTLE_WIN);
+    confirm(b); /* Award XP exactly once. */
+}
+static void close_growth(Battle *b)
+{
+    for(int i=0;i<30 && b->phase!=BATTLE_DONE;++i) {
+        if(b->phase==BATTLE_LEARN) battle_update(b,&(Input){0,0,0,1,0});
+        else confirm(b);
+    }
+    assert(b->phase==BATTLE_DONE);
+}
+int main(void)
+{
+    assert(SPECIES_COUNT==10);
+    for(int id=0;id<SPECIES_COUNT;++id) {
+        const Species *s=species_get(id);
+        assert((int)s->id==id && s->name[0] && s->description[0]);
+        assert(s->base_hp>0 && s->base_attack>0 && s->base_defense>0 && s->base_speed>0);
+        assert(s->experience_yield>0 && s->learn_count>0 && s->learn_count<=8);
+        assert(s->overworld_sprite==id && s->battle_sprite==id);
+        if(s->evolution_level) assert(s->evolved_species>=0 && s->evolved_species<SPECIES_COUNT && s->evolved_species!=id);
+        for(int i=0;i<s->learn_count;++i) {
+            assert(s->learnset[i].move>=0 && s->learnset[i].move<MOVE_COUNT);
+            assert(s->learnset[i].level>=1 && s->learnset[i].level<=100);
+        }
+        for(int level=1;level<=100;++level) {
+            Creature c;creature_create(&c,id,level);
+            assert(c.level==level && c.hp==c.max_hp && c.experience==creature_xp_for_level(level));
+            for(int i=0;i<4;++i) {
+                assert(c.moves[i]>=-1 && c.moves[i]<MOVE_COUNT);
+                assert(c.uses[i]==(c.moves[i]<0?0:attack_get(c.moves[i])->uses));
+                for(int j=0;j<i;++j) assert(c.moves[i]<0 || c.moves[i]!=c.moves[j]);
+            }
+        }
+    }
+    Creature c;CreatureGrowth g;
+    creature_create(&c,SPECIES_CINDLET,5);
+    int hp=c.hp;c.hp-=7;
+    creature_gain_xp(&c,179,&g);assert(c.level==5 && g.move_count==0);
+    creature_gain_xp(&c,1,&g);assert(c.level==6 && c.hp==hp-7+5);
+    assert(g.move_count==1 && g.moves[0]==MOVE_HEAT);
+    assert(c.moves[1]==MOVE_CINDER); /* Learning requires a choice. */
+    assert(creature_learn(&c,MOVE_HEAT,1));
+    assert(c.moves[1]==MOVE_HEAT && c.uses[1]==10);
+    assert(!creature_learn(&c,MOVE_HEAT,2));
+    assert(!creature_learn(&c,MOVE_COUNT,0));
+    assert(!creature_learn(&c,MOVE_LEAF,4));
+
+    strcpy(c.nickname,"SPARK");
+    creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
+    assert(c.species==SPECIES_EMBERLYN && c.level==8 && c.attack==42);
+    assert(!strcmp(creature_name(&c),"SPARK"));
+    assert(g.old_species==SPECIES_CINDLET && c.moves[1]==MOVE_HEAT);
+    creature_gain_xp(&c,0,&g);assert(g.move_count==0 && g.old_species==SPECIES_EMBERLYN);
+    creature_gain_xp(&c,-5,&g);assert(c.experience==creature_xp_for_level(8));
+    creature_gain_xp(&c,INT_MAX,&g);
+    assert(c.level==100 && c.experience==creature_xp_for_level(100) && !creature_xp_remaining(&c));
+    creature_gain_xp(&c,INT_MAX,&g);assert(g.move_count==0);
+    creature_create(&c,SPECIES_MOSSLET,7);c.hp=0;
+    creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
+    assert(c.species==SPECIES_MOSSHORN && c.hp==0); /* Stats cannot revive a fainted creature. */
+    creature_create(&c,SPECIES_FLINTLING,1);
+    creature_gain_xp(&c,creature_xp_for_level(12),&g);
+    assert(c.species==SPECIES_FLINTAUR && c.level==12 && g.move_count<=MOVE_COUNT);
+
+    Battle b;
+    creature_create(&c,SPECIES_CINDLET,5);c.experience=creature_xp_for_level(6)-1;
+    victory(&b,&c);int earned=b.ally.experience;
+    assert(b.ally.level==6 && b.reward_given);
+    for(int i=0;i<8 && b.phase!=BATTLE_LEARN;++i) confirm(&b);
+    assert(b.phase==BATTLE_LEARN && b.learn_cursor==4);
+    b.learn_cursor=1;confirm(&b);
+    assert(b.ally.moves[1]==MOVE_HEAT);
+    close_growth(&b);confirm(&b);assert(b.ally.experience==earned);
+    victory(&b,&c);
+    for(int i=0;i<8 && b.phase!=BATTLE_LEARN;++i) confirm(&b);
+    battle_update(&b,&(Input){0,0,0,1,0});close_growth(&b);
+    assert(b.ally.moves[1]==MOVE_CINDER);
+
+    creature_create(&c,SPECIES_CINDLET,7);c.experience=creature_xp_for_level(8)-1;
+    victory(&b,&c);assert(b.ally.species==SPECIES_EMBERLYN);
+    close_growth(&b);assert(b.ally.species==SPECIES_EMBERLYN);
+    creature_create(&c,SPECIES_CINDLET,5);
+    battle_begin(&b,&c,SPECIES_MOSSLET,3,2);confirm(&b);
+    b.cursor=4;b.escape_attempts=2;confirm(&b);confirm(&b);
+    assert(b.phase==BATTLE_DONE && b.ally.experience==c.experience);
+    puts("PASS: 10 species, 100 levels, XP boundaries/cap, evolution, stats, nicknames, move choices, single rewards");
+    return 0;
+}
+````
+
 ## tests/overworld_test.c
 
 ````text
@@ -1874,37 +2320,37 @@ int main(void)
 
     Player p;
     player_init(&p,map);
-    tick(&p,map,(Input){1,0,0,0},1,0.025f);
+    tick(&p,map,(Input){1,0,0,0,0},1,0.025f);
     assert(p.moving && p.x > 160 && p.x < 192);
     /* Release completes exactly one step. */
-    tick(&p,map,(Input){0,0,0,0},20,0.025f);
+    tick(&p,map,(Input){0,0,0,0,0},20,0.025f);
     assert(!p.moving && p.tile_x == 6 && p.x == 192);
 
     player_init(&p,map);
-    tick(&p,map,(Input){1,0,0,0},1,0.025f);
-    tick(&p,map,(Input){0,-1,0,0},40,0.025f);
+    tick(&p,map,(Input){1,0,0,0,0},1,0.025f);
+    tick(&p,map,(Input){0,-1,0,0,0},40,0.025f);
     assert(p.tile_x == 6 && p.tile_y < 11 && p.facing == FACE_UP);
 
     /* Held motion covers the same distance at 30, 60 and 120 Hz. */
     const int rates[] = {30,60,120};
     for (int i = 0; i < 3; ++i) {
         player_init(&p,map);
-        tick(&p,map,(Input){1,0,0,0},rates[i],1.0f/rates[i]);
+        tick(&p,map,(Input){1,0,0,0,0},rates[i],1.0f/rates[i]);
         assert(fabsf(p.x - 288.0f) < 0.01f);
     }
     player_init(&p,map);
-    tick(&p,map,(Input){1,-1,0,0},20,0.025f);
+    tick(&p,map,(Input){1,-1,0,0,0},20,0.025f);
     assert(p.y == 352); /* Horizontal priority; no diagonal corner cutting. */
     player_init(&p,map);
-    tick(&p,map,(Input){-1,0,0,0},100,0.05f);
+    tick(&p,map,(Input){-1,0,0,0,0},100,0.05f);
     assert(p.tile_x == 1 && p.x == 32 && !p.moving);
-    tick(&p,map,(Input){0,-1,0,0},200,0.05f);
+    tick(&p,map,(Input){0,-1,0,0,0},200,0.05f);
     assert(p.tile_y == 1 && p.y == 32 && !p.moving);
 
     /* Collision from all four sides of a blocked tile. */
     const char *const rows[] = {".....",".....","..O..",".....","....."};
     const int starts[][2] = {{1,2},{3,2},{2,1},{2,3}};
-    const Input directions[] = {{1,0,0,0},{-1,0,0,0},{0,1,0,0},{0,-1,0,0}};
+    const Input directions[] = {{1,0,0,0,0},{-1,0,0,0,0},{0,1,0,0,0},{0,-1,0,0,0}};
     for (int i = 0; i < 4; ++i) {
         Map small = {5,5,rows,starts[i][0],starts[i][1]};
         player_init(&p,&small);
@@ -1927,7 +2373,7 @@ int main(void)
     assert(camera.x == map->width*TILE_SIZE-SCREEN_WIDTH);
     assert(camera.y == map->height*TILE_SIZE-SCREEN_HEIGHT);
     player_init(&p,map);
-    tick(&p,map,(Input){1,0,0,0},1,10.0f);
+    tick(&p,map,(Input){1,0,0,0,0},1,10.0f);
     assert(p.x <= 166.401f); /* Long pauses are clamped. */
     puts("PASS: map, collision, release, turning, frame rates, camera, pause cap");
     return 0;
@@ -2034,35 +2480,35 @@ int main(void)
     assert(portals==6);
     Game g;
     place(&g,MAP_CLEARING,5,10);
-    update(&g,(Input){0,-1,0,0},10);
+    update(&g,(Input){0,-1,0,0,0},10);
     assert(g.map_id==MAP_LODGE);
-    update(&g,(Input){0,1,0,0},10);
+    update(&g,(Input){0,1,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
     place(&g,MAP_CLEARING,37,11);
-    update(&g,(Input){1,0,0,0},10);
+    update(&g,(Input){1,0,0,0,0},10);
     assert(g.map_id==MAP_FOREST);
-    update(&g,(Input){-1,0,0,0},10);
+    update(&g,(Input){-1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING);
     place(&g,MAP_FOREST,28,6);
-    update(&g,(Input){0,-1,0,0},10);
+    update(&g,(Input){0,-1,0,0,0},10);
     assert(g.map_id==MAP_CAVE);
-    update(&g,(Input){0,1,0,0},10);
+    update(&g,(Input){0,1,0,0,0},10);
     assert(g.map_id==MAP_FOREST);
 
     place(&g,MAP_CLEARING,7,11);
-    update(&g,(Input){0,-1,0,0},20);
+    update(&g,(Input){0,-1,0,0,0},20);
     assert(g.player.tile_y==11); /* NPC is solid. */
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"MIRA"));
     float npc_x=g.npcs.people[1].actor.x;
-    update(&g,(Input){1,0,0,0},100);
+    update(&g,(Input){1,0,0,0,0},100);
     assert(g.player.tile_x==7 && g.npcs.people[1].actor.x==npc_x);
     render(&g,"previews/dialogue.ppm");
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.dialogue.page==1);
-    update(&g,(Input){0,0,0,1},1);
+    update(&g,(Input){0,0,0,1,0},1);
     assert(!g.dialogue.active);
-    update(&g,(Input){0,0,0,0},100);
+    update(&g,(Input){0,0,0,0,0},100);
     assert(g.npcs.people[1].actor.x!=npc_x);
     for(int i=0;i<1000;++i) {
         update(&g,(Input){0},1);
@@ -2090,37 +2536,75 @@ int main(void)
     }
     place(&g,MAP_FOREST,8,12);
     for(int i=0;i<2000 && !g.in_battle;++i)
-        update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0},1);
+        update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0,0},1);
     assert(g.in_battle);
     fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
     float before_x=g.player.x,before_y=g.player.y;
-    update(&g,(Input){1,0,0,0},40);
+    update(&g,(Input){1,0,0,0,0},40);
     assert(g.player.x==before_x && g.player.y==before_y);
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.battle.phase==BATTLE_MENU);
     render(&g,"previews/battle-menu.ppm");
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     render(&g,"previews/battle-moves.ppm");
-    update(&g,(Input){0,0,0,1},1);
+    update(&g,(Input){0,0,0,1,0},1);
     g.battle.cursor=4;g.battle.escape_attempts=2;
-    update(&g,(Input){0,0,1,0},2);
+    update(&g,(Input){0,0,1,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
     assert(g.partner.hp==g.partner.max_hp && g.encounter.safe_steps==4);
-    battle_begin(&g.battle,&g.partner,"ECHOCRAG",7,99);g.in_battle=1;
+    battle_begin(&g.battle,&g.partner,SPECIES_ECHOCRAG,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
-    update(&g,(Input){0,0,1,0},3);
+    update(&g,(Input){0,0,1,0,0},3);
     assert(g.battle.result==BATTLE_LOSS);
-    update(&g,(Input){0,0,1,0},2);
+    update(&g,(Input){0,0,1,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
     assert(g.partner.hp==g.partner.max_hp);
+    /* Real game integration: victory -> learning choice -> persistent partner. */
+    creature_create(&g.partner,SPECIES_CINDLET,5);
+    g.partner.experience=creature_xp_for_level(6)-1;
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);g.in_battle=1;
+    g.battle.enemy.hp=1;g.battle.ally.speed=999;
+    update(&g,(Input){0,0,1,0,0},4);
+    assert(g.battle.ally.level==6);
+    update(&g,(Input){0,0,1,0,0},2);
+    assert(g.battle.phase==BATTLE_LEARN);
+    render(&g,"previews/learn-move.ppm");
+    g.battle.learn_cursor=1;update(&g,(Input){0,0,1,0,0},1);
+    for(int i=0;i<20 && g.in_battle;++i) update(&g,(Input){0,0,1,0,0},1);
+    assert(!g.in_battle && g.partner.level==6 && g.partner.moves[1]==MOVE_HEAT);
+    int saved_xp=g.partner.experience;
+    update(&g,(Input){0},5);assert(g.partner.experience==saved_xp);
+
+    creature_create(&g.partner,SPECIES_CINDLET,7);
+    g.partner.experience=creature_xp_for_level(8)-1;
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);g.in_battle=1;
+    g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
+    update(&g,(Input){0,0,1,0,0},6);
+    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EVOLUTION"));
+    render(&g,"previews/evolution.ppm");
+    for(int i=0;i<25 && g.in_battle;++i) {
+        if(g.battle.phase==BATTLE_LEARN) update(&g,(Input){0,0,0,1,0},1);
+        else update(&g,(Input){0,0,1,0,0},1);
+    }
+    assert(!g.in_battle && g.partner.species==SPECIES_EMBERLYN);
+    saved_xp=g.partner.experience;
+    g.player.tile_x=g.player.target_x=5;g.player.tile_y=g.player.target_y=10;
+    g.player.x=160;g.player.y=320;g.player.moving=0;
+    update(&g,(Input){0,-1,0,0,0},10);
+    assert(g.map_id==MAP_LODGE && g.partner.species==SPECIES_EMBERLYN && g.partner.experience==saved_xp);
+    update(&g,(Input){0,0,0,0,1},1);
+    assert(g.dialogue.active);fits(g.dialogue.pages[0]);fits(g.dialogue.pages[1]);
+    render(&g,"previews/partner.ppm");
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);
+    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EMBERLYN IS READY"));
     for(int id=0;id<MAP_COUNT;++id) {
         place(&g,id,map_get(id)->spawn_x,map_get(id)->spawn_y);
         render(&g,0);
     }
-    puts("PASS: six portals, NPC collision/patrol, dialogue, encounters, text bounds, drawing budget");
+    puts("PASS: world systems, battle return, learning/evolution persistence, partner summary, drawing budget");
     return 0;
 }
 ````
@@ -2144,7 +2628,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves'):
+for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner'):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'
@@ -2171,10 +2655,13 @@ previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
     src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
-    src/attacks.c src/battle.c src/battle_draw.c -o previews/world-test
+    src/attacks.c src/battle.c src/battle_draw.c src/creature.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/battle_test.c src/battle.c src/attacks.c -o previews/battle-test
+    tests/battle_test.c src/battle.c src/attacks.c src/creature.c -o previews/battle-test
 previews/battle-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/creature_test.c src/creature.c src/battle.c src/attacks.c -o previews/creature-test
+previews/creature-test
 python3 tests/preview.py
 ````

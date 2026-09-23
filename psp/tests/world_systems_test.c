@@ -95,35 +95,35 @@ int main(void)
     assert(portals==6);
     Game g;
     place(&g,MAP_CLEARING,5,10);
-    update(&g,(Input){0,-1,0,0},10);
+    update(&g,(Input){0,-1,0,0,0},10);
     assert(g.map_id==MAP_LODGE);
-    update(&g,(Input){0,1,0,0},10);
+    update(&g,(Input){0,1,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
     place(&g,MAP_CLEARING,37,11);
-    update(&g,(Input){1,0,0,0},10);
+    update(&g,(Input){1,0,0,0,0},10);
     assert(g.map_id==MAP_FOREST);
-    update(&g,(Input){-1,0,0,0},10);
+    update(&g,(Input){-1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING);
     place(&g,MAP_FOREST,28,6);
-    update(&g,(Input){0,-1,0,0},10);
+    update(&g,(Input){0,-1,0,0,0},10);
     assert(g.map_id==MAP_CAVE);
-    update(&g,(Input){0,1,0,0},10);
+    update(&g,(Input){0,1,0,0,0},10);
     assert(g.map_id==MAP_FOREST);
 
     place(&g,MAP_CLEARING,7,11);
-    update(&g,(Input){0,-1,0,0},20);
+    update(&g,(Input){0,-1,0,0,0},20);
     assert(g.player.tile_y==11); /* NPC is solid. */
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"MIRA"));
     float npc_x=g.npcs.people[1].actor.x;
-    update(&g,(Input){1,0,0,0},100);
+    update(&g,(Input){1,0,0,0,0},100);
     assert(g.player.tile_x==7 && g.npcs.people[1].actor.x==npc_x);
     render(&g,"previews/dialogue.ppm");
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.dialogue.page==1);
-    update(&g,(Input){0,0,0,1},1);
+    update(&g,(Input){0,0,0,1,0},1);
     assert(!g.dialogue.active);
-    update(&g,(Input){0,0,0,0},100);
+    update(&g,(Input){0,0,0,0,0},100);
     assert(g.npcs.people[1].actor.x!=npc_x);
     for(int i=0;i<1000;++i) {
         update(&g,(Input){0},1);
@@ -151,36 +151,74 @@ int main(void)
     }
     place(&g,MAP_FOREST,8,12);
     for(int i=0;i<2000 && !g.in_battle;++i)
-        update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0},1);
+        update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0,0},1);
     assert(g.in_battle);
     fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
     float before_x=g.player.x,before_y=g.player.y;
-    update(&g,(Input){1,0,0,0},40);
+    update(&g,(Input){1,0,0,0,0},40);
     assert(g.player.x==before_x && g.player.y==before_y);
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     assert(g.battle.phase==BATTLE_MENU);
     render(&g,"previews/battle-menu.ppm");
-    update(&g,(Input){0,0,1,0},1);
+    update(&g,(Input){0,0,1,0,0},1);
     render(&g,"previews/battle-moves.ppm");
-    update(&g,(Input){0,0,0,1},1);
+    update(&g,(Input){0,0,0,1,0},1);
     g.battle.cursor=4;g.battle.escape_attempts=2;
-    update(&g,(Input){0,0,1,0},2);
+    update(&g,(Input){0,0,1,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
     assert(g.partner.hp==g.partner.max_hp && g.encounter.safe_steps==4);
-    battle_begin(&g.battle,&g.partner,"ECHOCRAG",7,99);g.in_battle=1;
+    battle_begin(&g.battle,&g.partner,SPECIES_ECHOCRAG,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
-    update(&g,(Input){0,0,1,0},3);
+    update(&g,(Input){0,0,1,0,0},3);
     assert(g.battle.result==BATTLE_LOSS);
-    update(&g,(Input){0,0,1,0},2);
+    update(&g,(Input){0,0,1,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
     assert(g.partner.hp==g.partner.max_hp);
+    /* Real game integration: victory -> learning choice -> persistent partner. */
+    creature_create(&g.partner,SPECIES_CINDLET,5);
+    g.partner.experience=creature_xp_for_level(6)-1;
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);g.in_battle=1;
+    g.battle.enemy.hp=1;g.battle.ally.speed=999;
+    update(&g,(Input){0,0,1,0,0},4);
+    assert(g.battle.ally.level==6);
+    update(&g,(Input){0,0,1,0,0},2);
+    assert(g.battle.phase==BATTLE_LEARN);
+    render(&g,"previews/learn-move.ppm");
+    g.battle.learn_cursor=1;update(&g,(Input){0,0,1,0,0},1);
+    for(int i=0;i<20 && g.in_battle;++i) update(&g,(Input){0,0,1,0,0},1);
+    assert(!g.in_battle && g.partner.level==6 && g.partner.moves[1]==MOVE_HEAT);
+    int saved_xp=g.partner.experience;
+    update(&g,(Input){0},5);assert(g.partner.experience==saved_xp);
+
+    creature_create(&g.partner,SPECIES_CINDLET,7);
+    g.partner.experience=creature_xp_for_level(8)-1;
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);g.in_battle=1;
+    g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
+    update(&g,(Input){0,0,1,0,0},6);
+    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EVOLUTION"));
+    render(&g,"previews/evolution.ppm");
+    for(int i=0;i<25 && g.in_battle;++i) {
+        if(g.battle.phase==BATTLE_LEARN) update(&g,(Input){0,0,0,1,0},1);
+        else update(&g,(Input){0,0,1,0,0},1);
+    }
+    assert(!g.in_battle && g.partner.species==SPECIES_EMBERLYN);
+    saved_xp=g.partner.experience;
+    g.player.tile_x=g.player.target_x=5;g.player.tile_y=g.player.target_y=10;
+    g.player.x=160;g.player.y=320;g.player.moving=0;
+    update(&g,(Input){0,-1,0,0,0},10);
+    assert(g.map_id==MAP_LODGE && g.partner.species==SPECIES_EMBERLYN && g.partner.experience==saved_xp);
+    update(&g,(Input){0,0,0,0,1},1);
+    assert(g.dialogue.active);fits(g.dialogue.pages[0]);fits(g.dialogue.pages[1]);
+    render(&g,"previews/partner.ppm");
+    battle_begin(&g.battle,&g.partner,SPECIES_MOSSLET,3,42);
+    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EMBERLYN IS READY"));
     for(int id=0;id<MAP_COUNT;++id) {
         place(&g,id,map_get(id)->spawn_x,map_get(id)->spawn_y);
         render(&g,0);
     }
-    puts("PASS: six portals, NPC collision/patrol, dialogue, encounters, text bounds, drawing budget");
+    puts("PASS: world systems, battle return, learning/evolution persistence, partner summary, drawing budget");
     return 0;
 }
