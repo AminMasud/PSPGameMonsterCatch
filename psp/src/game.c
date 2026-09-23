@@ -22,10 +22,23 @@ void game_init(Game *g)
 {
     *g = (Game){0};
     encounter_init(&g->encounter,0x19236u);
+    battler_starter(&g->partner);
     enter_map(g,MAP_CLEARING,5,11);
 }
 void game_update(Game *g, const Input *input, float seconds)
 {
+    if(g->in_battle) {
+        battle_update(&g->battle,input);
+        if(g->battle.phase==BATTLE_DONE) {
+            g->in_battle=0;
+            /* Phase 4 testing rule: every battle restores HP and move uses.
+               Persistent attrition and healing locations arrive with RPG systems. */
+            battler_restore(&g->partner);
+            if(g->battle.result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
+            g->encounter.safe_steps=4;
+        }
+        return;
+    }
     if (g->dialogue.active) {
         if (input->cancel) g->dialogue.active = 0;
         else if (input->confirm) dialogue_advance(&g->dialogue);
@@ -52,16 +65,16 @@ void game_update(Game *g, const Input *input, float seconds)
         EncounterResult result;
         int area = map_encounter_area(g->map_id,g->player.tile_x,g->player.tile_y);
         if (encounter_step(&g->encounter,area,&result)) {
-            char message[160];
-            snprintf(message,sizeof(message),"%s - LEVEL %d\nA WILD VEYLING CROSSES YOUR PATH.\nIT SLIPS AWAY INTO THE SHADOWS.",result.name,result.level);
-            dialogue_open(&g->dialogue,"A RUSTLE NEARBY",message,0);
+            battle_begin(&g->battle,&g->partner,result.name,result.level,g->encounter.random);
+            g->in_battle=1;
         }
     }
-    if (!g->dialogue.active) npc_update(&g->npcs,g->map,&g->player,seconds);
+    if (!g->dialogue.active && !g->in_battle) npc_update(&g->npcs,g->map,&g->player,seconds);
     camera_update(&g->camera,&g->player,g->map);
 }
 void game_draw(const Game *g)
 {
+    if(g->in_battle) { battle_draw(&g->battle); return; }
     world_draw(g->map,&g->player,&g->camera);
     for (int i=0;i<g->npcs.count;++i)
         world_actor_draw(&g->npcs.people[i].actor,&g->camera,1);

@@ -1,4 +1,4 @@
-# Complete Phase 3 source contents
+# Complete Phase 4 source contents
 
 ## .gitattributes
 
@@ -22,7 +22,7 @@ previews/
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -35,7 +35,7 @@ LIBS = -lpspgu -lpspge -lpspdisplay -lpspctrl
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 3
+PSP_EBOOT_TITLE = Emberwake - Phase 4
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -53,22 +53,22 @@ PARAM.SFO: Makefile
 ## README.md
 
 ````text
-# Emberwake — Phase 3
+# Emberwake — Phase 4
 
 Original PSP homebrew RPG prototype in C / PSPSDK. The creatures are called
-**Veylings**. Phase 3 extends the existing Phase 2 project with connected maps,
-NPC interaction, dialogue, and encounter zones. Battles begin in Phase 4.
+**Veylings**. Phase 4 adds turn-based battles to the existing connected world. Maps, NPCs,
+dialogue, and exploration remain available.
 
 ## Play this build
 
-The verified build is **EBOOT-PHASE3.PBP**. The older EBOOT.PBP was locked by another
-process during packaging and remains the Phase 2 binary. Use the new file.
+The verified build is **EBOOT-PHASE4.PBP**. Use this explicitly named artifact;
+older EBOOT files are retained and are not the Phase 4 build.
 
-Copy EBOOT-PHASE3.PBP to the Memory Stick, naming the destination:
+Copy EBOOT-PHASE4.PBP to the Memory Stick, naming the destination:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
-Launch **Emberwake - Phase 3** from Game > Memory Stick.
+Launch **Emberwake - Phase 4** from Game > Memory Stick.
 
 - D-pad: smooth four-direction tile movement; horizontal wins when two directions
   are held. Release finishes the current tile.
@@ -96,8 +96,9 @@ Starting at the clearing:
 4. Find Mira northeast of spawn and Orin patrolling just south of the path.
    Verify you cannot walk through them and Orin cannot walk through you.
 5. Follow the horizontal sandy path east to the marked exit to the woods.
-6. Walk through dark tall grass until a Veyling notice appears. X or Circle
-   dismisses it. Standing still never triggers an encounter.
+6. Walk through dark tall grass until a battle begins. Press X through the
+   introduction, select FIGHT, then select an attack. Standing still never
+   triggers an encounter.
 7. Follow the right-hand path north into the gold-lit cave entrance.
 8. Walk on the rough cave floor for its different encounter table.
 9. Return through both exits; verify no immediate teleport loop.
@@ -118,9 +119,60 @@ The grace counter counts completed steps on any terrain.
 | Woods tall grass | Mosslet, level 2-4 | Twiglint, level 3-5 | Glowmoth, level 4-6 |
 | Cave rough floor | Flintling, level 3-5 | Duskwisp, level 4-6 | Echocrag, level 5-7 |
 
-The current result is a short name/level notice followed by the creature departing.
-These are encounter-table placeholders, not the full species database. No
-combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
+Encounters now enter the battle screen. Encounter entries and battle stats remain
+small prototype definitions; the full species database, experience, and evolution
+are Phase 5. Capture, team switching, inventory, and saves remain future work.
+
+## Battle prototype
+
+Your partner is **Cindlet**, a level 5 Ember Veyling with four attacks. Wild
+opponents come from the existing woods/cave tables. Battles display both
+creatures, names, levels, elements, numeric HP, and HP bars.
+
+Controls:
+- Tap D-pad up/down to select. Left/right also moves one menu entry.
+- X confirms an option or advances the current battle message.
+- Circle returns from attack selection to the main battle menu.
+- Holding X does not skip messages. Circle cannot dismiss combat results.
+
+FIGHT opens the four attacks with remaining uses, power, accuracy, and element.
+Faster creatures act first; equal speed uses a random tie-break. Each attack
+checks accuracy and consumes one use even if it misses. A defeated creature
+cannot retaliate. Each action has a separate message, followed by the outcome.
+
+Damage is:
+
+    base = ((2 * level / 5 + 2) * power * attack / defense) / 20 + 2
+    damage = max(1, base * elemental_multiplier * random(90..100) / 100)
+
+Integer arithmetic is used, with HP clamped at zero. Ember beats Grove, Grove
+beats Stone, Stone beats Wind, and Wind beats Ember (2x damage). Reverse matchups
+and same-element attacks deal half damage. Plain attacks are neutral.
+
+NUDGE is accurate and neutral; CINDER ARC is strong against Grove; BOLD LUNGE is
+powerful but less accurate; WHIRL CUT is a Wind option. Selecting an exhausted
+attack does not spend a turn. If all four moves are exhausted, FIGHT offers the
+weak, unlimited PRESS ON attack so combat cannot become stuck.
+
+RUN has a 70% escape chance and is guaranteed on the third attempt. A failed
+escape allows exactly one enemy action. CAPTURE, CREATURES, and ITEMS show clear
+not-yet-available messages and do not spend a turn.
+
+**Temporary Phase 4 rule:** your partner's HP and attack uses refill after every
+battle, including escape. Victory or escape returns to the same exploration
+position. Defeat returns you to Hearth Clearing at the original starting tile.
+All outcomes grant four safe steps before another encounter can roll. This rule
+makes battle testing repeatable before later inventory/healing systems.
+There are no experience awards, level increases, or captures in Phase 4.
+
+Additional PSP checks:
+1. Enter woods tall grass and try all four attacks across multiple battles.
+2. Check that uses decrease, HP bars change, and each action requires X.
+3. Cancel attack selection with Circle without spending a turn.
+4. Try RUN; a failure should produce only one enemy response.
+5. Win a battle and confirm you return to the same place with a fresh partner.
+6. Lose against a stronger cave opponent and confirm return to the clearing.
+7. Test HOME > Cancel/Quit during both menus and battle messages.
 
 ## Architecture and exact source tree
 
@@ -136,6 +188,8 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         lodge.inc
         cave.inc
       include/
+        attacks.h
+        battle.h
         camera.h
         dialogue.h
         encounter.h
@@ -149,6 +203,9 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         world_draw.h
       src/
         main.c
+        attacks.c
+        battle.c
+        battle_draw.c
         camera.c
         dialogue.c
         encounter.c
@@ -162,6 +219,7 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         world_draw.c
       tests/
         host/pspgu.h
+        battle_test.c
         overworld_test.c
         world_systems_test.c
         preview.py
@@ -172,7 +230,7 @@ except itself. Generated binaries and previews are ignored by Git.
 
 main.c initializes PSP services, seeds encounter randomness, and runs the existing
 vblank-paced loop. game.c coordinates map entry, step events, NPC interaction,
-and encounter notices. Player movement accepts an optional occupancy callback;
+and battle entry/return. Player movement accepts an optional occupancy callback;
 NPC collision reserves both current and destination tiles to avoid overlap.
 npc.c owns dialogue data and patrol behavior. dialogue.c stores bounded text
 pages. encounter.c owns random selection and grace steps. map.c owns map lookup,
@@ -207,6 +265,10 @@ not by the visual tile alone. Each portal declares an explicit walkable arrival
 tile away from the return trigger. Unknown codes/out-of-bounds locations block
 movement. All maps and graphics are embedded in the EBOOT.
 
+attacks.c defines attack power, accuracy, type, and uses. battle.c owns battle
+stats, turn sequencing, results, escape logic, and damage. battle_draw.c owns the
+battle screen and original placeholder creature graphics.
+
 To add a map, add its rows, ID, dimensions, name, portal connections, and optional
 NPC definitions / encounter terrain. Keep coordinates within the declared map
 and extend tests for new dimensions if they exceed the current test grid.
@@ -215,13 +277,13 @@ and extend tests for new dimensions if they exceed the current test grid.
 
 This machine uses the existing Ubuntu/WSL PSPDEV environment.
 
-From PowerShell, build the Phase 3 artifact without overwriting the locked file:
+From PowerShell, build the Phase 4 artifact:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE3.PBP EXTRA_TARGETS=EBOOT-PHASE3.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP'
 
 In a configured Linux/WSL shell, from the psp directory:
 
-    make PSP_EBOOT=EBOOT-PHASE3.PBP EXTRA_TARGETS=EBOOT-PHASE3.PBP
+    make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP
 
 For the conventional EBOOT.PBP output when that file is not open elsewhere:
 
@@ -236,15 +298,19 @@ From the psp directory in Linux/WSL:
 
     sh tests/run.sh
 
-Both test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
+All three test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
 Checks include Phase 2 regression coverage plus portal reachability and all six
 transitions, valid/non-trigger arrival tiles, NPC collisions in both directions,
 patrol limits, dialogue pause/advance/cancel, no stationary encounters, weighted
 table level ranges, encounter grace steps, text bounds, and drawing budget.
+Battle checks additionally cover turn order, accuracy, elemental damage, spent
+moves, fallback attacks, win/loss, no retaliation after knockout, menu controls,
+escape success/failure, battle freezing the world, and defeat returning home.
 The host test renders the real draw functions into software pixel buffers;
 tests/preview.py converts those buffers to PNG without third-party dependencies.
 
-Software previews are saved in previews/dialogue.png and previews/encounter.png.
+Software previews are saved in previews/dialogue.png, previews/encounter.png,
+previews/battle-menu.png, and previews/battle-moves.png.
 They are not emulator or hardware screenshots.
 
 Only visible terrain is drawn (at most 160 tiles). The GU list reserves 1 MiB for
@@ -253,10 +319,10 @@ tile, actor, and bitmap text commands. The tested scenes stay below a conservati
 The main loop retains its 50 ms elapsed-time cap and HOME callback service.
 
 Host regression/integration tests passed. The PSP compiler and linker passed
-with -Wall -Wextra -Werror, and the Phase 3 PBP was packaged successfully.
+with -Wall -Wextra -Werror, and the Phase 4 PBP was packaged successfully.
 Real PSP visuals, performance, and input/exit behavior still require your test.
 
-Stop here before Phase 4.
+Stop here before Phase 5.
 
 ## Official references
 
@@ -352,6 +418,58 @@ Stop here before Phase 4.
 "WWWWWWWWWWWWWWW",
 ````
 
+## include/attacks.h
+
+````text
+#ifndef EMBERWAKE_ATTACKS_H
+#define EMBERWAKE_ATTACKS_H
+typedef enum { ELEMENT_PLAIN, ELEMENT_GROVE, ELEMENT_EMBER, ELEMENT_STONE, ELEMENT_WIND } Element;
+typedef enum { MOVE_NUDGE, MOVE_CINDER, MOVE_LEAF, MOVE_PEBBLE, MOVE_GUST, MOVE_LUNGE, MOVE_COUNT } MoveId;
+typedef struct { const char *name; int power, accuracy; Element element; int uses; } Attack;
+const Attack *attack_get(int id);
+const char *element_name(Element element);
+int attack_effectiveness(Element attack, Element defender); /* 1 half, 2 normal, 4 double */
+#endif
+````
+
+## include/battle.h
+
+````text
+#ifndef EMBERWAKE_BATTLE_H
+#define EMBERWAKE_BATTLE_H
+#include <stdint.h>
+#include "input.h"
+#include "attacks.h"
+#define BATTLE_MOVES 4
+typedef struct {
+    const char *name;
+    Element element;
+    int level, max_hp, hp, attack, defense, speed;
+    int moves[BATTLE_MOVES], uses[BATTLE_MOVES];
+} Battler;
+typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_DONE } BattlePhase;
+typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED } BattleResult;
+typedef enum { AFTER_MENU, AFTER_TURN, AFTER_DONE } BattleAfter;
+typedef struct {
+    Battler ally, enemy;
+    BattlePhase phase;
+    BattleResult result;
+    BattleAfter after;
+    uint32_t random;
+    int cursor, move_cursor, previous_direction;
+    int choices[2], order[2], turn_index;
+    int escape_attempts;
+    char message[160];
+} Battle;
+void battler_starter(Battler *b);
+void battler_restore(Battler *b);
+void battle_begin(Battle *b,const Battler *ally,const char *enemy_name,int level,uint32_t seed);
+void battle_update(Battle *b,const Input *input);
+int battle_damage(const Battler *attacker,const Battler *defender,const Attack *attack,int variation);
+void battle_draw(const Battle *b);
+#endif
+````
+
 ## include/camera.h
 
 ````text
@@ -401,6 +519,7 @@ int encounter_step(Encounter *e, int area, EncounterResult *result);
 #include "npc.h"
 #include "dialogue.h"
 #include "encounter.h"
+#include "battle.h"
 typedef struct {
     const Map *map;
     Player player;
@@ -409,6 +528,9 @@ typedef struct {
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;
+    Battler partner;
+    Battle battle;
+    int in_battle;
 } Game;
 void game_init(Game *game);
 void game_update(Game *game, const Input *input, float seconds);
@@ -539,6 +661,316 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 #endif
 ````
 
+## src/attacks.c
+
+````text
+#include "attacks.h"
+static const Attack attacks[MOVE_COUNT] = {
+    {"NUDGE",28,100,ELEMENT_PLAIN,24},
+    {"CINDER ARC",40,95,ELEMENT_EMBER,12},
+    {"LEAF LASH",40,95,ELEMENT_GROVE,12},
+    {"PEBBLE BURST",42,90,ELEMENT_STONE,12},
+    {"WHIRL CUT",38,100,ELEMENT_WIND,12},
+    {"BOLD LUNGE",55,75,ELEMENT_PLAIN,8}
+};
+const Attack *attack_get(int id)
+{
+    return &attacks[id>=0 && id<MOVE_COUNT ? id : MOVE_NUDGE];
+}
+const char *element_name(Element element)
+{
+    const char *const names[]={"PLAIN","GROVE","EMBER","STONE","WIND"};
+    return names[element>=ELEMENT_PLAIN && element<=ELEMENT_WIND ? element : ELEMENT_PLAIN];
+}
+int attack_effectiveness(Element a,Element d)
+{
+    if(a==ELEMENT_PLAIN || d==ELEMENT_PLAIN) return 2;
+    if((a==ELEMENT_EMBER && d==ELEMENT_GROVE) ||
+       (a==ELEMENT_GROVE && d==ELEMENT_STONE) ||
+       (a==ELEMENT_STONE && d==ELEMENT_WIND) ||
+       (a==ELEMENT_WIND && d==ELEMENT_EMBER)) return 4;
+    if(a==d || (d==ELEMENT_EMBER && a==ELEMENT_GROVE) ||
+       (d==ELEMENT_GROVE && a==ELEMENT_STONE) ||
+       (d==ELEMENT_STONE && a==ELEMENT_WIND) ||
+       (d==ELEMENT_WIND && a==ELEMENT_EMBER)) return 1;
+    return 2;
+}
+````
+
+## src/battle_draw.c
+
+````text
+#include <stdio.h>
+#include <pspgu.h>
+#include "battle.h"
+#include "graphics.h"
+#include "text.h"
+#define C(r,g,b) GU_RGBA(r,g,b,255)
+
+static void creature_draw(int x,int y,Element element,int back)
+{
+    unsigned int body=element==ELEMENT_EMBER?C(224,123,67):
+        element==ELEMENT_GROVE?C(114,167,92):element==ELEMENT_STONE?C(141,149,174):C(155,140,208);
+    graphics_rectangle(x-6,y+48,78,8,C(33,45,53));
+    graphics_rectangle(x+4,y+18,52,32,body);
+    graphics_rectangle(x+12,y+8,36,30,body);
+    graphics_rectangle(x+8,y+45,12,10,body);
+    graphics_rectangle(x+40,y+45,12,10,body);
+    if(element==ELEMENT_EMBER) {
+        graphics_rectangle(x+16,y,8,12,C(255,188,91));
+        graphics_rectangle(x+33,y-5,8,17,C(255,188,91));
+        graphics_rectangle(x+55,y+28,12,8,C(236,162,76));
+    } else if(element==ELEMENT_GROVE) {
+        graphics_rectangle(x+2,y+1,23,8,C(77,121,74));
+        graphics_rectangle(x+34,y-4,22,8,C(168,194,96));
+    } else if(element==ELEMENT_STONE) {
+        graphics_rectangle(x+7,y+4,15,16,C(190,192,197));
+        graphics_rectangle(x+39,y+3,17,19,C(108,115,145));
+    } else {
+        graphics_rectangle(x-14,y+15,24,12,C(185,169,226));
+        graphics_rectangle(x+52,y+15,24,12,C(185,169,226));
+    }
+    if(!back) {
+        graphics_rectangle(x+17,y+23,6,7,C(23,31,41));
+        graphics_rectangle(x+38,y+23,6,7,C(23,31,41));
+        graphics_rectangle(x+27,y+35,8,3,C(58,54,57));
+    } else {
+        graphics_rectangle(x+21,y+20,23,5,C(255,179,94));
+    }
+}
+static void status(const Battler *unit,int x,int y,int width)
+{
+    char line[64];
+    graphics_rectangle(x,y,width,58,C(25,35,45));
+    snprintf(line,sizeof(line),"%s  LV %d",unit->name,unit->level);
+    text_draw(x+8,y+7,line,C(241,232,207),1);
+    text_draw(x+8,y+20,element_name(unit->element),C(174,192,188),1);
+    int bar_width=width-16;
+    graphics_rectangle(x+8,y+32,bar_width,6,C(66,72,78));
+    int filled=bar_width*unit->hp/unit->max_hp;
+    if(filled>0) graphics_rectangle(x+8,y+32,filled,6,
+        unit->hp*4<=unit->max_hp?C(228,121,99):C(125,201,154));
+    snprintf(line,sizeof(line),"HP %d / %d",unit->hp,unit->max_hp);
+    text_draw(x+8,y+44,line,C(224,227,218),1);
+}
+void battle_draw(const Battle *b)
+{
+    graphics_rectangle(0,0,480,272,C(48,65,74));
+    graphics_rectangle(0,88,480,88,C(65,81,77));
+    graphics_rectangle(0,0,480,15,C(19,28,36));
+    text_draw(10,4,"WILD VEYLING ENCOUNTER",C(241,204,145),1);
+    creature_draw(325,38,b->enemy.element,0);
+    creature_draw(65,104,b->ally.element,1);
+    status(&b->enemy,18,24,202);
+    status(&b->ally,253,109,210);
+    graphics_rectangle(6,176,468,90,C(177,144,94));
+    graphics_rectangle(8,178,464,86,C(21,30,38));
+    if(b->phase==BATTLE_MESSAGE || b->phase==BATTLE_DONE) {
+        text_draw(18,188,b->message,C(236,236,218),2);
+        text_draw(18,251,"X CONTINUE",C(167,194,180),1);
+    } else if(b->phase==BATTLE_MENU) {
+        text_draw(18,191,"CHOOSE YOUR NEXT MOVE.",C(236,236,218),1);
+        text_draw(18,210,"D-PAD SELECT   X CONFIRM",C(167,194,180),1);
+        text_draw(18,230,"CINDLET - EMBER PARTNER",C(233,173,115),1);
+        const char *const options[]={"FIGHT","CAPTURE","CREATURES","ITEMS","RUN"};
+        for(int i=0;i<5;++i) {
+            if(i==b->cursor) graphics_rectangle(302,182+i*15,158,14,C(79,92,86));
+            text_draw(310,186+i*15,options[i],i==b->cursor?C(255,213,147):C(187,193,193),1);
+        }
+    } else {
+        int available=0;
+        for(int i=0;i<4;++i) available+=b->ally.uses[i];
+        if(!available) {
+            text_draw(18,190,"ALL ATTACKS ARE SPENT.",C(236,236,218),1);
+            text_draw(18,211,"X PRESS ON - WEAK BUT UNLIMITED",C(236,236,218),1);
+        } else {
+            for(int i=0;i<4;++i) {
+                char line[64];
+                const Attack *move=attack_get(b->ally.moves[i]);
+                if(i==b->move_cursor) graphics_rectangle(14,183+i*15,261,14,C(79,92,86));
+                snprintf(line,sizeof(line),"%s  %d/%d",move->name,b->ally.uses[i],move->uses);
+                text_draw(20,187+i*15,line,b->ally.uses[i]?C(239,227,200):C(155,155,155),1);
+            }
+            const Attack *selected=attack_get(b->ally.moves[b->move_cursor]);
+            char line[40];
+            text_draw(295,190,element_name(selected->element),C(245,185,112),1);
+            snprintf(line,sizeof(line),"POWER %d",selected->power);
+            text_draw(295,208,line,C(220,225,215),1);
+            snprintf(line,sizeof(line),"ACCURACY %d/100",selected->accuracy);
+            text_draw(295,226,line,C(220,225,215),1);
+        }
+        text_draw(18,251,"X ATTACK   O BACK",C(167,194,180),1);
+    }
+}
+````
+
+## src/battle.c
+
+````text
+#include <stdio.h>
+#include <string.h>
+#include "battle.h"
+
+static uint32_t random_next(Battle *b)
+{
+    uint32_t x=b->random;
+    x^=x<<13; x^=x>>17; x^=x<<5;
+    return b->random=x;
+}
+void battler_restore(Battler *b)
+{
+    b->hp=b->max_hp;
+    for(int i=0;i<BATTLE_MOVES;++i) b->uses[i]=attack_get(b->moves[i])->uses;
+}
+static void create(Battler *b,const char *name,Element type,int level)
+{
+    *b=(Battler){0};
+    b->name=name; b->element=type;
+    b->level=level<1?1:level>100?100:level;
+    b->max_hp=24+b->level*5;
+    b->attack=10+b->level*3; b->defense=10+b->level*2;
+    b->speed=8+b->level*2;
+    b->moves[0]=MOVE_NUDGE;
+    b->moves[1]=type==ELEMENT_EMBER?MOVE_CINDER:type==ELEMENT_GROVE?MOVE_LEAF:
+                type==ELEMENT_STONE?MOVE_PEBBLE:MOVE_GUST;
+    b->moves[2]=MOVE_LUNGE; b->moves[3]=MOVE_NUDGE;
+    battler_restore(b);
+}
+void battler_starter(Battler *b)
+{
+    create(b,"CINDLET",ELEMENT_EMBER,5);
+    b->moves[3]=MOVE_GUST; battler_restore(b);
+}
+void battle_begin(Battle *b,const Battler *ally,const char *name,int level,uint32_t seed)
+{
+    *b=(Battle){0};
+    b->ally=*ally; b->random=seed?seed:0x3291u;
+    Element type=ELEMENT_GROVE;
+    if(!strcmp(name,"FLINTLING") || !strcmp(name,"ECHOCRAG")) type=ELEMENT_STONE;
+    if(!strcmp(name,"GLOWMOTH") || !strcmp(name,"DUSKWISP")) type=ELEMENT_WIND;
+    create(&b->enemy,name,type,level);
+    /* Three distinct wild moves, with a fourth reserve basic attack slot. */
+    b->phase=BATTLE_MESSAGE; b->after=AFTER_MENU;
+    snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\nCINDLET IS READY.\nX CONTINUE",name);
+}
+int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
+{
+    int defense=d->defense>0?d->defense:1;
+    if(variation<90) variation=90;
+    if(variation>100) variation=100;
+    int base=((2*a->level/5+2)*move->power*a->attack/defense)/20+2;
+    int damage=base*attack_effectiveness(move->element,d->element)*variation/200;
+    return damage<1?1:damage;
+}
+static void message(Battle *b,const char *text,BattleAfter after)
+{
+    snprintf(b->message,sizeof(b->message),"%s",text);
+    b->phase=BATTLE_MESSAGE; b->after=after;
+}
+static int choose_enemy(Battle *b)
+{
+    int slots[4],count=0;
+    for(int i=0;i<4;++i) if(b->enemy.uses[i]>0) slots[count++]=i;
+    return count?slots[random_next(b)%(unsigned int)count]:-1;
+}
+static void next_action(Battle *b)
+{
+    if(b->turn_index>=2) { b->phase=BATTLE_MENU; return; }
+    int side=b->order[b->turn_index++];
+    Battler *a=side==0?&b->ally:&b->enemy;
+    Battler *d=side==0?&b->enemy:&b->ally;
+    int slot=b->choices[side];
+    /* PRESS ON is an unlimited weak fallback, only when every move is spent. */
+    const Attack fallback={"PRESS ON",15,100,ELEMENT_PLAIN,0};
+    const Attack *move=slot<0?&fallback:attack_get(a->moves[slot]);
+    if(slot>=0) --a->uses[slot];
+    int hit=(int)(random_next(b)%100)<move->accuracy;
+    if(!hit) {
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\nTHE ATTACK MISSED.",a->name,move->name);
+    } else {
+        int damage=battle_damage(a,d,move,90+(int)(random_next(b)%11));
+        if(damage>d->hp) damage=d->hp;
+        d->hp-=damage;
+        int effect=attack_effectiveness(move->element,d->element);
+        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",a->name,move->name,damage,
+                 effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
+    }
+    b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;
+    if(d->hp==0) {
+        b->result=side==0?BATTLE_WIN:BATTLE_LOSS;
+        /* Damage is shown first; the next confirmation shows the outcome. */
+    }
+}
+static void begin_turn(Battle *b,int slot)
+{
+    b->choices[0]=slot; b->choices[1]=choose_enemy(b);
+    int enemy_first=b->enemy.speed>b->ally.speed;
+    if(b->enemy.speed==b->ally.speed) enemy_first=(int)(random_next(b)%2);
+    b->order[0]=enemy_first; b->order[1]=1-enemy_first; b->turn_index=0;
+    next_action(b);
+}
+static int navigation(Battle *b,const Input *input)
+{
+    int direction=input->vertical?input->vertical:input->horizontal;
+    int edge=direction && direction!=b->previous_direction;
+    b->previous_direction=direction;
+    return edge?direction:0;
+}
+void battle_update(Battle *b,const Input *input)
+{
+    int nav=navigation(b,input);
+    if(b->phase==BATTLE_DONE) return;
+    if(b->phase==BATTLE_MESSAGE) {
+        if(!input->confirm) return; /* Results cannot be accidentally canceled. */
+        if(b->after==AFTER_DONE) { b->phase=BATTLE_DONE; return; }
+        if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
+        if(b->result==BATTLE_WIN) {
+            message(b,"VICTORY.\nTHE WILD VEYLING RETREATS.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+        } else if(b->result==BATTLE_LOSS) {
+            message(b,"CINDLET NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+        } else next_action(b);
+        return;
+    }
+    if(b->phase==BATTLE_ATTACKS) {
+        if(input->cancel) { b->phase=BATTLE_MENU; return; }
+        if(nav) b->move_cursor=(b->move_cursor+nav+4)%4;
+        if(!input->confirm) return;
+        int available=0;
+        for(int i=0;i<4;++i) available+=b->ally.uses[i];
+        if(!available) { begin_turn(b,-1); return; }
+        if(b->ally.uses[b->move_cursor]<=0) {
+            message(b,"THAT ATTACK HAS NO USES LEFT.\nCHOOSE ANOTHER ATTACK.",AFTER_MENU);
+            return;
+        }
+        begin_turn(b,b->move_cursor);
+        return;
+    }
+    if(nav) b->cursor=(b->cursor+nav+5)%5;
+    if(!input->confirm) return;
+    switch(b->cursor) {
+    case 0: b->phase=BATTLE_ATTACKS; break;
+    case 1:
+        message(b,"CAPTURE IS NOT AVAILABLE YET.\nIT ARRIVES IN PHASE 6.",AFTER_MENU); break;
+    case 2:
+        message(b,"CINDLET IS YOUR ONLY PARTNER.\nTEAM SWITCHING ARRIVES IN PHASE 6.",AFTER_MENU); break;
+    case 3:
+        message(b,"YOUR ITEM BAG IS EMPTY.\nITEMS ARRIVE IN PHASE 7.",AFTER_MENU); break;
+    default:
+        ++b->escape_attempts;
+        if(b->escape_attempts>=3 || random_next(b)%100<70) {
+            b->result=BATTLE_ESCAPED;
+            message(b,"YOU GOT AWAY SAFELY.\nPARTNER RESTORED AFTER BATTLE.",AFTER_DONE);
+        } else {
+            b->choices[1]=choose_enemy(b);
+            /* Only the enemy acts after a failed escape. */
+            b->order[1]=1; b->turn_index=1;
+            message(b,"THE WAY OUT IS BLOCKED.\nTHE WILD VEYLING MOVES CLOSER.",AFTER_TURN);
+        }
+        break;
+    }
+}
+````
+
 ## src/camera.c
 
 ````text
@@ -643,10 +1075,23 @@ void game_init(Game *g)
 {
     *g = (Game){0};
     encounter_init(&g->encounter,0x19236u);
+    battler_starter(&g->partner);
     enter_map(g,MAP_CLEARING,5,11);
 }
 void game_update(Game *g, const Input *input, float seconds)
 {
+    if(g->in_battle) {
+        battle_update(&g->battle,input);
+        if(g->battle.phase==BATTLE_DONE) {
+            g->in_battle=0;
+            /* Phase 4 testing rule: every battle restores HP and move uses.
+               Persistent attrition and healing locations arrive with RPG systems. */
+            battler_restore(&g->partner);
+            if(g->battle.result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
+            g->encounter.safe_steps=4;
+        }
+        return;
+    }
     if (g->dialogue.active) {
         if (input->cancel) g->dialogue.active = 0;
         else if (input->confirm) dialogue_advance(&g->dialogue);
@@ -673,16 +1118,16 @@ void game_update(Game *g, const Input *input, float seconds)
         EncounterResult result;
         int area = map_encounter_area(g->map_id,g->player.tile_x,g->player.tile_y);
         if (encounter_step(&g->encounter,area,&result)) {
-            char message[160];
-            snprintf(message,sizeof(message),"%s - LEVEL %d\nA WILD VEYLING CROSSES YOUR PATH.\nIT SLIPS AWAY INTO THE SHADOWS.",result.name,result.level);
-            dialogue_open(&g->dialogue,"A RUSTLE NEARBY",message,0);
+            battle_begin(&g->battle,&g->partner,result.name,result.level,g->encounter.random);
+            g->in_battle=1;
         }
     }
-    if (!g->dialogue.active) npc_update(&g->npcs,g->map,&g->player,seconds);
+    if (!g->dialogue.active && !g->in_battle) npc_update(&g->npcs,g->map,&g->player,seconds);
     camera_update(&g->camera,&g->player,g->map);
 }
 void game_draw(const Game *g)
 {
+    if(g->in_battle) { battle_draw(&g->battle); return; }
     world_draw(g->map,&g->player,&g->camera);
     for (int i=0;i<g->npcs.count;++i)
         world_actor_draw(&g->npcs.people[i].actor,&g->camera,1);
@@ -1282,6 +1727,119 @@ void world_draw(const Map *map, const Player *player, const Camera *camera)
 #endif
 ````
 
+## tests/battle_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "battle.h"
+
+static void press(Battle *b)
+{
+    battle_update(b,&(Input){0,0,1,0});
+}
+static void start(Battle *b,unsigned int seed)
+{
+    Battler ally; battler_starter(&ally);
+    battle_begin(b,&ally,"MOSSLET",3,seed);
+    press(b); assert(b->phase==BATTLE_MENU);
+}
+static void choose(Battle *b,int move)
+{
+    b->cursor=0; press(b); assert(b->phase==BATTLE_ATTACKS);
+    b->move_cursor=move; press(b);
+}
+static void finish_messages(Battle *b)
+{
+    int limit=8;
+    while(b->phase==BATTLE_MESSAGE && limit-->0) press(b);
+    assert(limit>0);
+}
+int main(void)
+{
+    Battle b;
+    start(&b,12);
+    assert(b.ally.level==5 && b.ally.hp==b.ally.max_hp);
+    int hp=b.enemy.hp;
+    choose(&b,0);
+    assert(b.ally.uses[0]==23 && b.enemy.hp<hp);
+    assert(b.ally.hp==b.ally.max_hp); /* Enemy has not acted yet. */
+    press(&b);
+    assert(b.ally.hp<b.ally.max_hp);
+    press(&b); assert(b.phase==BATTLE_MENU);
+
+    start(&b,12);
+    b.enemy.hp=1;
+    choose(&b,0);
+    assert(b.result==BATTLE_WIN && b.enemy.hp==0);
+    finish_messages(&b);
+    assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
+    battle_update(&b,&(Input){0,0,1,0}); assert(b.phase==BATTLE_DONE);
+
+    start(&b,12);
+    b.ally.hp=1; b.enemy.speed=999;
+    for(int i=0;i<4;++i) b.enemy.moves[i]=MOVE_NUDGE;
+    choose(&b,0);
+    assert(b.result==BATTLE_LOSS && b.ally.hp==0 && b.ally.uses[0]==24);
+    finish_messages(&b); assert(b.phase==BATTLE_DONE);
+
+    start(&b,12);
+    b.cursor=0; press(&b);
+    battle_update(&b,&(Input){0,0,0,1});
+    assert(b.phase==BATTLE_MENU && b.enemy.hp==b.enemy.max_hp);
+    /* Menu navigation advances once per new direction, not once per frame. */
+    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0});
+    assert(b.cursor==1);
+    battle_update(&b,&(Input){0});
+    battle_update(&b,&(Input){0,1,0,0}); assert(b.cursor==2);
+    for(int i=1;i<=3;++i) {
+        b.cursor=i; press(&b); assert(b.phase==BATTLE_MESSAGE);
+        finish_messages(&b);
+        assert(b.phase==BATTLE_MENU && b.ally.hp==b.ally.max_hp);
+    }
+    b.ally.uses[0]=0; choose(&b,0);
+    assert(strstr(b.message,"NO USES") && b.enemy.hp==b.enemy.max_hp);
+    finish_messages(&b);
+    for(int i=0;i<4;++i) b.ally.uses[i]=0;
+    choose(&b,1); assert(strstr(b.message,"PRESS ON"));
+    finish_messages(&b);
+    for(int i=0;i<4;++i) assert(b.ally.uses[i]==0);
+
+    int saw_fail=0,saw_success=0,saw_miss=0;
+    for(unsigned int seed=1;seed<100;++seed) {
+        start(&b,seed); b.cursor=4; press(&b);
+        if(b.result==BATTLE_ESCAPED) {
+            saw_success=1;finish_messages(&b);assert(b.phase==BATTLE_DONE);
+        } else {
+            saw_fail=1;
+            int uses=0;for(int i=0;i<4;++i) uses+=b.enemy.uses[i];
+            finish_messages(&b);assert(b.phase==BATTLE_MENU);
+            int after=0;for(int i=0;i<4;++i) after+=b.enemy.uses[i];
+            assert(after==uses-1); /* Exactly one response to failed escape. */
+            b.escape_attempts=2;b.cursor=4;press(&b);
+            assert(b.result==BATTLE_ESCAPED);
+        }
+        start(&b,seed);choose(&b,2);
+        if(strstr(b.message,"MISSED")) {
+            saw_miss=1;assert(b.enemy.hp==b.enemy.max_hp && b.ally.uses[2]==7);
+        }
+    }
+    assert(saw_fail && saw_success && saw_miss);
+    start(&b,7);
+    int weak=battle_damage(&b.ally,&b.enemy,attack_get(MOVE_NUDGE),90);
+    int strong=battle_damage(&b.ally,&b.enemy,attack_get(MOVE_NUDGE),100);
+    assert(weak>=1 && strong>=weak);
+    assert(attack_effectiveness(ELEMENT_EMBER,ELEMENT_GROVE)==4);
+    assert(attack_effectiveness(ELEMENT_GROVE,ELEMENT_EMBER)==1);
+    assert(attack_effectiveness(ELEMENT_PLAIN,ELEMENT_STONE)==2);
+    assert(attack_effectiveness(ELEMENT_EMBER,ELEMENT_EMBER)==1);
+    b.enemy.defense=0;assert(battle_damage(&b.ally,&b.enemy,attack_get(MOVE_NUDGE),100)>0);
+    puts("PASS: turns, speed, HP, victory/defeat, accuracy, uses, fallback, menu, escape, damage");
+    return 0;
+}
+````
+
 ## tests/overworld_test.c
 
 ````text
@@ -1516,7 +2074,7 @@ int main(void)
     assert(g.npcs.people[1].actor.tile_x==9); /* Patrol cannot enter player. */
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
-    assert(!g.dialogue.active); /* Encounters only roll on completed steps. */
+    assert(!g.dialogue.active && !g.in_battle); /* Only completed steps roll. */
     Encounter e; EncounterResult result;
     encounter_init(&e,123);
     for(int i=0;i<1000;++i) assert(!encounter_step(&e,0,&result));
@@ -1531,11 +2089,33 @@ int main(void)
         assert(count>50);
     }
     place(&g,MAP_FOREST,8,12);
-    for(int i=0;i<2000 && !g.dialogue.active;++i)
+    for(int i=0;i<2000 && !g.in_battle;++i)
         update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0},1);
-    assert(g.dialogue.active);
-    fits(g.dialogue.pages[0]);
+    assert(g.in_battle);
+    fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
+    float before_x=g.player.x,before_y=g.player.y;
+    update(&g,(Input){1,0,0,0},40);
+    assert(g.player.x==before_x && g.player.y==before_y);
+    update(&g,(Input){0,0,1,0},1);
+    assert(g.battle.phase==BATTLE_MENU);
+    render(&g,"previews/battle-menu.ppm");
+    update(&g,(Input){0,0,1,0},1);
+    render(&g,"previews/battle-moves.ppm");
+    update(&g,(Input){0,0,0,1},1);
+    g.battle.cursor=4;g.battle.escape_attempts=2;
+    update(&g,(Input){0,0,1,0},2);
+    assert(!g.in_battle && g.map_id==MAP_FOREST);
+    assert(g.player.x==before_x && g.player.y==before_y);
+    assert(g.partner.hp==g.partner.max_hp && g.encounter.safe_steps==4);
+    battle_begin(&g.battle,&g.partner,"ECHOCRAG",7,99);g.in_battle=1;
+    g.battle.ally.hp=1;g.battle.enemy.speed=999;
+    for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
+    update(&g,(Input){0,0,1,0},3);
+    assert(g.battle.result==BATTLE_LOSS);
+    update(&g,(Input){0,0,1,0},2);
+    assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
+    assert(g.partner.hp==g.partner.max_hp);
     for(int id=0;id<MAP_COUNT;++id) {
         place(&g,id,map_get(id)->spawn_x,map_get(id)->spawn_y);
         render(&g,0);
@@ -1564,7 +2144,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'encounter'):
+for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves'):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'
@@ -1590,7 +2170,11 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c -o previews/world-test
+    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/attacks.c src/battle.c src/battle_draw.c -o previews/world-test
 previews/world-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/battle_test.c src/battle.c src/attacks.c -o previews/battle-test
+previews/battle-test
 python3 tests/preview.py
 ````

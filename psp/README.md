@@ -1,19 +1,19 @@
-# Emberwake — Phase 3
+# Emberwake — Phase 4
 
 Original PSP homebrew RPG prototype in C / PSPSDK. The creatures are called
-**Veylings**. Phase 3 extends the existing Phase 2 project with connected maps,
-NPC interaction, dialogue, and encounter zones. Battles begin in Phase 4.
+**Veylings**. Phase 4 adds turn-based battles to the existing connected world. Maps, NPCs,
+dialogue, and exploration remain available.
 
 ## Play this build
 
-The verified build is **EBOOT-PHASE3.PBP**. The older EBOOT.PBP was locked by another
-process during packaging and remains the Phase 2 binary. Use the new file.
+The verified build is **EBOOT-PHASE4.PBP**. Use this explicitly named artifact;
+older EBOOT files are retained and are not the Phase 4 build.
 
-Copy EBOOT-PHASE3.PBP to the Memory Stick, naming the destination:
+Copy EBOOT-PHASE4.PBP to the Memory Stick, naming the destination:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
-Launch **Emberwake - Phase 3** from Game > Memory Stick.
+Launch **Emberwake - Phase 4** from Game > Memory Stick.
 
 - D-pad: smooth four-direction tile movement; horizontal wins when two directions
   are held. Release finishes the current tile.
@@ -41,8 +41,9 @@ Starting at the clearing:
 4. Find Mira northeast of spawn and Orin patrolling just south of the path.
    Verify you cannot walk through them and Orin cannot walk through you.
 5. Follow the horizontal sandy path east to the marked exit to the woods.
-6. Walk through dark tall grass until a Veyling notice appears. X or Circle
-   dismisses it. Standing still never triggers an encounter.
+6. Walk through dark tall grass until a battle begins. Press X through the
+   introduction, select FIGHT, then select an attack. Standing still never
+   triggers an encounter.
 7. Follow the right-hand path north into the gold-lit cave entrance.
 8. Walk on the rough cave floor for its different encounter table.
 9. Return through both exits; verify no immediate teleport loop.
@@ -63,9 +64,60 @@ The grace counter counts completed steps on any terrain.
 | Woods tall grass | Mosslet, level 2-4 | Twiglint, level 3-5 | Glowmoth, level 4-6 |
 | Cave rough floor | Flintling, level 3-5 | Duskwisp, level 4-6 | Echocrag, level 5-7 |
 
-The current result is a short name/level notice followed by the creature departing.
-These are encounter-table placeholders, not the full species database. No
-combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
+Encounters now enter the battle screen. Encounter entries and battle stats remain
+small prototype definitions; the full species database, experience, and evolution
+are Phase 5. Capture, team switching, inventory, and saves remain future work.
+
+## Battle prototype
+
+Your partner is **Cindlet**, a level 5 Ember Veyling with four attacks. Wild
+opponents come from the existing woods/cave tables. Battles display both
+creatures, names, levels, elements, numeric HP, and HP bars.
+
+Controls:
+- Tap D-pad up/down to select. Left/right also moves one menu entry.
+- X confirms an option or advances the current battle message.
+- Circle returns from attack selection to the main battle menu.
+- Holding X does not skip messages. Circle cannot dismiss combat results.
+
+FIGHT opens the four attacks with remaining uses, power, accuracy, and element.
+Faster creatures act first; equal speed uses a random tie-break. Each attack
+checks accuracy and consumes one use even if it misses. A defeated creature
+cannot retaliate. Each action has a separate message, followed by the outcome.
+
+Damage is:
+
+    base = ((2 * level / 5 + 2) * power * attack / defense) / 20 + 2
+    damage = max(1, base * elemental_multiplier * random(90..100) / 100)
+
+Integer arithmetic is used, with HP clamped at zero. Ember beats Grove, Grove
+beats Stone, Stone beats Wind, and Wind beats Ember (2x damage). Reverse matchups
+and same-element attacks deal half damage. Plain attacks are neutral.
+
+NUDGE is accurate and neutral; CINDER ARC is strong against Grove; BOLD LUNGE is
+powerful but less accurate; WHIRL CUT is a Wind option. Selecting an exhausted
+attack does not spend a turn. If all four moves are exhausted, FIGHT offers the
+weak, unlimited PRESS ON attack so combat cannot become stuck.
+
+RUN has a 70% escape chance and is guaranteed on the third attempt. A failed
+escape allows exactly one enemy action. CAPTURE, CREATURES, and ITEMS show clear
+not-yet-available messages and do not spend a turn.
+
+**Temporary Phase 4 rule:** your partner's HP and attack uses refill after every
+battle, including escape. Victory or escape returns to the same exploration
+position. Defeat returns you to Hearth Clearing at the original starting tile.
+All outcomes grant four safe steps before another encounter can roll. This rule
+makes battle testing repeatable before later inventory/healing systems.
+There are no experience awards, level increases, or captures in Phase 4.
+
+Additional PSP checks:
+1. Enter woods tall grass and try all four attacks across multiple battles.
+2. Check that uses decrease, HP bars change, and each action requires X.
+3. Cancel attack selection with Circle without spending a turn.
+4. Try RUN; a failure should produce only one enemy response.
+5. Win a battle and confirm you return to the same place with a fresh partner.
+6. Lose against a stronger cave opponent and confirm return to the clearing.
+7. Test HOME > Cancel/Quit during both menus and battle messages.
 
 ## Architecture and exact source tree
 
@@ -81,6 +133,8 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         lodge.inc
         cave.inc
       include/
+        attacks.h
+        battle.h
         camera.h
         dialogue.h
         encounter.h
@@ -94,6 +148,9 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         world_draw.h
       src/
         main.c
+        attacks.c
+        battle.c
+        battle_draw.c
         camera.c
         dialogue.c
         encounter.c
@@ -107,6 +164,7 @@ combat, capture, leveling, healing, shops, saving, or RPG menus are implemented.
         world_draw.c
       tests/
         host/pspgu.h
+        battle_test.c
         overworld_test.c
         world_systems_test.c
         preview.py
@@ -117,7 +175,7 @@ except itself. Generated binaries and previews are ignored by Git.
 
 main.c initializes PSP services, seeds encounter randomness, and runs the existing
 vblank-paced loop. game.c coordinates map entry, step events, NPC interaction,
-and encounter notices. Player movement accepts an optional occupancy callback;
+and battle entry/return. Player movement accepts an optional occupancy callback;
 NPC collision reserves both current and destination tiles to avoid overlap.
 npc.c owns dialogue data and patrol behavior. dialogue.c stores bounded text
 pages. encounter.c owns random selection and grace steps. map.c owns map lookup,
@@ -152,6 +210,10 @@ not by the visual tile alone. Each portal declares an explicit walkable arrival
 tile away from the return trigger. Unknown codes/out-of-bounds locations block
 movement. All maps and graphics are embedded in the EBOOT.
 
+attacks.c defines attack power, accuracy, type, and uses. battle.c owns battle
+stats, turn sequencing, results, escape logic, and damage. battle_draw.c owns the
+battle screen and original placeholder creature graphics.
+
 To add a map, add its rows, ID, dimensions, name, portal connections, and optional
 NPC definitions / encounter terrain. Keep coordinates within the declared map
 and extend tests for new dimensions if they exceed the current test grid.
@@ -160,13 +222,13 @@ and extend tests for new dimensions if they exceed the current test grid.
 
 This machine uses the existing Ubuntu/WSL PSPDEV environment.
 
-From PowerShell, build the Phase 3 artifact without overwriting the locked file:
+From PowerShell, build the Phase 4 artifact:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE3.PBP EXTRA_TARGETS=EBOOT-PHASE3.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP'
 
 In a configured Linux/WSL shell, from the psp directory:
 
-    make PSP_EBOOT=EBOOT-PHASE3.PBP EXTRA_TARGETS=EBOOT-PHASE3.PBP
+    make PSP_EBOOT=EBOOT-PHASE4.PBP EXTRA_TARGETS=EBOOT-PHASE4.PBP
 
 For the conventional EBOOT.PBP output when that file is not open elsewhere:
 
@@ -181,15 +243,19 @@ From the psp directory in Linux/WSL:
 
     sh tests/run.sh
 
-Both test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
+All three test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
 Checks include Phase 2 regression coverage plus portal reachability and all six
 transitions, valid/non-trigger arrival tiles, NPC collisions in both directions,
 patrol limits, dialogue pause/advance/cancel, no stationary encounters, weighted
 table level ranges, encounter grace steps, text bounds, and drawing budget.
+Battle checks additionally cover turn order, accuracy, elemental damage, spent
+moves, fallback attacks, win/loss, no retaliation after knockout, menu controls,
+escape success/failure, battle freezing the world, and defeat returning home.
 The host test renders the real draw functions into software pixel buffers;
 tests/preview.py converts those buffers to PNG without third-party dependencies.
 
-Software previews are saved in previews/dialogue.png and previews/encounter.png.
+Software previews are saved in previews/dialogue.png, previews/encounter.png,
+previews/battle-menu.png, and previews/battle-moves.png.
 They are not emulator or hardware screenshots.
 
 Only visible terrain is drawn (at most 160 tiles). The GU list reserves 1 MiB for
@@ -198,10 +264,10 @@ tile, actor, and bitmap text commands. The tested scenes stay below a conservati
 The main loop retains its 50 ms elapsed-time cap and HOME callback service.
 
 Host regression/integration tests passed. The PSP compiler and linker passed
-with -Wall -Wextra -Werror, and the Phase 3 PBP was packaged successfully.
+with -Wall -Wextra -Werror, and the Phase 4 PBP was packaged successfully.
 Real PSP visuals, performance, and input/exit behavior still require your test.
 
-Stop here before Phase 4.
+Stop here before Phase 5.
 
 ## Official references
 

@@ -7,6 +7,10 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c -o previews/world-test
+    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/attacks.c src/battle.c src/battle_draw.c -o previews/world-test
 previews/world-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/battle_test.c src/battle.c src/attacks.c -o previews/battle-test
+previews/battle-test
 python3 tests/preview.py

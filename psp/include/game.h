@@ -4,6 +4,7 @@
 #include "npc.h"
 #include "dialogue.h"
 #include "encounter.h"
+#include "battle.h"
 typedef struct {
     const Map *map;
     Player player;
@@ -12,6 +13,9 @@ typedef struct {
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;
+    Battler partner;
+    Battle battle;
+    int in_battle;
 } Game;
 void game_init(Game *game);
 void game_update(Game *game, const Input *input, float seconds);

@@ -135,7 +135,7 @@ int main(void)
     assert(g.npcs.people[1].actor.tile_x==9); /* Patrol cannot enter player. */
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
-    assert(!g.dialogue.active); /* Encounters only roll on completed steps. */
+    assert(!g.dialogue.active && !g.in_battle); /* Only completed steps roll. */
     Encounter e; EncounterResult result;
     encounter_init(&e,123);
     for(int i=0;i<1000;++i) assert(!encounter_step(&e,0,&result));
@@ -150,11 +150,33 @@ int main(void)
         assert(count>50);
     }
     place(&g,MAP_FOREST,8,12);
-    for(int i=0;i<2000 && !g.dialogue.active;++i)
+    for(int i=0;i<2000 && !g.in_battle;++i)
         update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0},1);
-    assert(g.dialogue.active);
-    fits(g.dialogue.pages[0]);
+    assert(g.in_battle);
+    fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
+    float before_x=g.player.x,before_y=g.player.y;
+    update(&g,(Input){1,0,0,0},40);
+    assert(g.player.x==before_x && g.player.y==before_y);
+    update(&g,(Input){0,0,1,0},1);
+    assert(g.battle.phase==BATTLE_MENU);
+    render(&g,"previews/battle-menu.ppm");
+    update(&g,(Input){0,0,1,0},1);
+    render(&g,"previews/battle-moves.ppm");
+    update(&g,(Input){0,0,0,1},1);
+    g.battle.cursor=4;g.battle.escape_attempts=2;
+    update(&g,(Input){0,0,1,0},2);
+    assert(!g.in_battle && g.map_id==MAP_FOREST);
+    assert(g.player.x==before_x && g.player.y==before_y);
+    assert(g.partner.hp==g.partner.max_hp && g.encounter.safe_steps==4);
+    battle_begin(&g.battle,&g.partner,"ECHOCRAG",7,99);g.in_battle=1;
+    g.battle.ally.hp=1;g.battle.enemy.speed=999;
+    for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
+    update(&g,(Input){0,0,1,0},3);
+    assert(g.battle.result==BATTLE_LOSS);
+    update(&g,(Input){0,0,1,0},2);
+    assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
+    assert(g.partner.hp==g.partner.max_hp);
     for(int id=0;id<MAP_COUNT;++id) {
         place(&g,id,map_get(id)->spawn_x,map_get(id)->spawn_y);
         render(&g,0);
