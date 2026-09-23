@@ -11,6 +11,11 @@ void player_init(Player *p, const Map *map)
 }
 void player_update(Player *p, const Map *map, const Input *input, float seconds)
 {
+    player_update_blocked(p,map,input,seconds,0,0);
+}
+void player_update_blocked(Player *p, const Map *map, const Input *input,
+                           float seconds, PlayerBlocker blocker, void *context)
+{
     if (seconds <= 0.0f) return;
     if (seconds > 0.05f) seconds = 0.05f;
     /* Finish a tile after release; turns happen at tile boundaries.
@@ -22,7 +27,8 @@ void player_update(Player *p, const Map *map, const Input *input, float seconds)
             if (dx == 0 && dy == 0) { p->animation = 0.0f; break; }
             p->facing = dx < 0 ? FACE_LEFT : dx > 0 ? FACE_RIGHT
                        : dy < 0 ? FACE_UP : FACE_DOWN;
-            if (!map_walkable(map, p->tile_x + dx, p->tile_y + dy)) {
+            if (!map_walkable(map, p->tile_x + dx, p->tile_y + dy) ||
+                (blocker && blocker(context,p->tile_x+dx,p->tile_y+dy))) {
                 p->animation = 0.0f;
                 break;
             }

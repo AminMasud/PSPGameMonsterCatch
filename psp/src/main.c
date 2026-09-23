@@ -46,6 +46,7 @@ int main(void)
 
     graphics_init();
     game_init(&game);
+    encounter_init(&game.encounter,sceKernelGetSystemTimeLow());
     unsigned int previous = sceKernelGetSystemTimeLow();
 
     while (running) {

@@ -11,4 +11,7 @@ typedef struct {
 } Player;
 void player_init(Player *player, const Map *map);
 void player_update(Player *player, const Map *map, const Input *input, float seconds);
+typedef int (*PlayerBlocker)(void *context, int x, int y);
+void player_update_blocked(Player *p, const Map *map, const Input *input,
+                           float seconds, PlayerBlocker blocker, void *context);
 #endif

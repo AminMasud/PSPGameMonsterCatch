@@ -8,6 +8,37 @@ static void tile_draw(char tile, int x, int y, int variant)
 {
     graphics_rectangle(x,y,32,32,variant ? COLOR(62,93,66) : COLOR(59,89,63));
     switch (tile) {
+    case 'W':
+        graphics_rectangle(x,y,32,32,COLOR(110,69,52));
+        graphics_rectangle(x,y,32,3,COLOR(174,113,72));
+        graphics_rectangle(x+15,y+3,2,29,COLOR(78,50,44));
+        break;
+    case 'D':
+        graphics_rectangle(x,y,32,32,COLOR(154,121,78));
+        graphics_rectangle(x+5,y+2,22,30,COLOR(24,30,37));
+        graphics_rectangle(x+9,y+27,14,3,COLOR(238,188,96));
+        break;
+    case '>':
+        graphics_rectangle(x,y,32,32,COLOR(169,148,104));
+        graphics_rectangle(x+5,y+13,22,6,COLOR(246,219,147));
+        graphics_rectangle(x+19,y+8,4,16,COLOR(246,219,147));
+        break;
+    case '_':
+        graphics_rectangle(x,y,32,32,COLOR(116,101,79));
+        graphics_rectangle(x,y+30,32,2,COLOR(74,68,58));
+        break;
+    case 'c':
+        graphics_rectangle(x,y,32,32,COLOR(66,68,81));
+        graphics_rectangle(x+5,y+8,8,3,COLOR(91,89,106));
+        graphics_rectangle(x+22,y+23,5,3,COLOR(45,48,63));
+        break;
+    case 'g':
+        graphics_rectangle(x,y,32,32,COLOR(36,71,52));
+        for (int i=0;i<4;++i) {
+            graphics_rectangle(x+3+i*7,y+7,3,10,COLOR(81,122,64));
+            graphics_rectangle(x+1+i*7,y+23,3,7,COLOR(62,101,52));
+        }
+        break;
     case '#': /* Trees fit inside their solid tile. */
         graphics_rectangle(x+12,y+18,8,12,COLOR(89,63,45));
         graphics_rectangle(x+3,y+8,26,15,COLOR(27,58,47));
@@ -41,17 +72,18 @@ static void tile_draw(char tile, int x, int y, int variant)
     }
 }
 
-static void player_draw(const Player *p, const Camera *camera)
+void world_actor_draw(const Player *p, const Camera *camera, int npc)
 {
     int x = (int)p->x - camera->x + 8;
     int y = (int)p->y - camera->y + 7;
+    if (x < -32 || y < -32 || x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
     int stride = p->moving ? ((int)(p->animation / 0.1f) % 4) : 0;
     int left = stride == 1 ? 2 : 0;
     int right = stride == 3 ? 2 : 0;
     graphics_rectangle(x,y+19,16,4,COLOR(36,57,43));
     graphics_rectangle(x+3,y+16-left,4,6,COLOR(34,42,57));
     graphics_rectangle(x+9,y+16-right,4,6,COLOR(34,42,57));
-    graphics_rectangle(x,y+8,16,9,COLOR(76,174,161));
+    graphics_rectangle(x,y+8,16,9,npc ? COLOR(184,133,181) : COLOR(76,174,161));
     graphics_rectangle(x+3,y+1,10,8,COLOR(238,203,154));
     graphics_rectangle(x+1,y,14,3,COLOR(218,119,65));
     if (p->facing == FACE_UP) {
@@ -81,5 +113,5 @@ void world_draw(const Map *map, const Player *player, const Camera *camera)
                       y*TILE_SIZE-camera->y, (x+y)%2);
         }
     }
-    player_draw(player, camera);
+    world_actor_draw(player, camera, 0);
 }

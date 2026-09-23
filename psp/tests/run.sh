@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+# Run from the psp directory. Host checks use only a color macro stub, not an emulator.
+mkdir -p previews
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/overworld_test.c src/map.c src/player.c src/camera.c -lm -o previews/overworld-test
+previews/overworld-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
+    tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
+    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c -o previews/world-test
+previews/world-test
+python3 tests/preview.py

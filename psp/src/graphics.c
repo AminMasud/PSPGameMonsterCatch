@@ -7,9 +7,9 @@
 #define FRAME_BYTES (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
 
 /* Aligned command buffer, reused only after the previous list completes. */
-/* Visible tiles need at most 800 rectangles plus the player. Reserve 256 KiB
-   for their vertex storage and commands; do not draw the entire world. */
-static unsigned int command_list[65536] __attribute__((aligned(16)));
+/* Reserve 1 MiB for visible terrain, actors, and the bitmap dialogue font.
+   Host drawing tests enforce a conservative 6000-rectangle frame budget. */
+static unsigned int command_list[262144] __attribute__((aligned(16)));
 
 typedef struct {
     unsigned int color;
