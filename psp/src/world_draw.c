@@ -4,7 +4,7 @@
 
 #define COLOR(r,g,b) GU_RGBA(r,g,b,255)
 
-static void tile_draw(char tile, int x, int y, int variant)
+static void tile_draw(char tile, int x, int y, int variant,int phase)
 {
     graphics_rectangle(x,y,32,32,variant ? COLOR(62,93,66) : COLOR(59,89,63));
     switch (tile) {
@@ -19,9 +19,18 @@ static void tile_draw(char tile, int x, int y, int variant)
         graphics_rectangle(x+9,y+27,14,3,COLOR(238,188,96));
         break;
     case '>':
+    case '<':
         graphics_rectangle(x,y,32,32,COLOR(169,148,104));
         graphics_rectangle(x+5,y+13,22,6,COLOR(246,219,147));
-        graphics_rectangle(x+19,y+8,4,16,COLOR(246,219,147));
+        graphics_rectangle(x+(tile=='<'?9:19),y+8,4,16,COLOR(246,219,147));
+        break;
+    case 'r':
+        graphics_rectangle(x,y,32,32,variant?COLOR(69,100,83):COLOR(61,92,78));
+        for (int i=0;i<3;++i) {
+            int sway=(phase+i)%3-1;
+            graphics_rectangle(x+5+i*9,y+12,2,17,COLOR(115,151,101));
+            graphics_rectangle(x+4+i*9+sway,y+5,4,12,COLOR(207,183,114));
+        }
         break;
     case '_':
         graphics_rectangle(x,y,32,32,COLOR(116,101,79));
@@ -47,13 +56,20 @@ static void tile_draw(char tile, int x, int y, int variant)
         break;
     case '~':
         graphics_rectangle(x,y,32,32,COLOR(44,91,113));
-        graphics_rectangle(x+4,y+9,12,2,COLOR(86,139,151));
-        graphics_rectangle(x+17,y+23,10,2,COLOR(63,115,138));
+        graphics_rectangle(x+3+phase,y+9,12,2,COLOR(86,139,151));
+        graphics_rectangle(x+18-phase,y+23,10,2,COLOR(63,115,138));
         break;
     case 'O':
         graphics_rectangle(x+3,y+9,26,20,COLOR(44,55,55));
         graphics_rectangle(x+5,y+5,21,20,COLOR(111,118,106));
         graphics_rectangle(x+8,y+5,15,5,COLOR(147,149,126));
+        break;
+    case 'H':
+        graphics_rectangle(x+2,y+3,28,26,COLOR(45,71,68));
+        graphics_rectangle(x+6,y+7,20,18,COLOR(86,168,151));
+        graphics_rectangle(x+10,y+11,12,10,COLOR(190,234,183));
+        graphics_rectangle(x+14,y+9,4,14,COLOR(86,168,151));
+        graphics_rectangle(x+9,y+14,14,4,COLOR(86,168,151));
         break;
     case '=':
         graphics_rectangle(x,y,32,32,COLOR(169,148,104));
@@ -100,7 +116,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc)
     }
 }
 
-void world_draw(const Map *map, const Player *player, const Camera *camera)
+void world_draw(const Map *map, const Player *player, const Camera *camera,float animation)
 {
     /* At most 16 columns x 10 rows, independent of total map size. */
     int first_x = camera->x / TILE_SIZE;
@@ -110,7 +126,7 @@ void world_draw(const Map *map, const Player *player, const Camera *camera)
     for (int y = first_y; y <= last_y && y < map->height; ++y) {
         for (int x = first_x; x <= last_x && x < map->width; ++x) {
             tile_draw(map_tile(map,x,y), x*TILE_SIZE-camera->x,
-                      y*TILE_SIZE-camera->y, (x+y)%2);
+                      y*TILE_SIZE-camera->y, (x+y)%2,(int)(animation*4)%4);
         }
     }
     world_actor_draw(player, camera, 0);

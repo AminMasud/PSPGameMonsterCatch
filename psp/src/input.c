@@ -16,7 +16,7 @@ void input_poll(Input *input)
     SceCtrlData pad = {0};
     input->horizontal = 0;
     input->vertical = 0;
-    input->confirm = input->cancel = input->details = 0;
+    input->confirm = input->cancel = input->details = input->menu = 0;
     if (sceCtrlPeekBufferPositive(&pad, 1) <= 0) {
         return;
     }
@@ -29,4 +29,7 @@ void input_poll(Input *input)
     input->confirm = (pressed & PSP_CTRL_CROSS) != 0;
     input->cancel = (pressed & PSP_CTRL_CIRCLE) != 0;
     input->details = (pressed & PSP_CTRL_SELECT) != 0;
+    if (pressed & PSP_CTRL_TRIANGLE) input->menu |= INPUT_MENU_OPEN;
+    if (pressed & PSP_CTRL_START) input->menu |= INPUT_MENU_SAVE;
+    if (pressed & PSP_CTRL_LTRIGGER) input->menu |= INPUT_MENU_LOAD;
 }

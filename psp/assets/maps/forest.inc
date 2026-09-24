@@ -9,7 +9,7 @@
 "#......ggg#gggggggg#gggggg..=..#",
 "#......ggggggggggggggggggg..=..#",
 "#......ggggggggggggggggggg..=..#",
-"#>=============================#",
+"#>============================>#",
 "#......ggggggggggggggggggg..=..#",
 "#......ggggggggggggggggggg..=..#",
 "#......ggggggggggggggggggg..=..#",

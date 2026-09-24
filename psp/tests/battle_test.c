@@ -5,7 +5,7 @@
 
 static void press(Battle *b)
 {
-    battle_update(b,&(Input){0,0,1,0,0});
+    battle_update(b,&(Input){0,0,1,0,0,0});
 }
 static void start(Battle *b,unsigned int seed)
 {
@@ -43,7 +43,7 @@ int main(void)
     assert(b.result==BATTLE_WIN && b.enemy.hp==0);
     finish_messages(&b);
     assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
-    battle_update(&b,&(Input){0,0,1,0,0}); assert(b.phase==BATTLE_DONE);
+    battle_update(&b,&(Input){0,0,1,0,0,0}); assert(b.phase==BATTLE_DONE);
 
     start(&b,12);
     b.ally.hp=1; b.enemy.speed=999;
@@ -54,18 +54,20 @@ int main(void)
 
     start(&b,12);
     b.cursor=0; press(&b);
-    battle_update(&b,&(Input){0,0,0,1,0});
+    battle_update(&b,&(Input){0,0,0,1,0,0});
     assert(b.phase==BATTLE_MENU && b.enemy.hp==b.enemy.max_hp);
     /* Menu navigation advances once per new direction, not once per frame. */
-    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0,0});
+    for(int i=0;i<20;++i) battle_update(&b,&(Input){0,1,0,0,0,0});
     assert(b.cursor==1);
     battle_update(&b,&(Input){0});
-    battle_update(&b,&(Input){0,1,0,0,0}); assert(b.cursor==2);
-    for(int i=1;i<=3;++i) {
-        b.cursor=i; press(&b); assert(b.phase==BATTLE_MESSAGE);
-        finish_messages(&b);
-        assert(b.phase==BATTLE_MENU && b.ally.hp==b.ally.max_hp);
-    }
+    battle_update(&b,&(Input){0,1,0,0,0,0}); assert(b.cursor==2);
+    b.cursor=1;press(&b);assert(b.phase==BATTLE_CAPTURE);
+    battle_update(&b,&(Input){.cancel=1});assert(b.phase==BATTLE_MENU);
+    b.cursor=2;press(&b);assert(b.phase==BATTLE_SWITCH);
+    battle_update(&b,&(Input){.cancel=1});assert(b.phase==BATTLE_MENU);
+    b.cursor=3;press(&b);assert(b.phase==BATTLE_ITEMS);
+    battle_update(&b,&(Input){.cancel=1});
+    assert(b.phase==BATTLE_MENU && b.ally.hp==b.ally.max_hp);
     b.ally.uses[0]=0; choose(&b,0);
     assert(strstr(b.message,"NO USES") && b.enemy.hp==b.enemy.max_hp);
     finish_messages(&b);

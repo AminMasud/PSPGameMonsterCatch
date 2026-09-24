@@ -15,22 +15,34 @@ static const char *const cave_rows[] = {
 static const Map forest = {32,20,forest_rows,2,11};
 static const Map lodge = {15,9,lodge_rows,7,6};
 static const Map cave = {20,14,cave_rows,2,10};
+static const char *const marsh_rows[] = {
+#include "../assets/maps/marsh.inc"
+};
+static const char *const rest_rows[] = {
+#include "../assets/maps/rest.inc"
+};
+static const Map marsh = {28,18,marsh_rows,2,10};
+static const Map rest = {15,9,rest_rows,7,6};
 static const Portal portals[] = {
     {MAP_CLEARING,38,11,MAP_FOREST,2,11},
     {MAP_FOREST,1,11,MAP_CLEARING,37,11},
     {MAP_CLEARING,5,9,MAP_LODGE,7,6},
     {MAP_LODGE,7,7,MAP_CLEARING,5,10},
     {MAP_FOREST,28,5,MAP_CAVE,2,10},
-    {MAP_CAVE,2,11,MAP_FOREST,28,6}
+    {MAP_CAVE,2,11,MAP_FOREST,28,6},
+    {MAP_FOREST,30,11,MAP_MARSH,2,10},
+    {MAP_MARSH,1,10,MAP_FOREST,29,11},
+    {MAP_MARSH,24,4,MAP_REST,7,6},
+    {MAP_REST,7,7,MAP_MARSH,24,5}
 };
 const Map *map_get(int id)
 {
-    const Map *const maps[] = {&clearing,&forest,&lodge,&cave};
+    const Map *const maps[] = {&clearing,&forest,&lodge,&cave,&marsh,&rest};
     return id >= 0 && id < MAP_COUNT ? maps[id] : &clearing;
 }
 const char *map_name(int id)
 {
-    const char *const names[] = {"HEARTH CLEARING","FERNVEIL WOODS","WAYFARER LODGE","HOLLOWSTONE CAVE"};
+    const char *const names[] = {"HEARTH CLEARING","FERNVEIL WOODS","WAYFARER LODGE","HOLLOWSTONE CAVE","SUNTHREAD MARSH","LANTERN REST"};
     return id >= 0 && id < MAP_COUNT ? names[id] : names[0];
 }
 const Portal *map_portal(int id, int x, int y)
@@ -43,7 +55,8 @@ const Portal *map_portal(int id, int x, int y)
 int map_encounter_area(int id, int x, int y)
 {
     char tile = map_tile(map_get(id),x,y);
-    return tile == 'g' && id == MAP_FOREST ? 1 : tile == 'c' && id == MAP_CAVE ? 2 : 0;
+    return tile == 'g' && id == MAP_FOREST ? 1 : tile == 'c' && id == MAP_CAVE ? 2 :
+           tile == 'r' && id == MAP_MARSH ? 3 : 0;
 }
 const Map *map_test(void) { return &clearing; }
 char map_tile(const Map *map, int x, int y)
@@ -55,5 +68,5 @@ int map_walkable(const Map *map, int x, int y)
 {
     char tile = map_tile(map, x, y);
     return tile == '.' || tile == '=' || tile == ',' || tile == 'D' ||
-           tile == '>' || tile == 'g' || tile == 'c' || tile == '_';
+           tile == '>' || tile == '<' || tile == 'g' || tile == 'r' || tile == 'c' || tile == '_' || tile == 'H';
 }

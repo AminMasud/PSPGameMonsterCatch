@@ -5,6 +5,10 @@
 #include "dialogue.h"
 #include "encounter.h"
 #include "battle.h"
+#include "party_menu.h"
+#include "inventory.h"
+#include "save_data.h"
+#include "player_menu.h"
 typedef struct {
     const Map *map;
     Player player;
@@ -13,7 +17,18 @@ typedef struct {
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;
-    Battler partner;
+    Party party;
+    Inventory inventory;
+    PartyMenu roster;
+    int roster_open;
+    PlayerMenu menu;
+    GameOptions options;
+    int menu_open, previous_ui_direction;
+    float transition, area_label, animation;
+    int shop_open, shop_cursor, shop_previous_direction;
+    int tavi_shop_pending;
+    char shop_message[112];
+    SaveStatus save_seen_status;
     Battle battle;
     int in_battle;
 } Game;

@@ -4,7 +4,7 @@
 #include <string.h>
 #include "battle.h"
 
-static void confirm(Battle *b) { battle_update(b,&(Input){0,0,1,0,0}); }
+static void confirm(Battle *b) { battle_update(b,&(Input){0,0,1,0,0,0}); }
 static void victory(Battle *b,Creature *c)
 {
     battle_begin(b,c,SPECIES_MOSSLET,3,42);
@@ -16,14 +16,14 @@ static void victory(Battle *b,Creature *c)
 static void close_growth(Battle *b)
 {
     for(int i=0;i<30 && b->phase!=BATTLE_DONE;++i) {
-        if(b->phase==BATTLE_LEARN) battle_update(b,&(Input){0,0,0,1,0});
+        if(b->phase==BATTLE_LEARN) battle_update(b,&(Input){0,0,0,1,0,0});
         else confirm(b);
     }
     assert(b->phase==BATTLE_DONE);
 }
 int main(void)
 {
-    assert(SPECIES_COUNT==10);
+    assert(SPECIES_COUNT==12);
     for(int id=0;id<SPECIES_COUNT;++id) {
         const Species *s=species_get(id);
         assert((int)s->id==id && s->name[0] && s->description[0]);
@@ -86,7 +86,7 @@ int main(void)
     close_growth(&b);confirm(&b);assert(b.ally.experience==earned);
     victory(&b,&c);
     for(int i=0;i<8 && b.phase!=BATTLE_LEARN;++i) confirm(&b);
-    battle_update(&b,&(Input){0,0,0,1,0});close_growth(&b);
+    battle_update(&b,&(Input){0,0,0,1,0,0});close_growth(&b);
     assert(b.ally.moves[1]==MOVE_CINDER);
 
     creature_create(&c,SPECIES_CINDLET,7);c.experience=creature_xp_for_level(8)-1;
@@ -96,6 +96,6 @@ int main(void)
     battle_begin(&b,&c,SPECIES_MOSSLET,3,2);confirm(&b);
     b.cursor=4;b.escape_attempts=2;confirm(&b);confirm(&b);
     assert(b.phase==BATTLE_DONE && b.ally.experience==c.experience);
-    puts("PASS: 10 species, 100 levels, XP boundaries/cap, evolution, stats, nicknames, move choices, single rewards");
+    puts("PASS: 12 species, 100 levels, XP boundaries/cap, evolution, stats, nicknames, move choices, single rewards");
     return 0;
 }

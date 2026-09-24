@@ -2,11 +2,14 @@
 #include "game.h"
 #include "graphics.h"
 #include "input.h"
+#include "audio.h"
 
 /* User-mode PRX: no kernel access or extra PSP-3000 RAM required. */
 PSP_MODULE_INFO("Emberwake", 0, 0, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
-PSP_HEAP_SIZE_KB(1024);
+/* Savedata dialogs allocate their own UI buffers; keep enough user heap for
+   the dialog without requiring extra hardware memory. */
+PSP_HEAP_SIZE_KB(4096);
 
 static volatile int running = 1;
 
@@ -45,6 +48,7 @@ int main(void)
     }
 
     graphics_init();
+    audio_init(); /* A missing audio channel leaves the game playable silently. */
     game_init(&game);
     encounter_init(&game.encounter,sceKernelGetSystemTimeLow());
     unsigned int previous = sceKernelGetSystemTimeLow();
@@ -68,6 +72,7 @@ int main(void)
         graphics_end();
     }
 
+    audio_shutdown();
     graphics_shutdown();
     sceKernelDeleteCallback(callback);
     sceKernelExitGame();

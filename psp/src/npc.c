@@ -20,8 +20,12 @@ void npc_load(Npcs *n, int map_id)
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
-    } else {
+    } else if (map_id == MAP_CAVE) {
         add(n,5,10,"NEL","FOOTSTEPS ECHO IN THIS CAVE.","VEYLINGS STIR ON THE ROUGH FLOOR.\nTHE SOUTHWEST EXIT LEADS OUT.",5);
+    } else if (map_id == MAP_MARSH) {
+        add(n,4,8,"ELA","REEDSKIP HOPS AMONG THESE REEDS.\nSUNFINCH IS A RARER SIGHT.","THE BOARDWALK IS SAFE TO FOLLOW.\nLANTERN REST LIES NORTHEAST.",4);
+    } else if (map_id == MAP_REST) {
+        add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
     }
 }
 int npc_blocks(void *context, int x, int y)
