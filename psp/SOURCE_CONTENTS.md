@@ -1129,10 +1129,10 @@ player input, first and second action resolution, faint checks, result checks,
 and round completion.
 
 While an action message is visible, the acting Veyling stays at full brightness
-inside a warm corner glow and the other sprite is dimmed. The highlight switches
-with the actor and clears for command selection, attack selection, replacement
-menus, and result messages. Names, HP panels, and battle text are never dimmed.
-With animation disabled, the highlight remains visible without pulsing.
+and the other sprite is dimmed. The highlight switches with the actor and clears
+for command selection, attack selection, replacement menus, and result messages.
+Names, HP panels, and battle text are never dimmed. The brightness cue remains
+visible when animation is disabled.
 
 FIGHT chooses one of four attacks. Each attempt consumes one use, including
 misses. A creature knocked out by the first action cannot perform the queued
@@ -1267,9 +1267,9 @@ assets/generated/pets.rgba4444 and pets.json are committed build inputs. The
 manifest records the source and texture checksums. src/pet_assets.S embeds the
 texture data, pet_draw.c chooses the numbered sprite, and graphics.c draws
 alpha-blended textured strips with an optional hardware color tint before
-restoring the rectangle rendering state. The spotlight adds only eight small
-GU rectangles and reuses the two existing sprite draws. No PNG decoder, runtime
-asset loading, or additional PSP libraries are required.
+restoring the rectangle rendering state. The spotlight reuses the two existing
+sprite draws and adds no geometry. No PNG decoder, runtime asset loading, or
+additional PSP libraries are required.
 
 - include/: public interfaces and data models.
 - src/: game systems, GU renderer, menus, audio, savedata service and migration.
@@ -1325,8 +1325,8 @@ through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png fro
 the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Choose an attack and verify the ally receives the glow while the enemy dims.
-2. Advance once and verify the glow moves to the enemy for its action.
+1. Choose an attack and verify the ally stays bright while the enemy dims.
+2. Advance once and verify the brightness focus moves to the enemy.
 3. Verify both sprites return to normal brightness at the command menu.
 4. Repeat with an enemy faster than the ally; its spotlight must appear first.
 5. Check misses, knockouts, items, captures, RUN, and swaps for the correct actor.
@@ -1559,16 +1559,6 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
     snprintf(line,sizeof(line),"HP %d / %d",unit->hp,unit->max_hp);
     text_draw(x+8,y+44,line,C(224,227,218),1);
 }
-static void spotlight_frame(int x,int y,int frame)
-{
-    int pulse=frame<4;
-    unsigned int color=pulse?C(255,190,92):C(224,151,72);
-    int edge=20;
-    graphics_rectangle(x,y,edge,3,color);graphics_rectangle(x,y,3,edge,color);
-    graphics_rectangle(x+96-edge,y,edge,3,color);graphics_rectangle(x+93,y,3,edge,color);
-    graphics_rectangle(x,y+93,edge,3,color);graphics_rectangle(x,y+96-edge,3,edge,color);
-    graphics_rectangle(x+96-edge,y+93,edge,3,color);graphics_rectangle(x+93,y+96-edge,3,edge,color);
-}
 void battle_draw(const Battle *b)
 {
     graphics_rectangle(0,0,480,272,C(48,65,74));
@@ -1583,8 +1573,6 @@ void battle_draw(const Battle *b)
     int spotlight=b->phase==BATTLE_MESSAGE?b->acting_side:-1;
     unsigned int enemy_tint=spotlight<0 || spotlight==1?C(255,255,255):C(116,124,126);
     unsigned int ally_tint=spotlight<0 || spotlight==0?C(255,255,255):C(116,124,126);
-    if(spotlight==1) spotlight_frame(enemy_x,enemy_y,frame);
-    if(spotlight==0) spotlight_frame(ally_x,ally_y,frame);
     pet_draw_tinted(b->enemy.species,enemy_x,enemy_y,96,0,enemy_tint);
     pet_draw_tinted(b->ally.species,ally_x,ally_y,96,1,ally_tint);
     if (b->hit_time>0) {

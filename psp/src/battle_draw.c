@@ -23,16 +23,6 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
     snprintf(line,sizeof(line),"HP %d / %d",unit->hp,unit->max_hp);
     text_draw(x+8,y+44,line,C(224,227,218),1);
 }
-static void spotlight_frame(int x,int y,int frame)
-{
-    int pulse=frame<4;
-    unsigned int color=pulse?C(255,190,92):C(224,151,72);
-    int edge=20;
-    graphics_rectangle(x,y,edge,3,color);graphics_rectangle(x,y,3,edge,color);
-    graphics_rectangle(x+96-edge,y,edge,3,color);graphics_rectangle(x+93,y,3,edge,color);
-    graphics_rectangle(x,y+93,edge,3,color);graphics_rectangle(x,y+96-edge,3,edge,color);
-    graphics_rectangle(x+96-edge,y+93,edge,3,color);graphics_rectangle(x+93,y+96-edge,3,edge,color);
-}
 void battle_draw(const Battle *b)
 {
     graphics_rectangle(0,0,480,272,C(48,65,74));
@@ -47,8 +37,6 @@ void battle_draw(const Battle *b)
     int spotlight=b->phase==BATTLE_MESSAGE?b->acting_side:-1;
     unsigned int enemy_tint=spotlight<0 || spotlight==1?C(255,255,255):C(116,124,126);
     unsigned int ally_tint=spotlight<0 || spotlight==0?C(255,255,255):C(116,124,126);
-    if(spotlight==1) spotlight_frame(enemy_x,enemy_y,frame);
-    if(spotlight==0) spotlight_frame(ally_x,ally_y,frame);
     pet_draw_tinted(b->enemy.species,enemy_x,enemy_y,96,0,enemy_tint);
     pet_draw_tinted(b->ally.species,ally_x,ally_y,96,1,ally_tint);
     if (b->hit_time>0) {
