@@ -29,6 +29,7 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
+    b->acting_side=-1;
     b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
@@ -85,6 +86,7 @@ static void check_action_result(Battle *b)
 }
 static void complete_player_action(Battle *b)
 {
+    b->acting_side=0;
     b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     ++b->turn_index;
     check_action_result(b);
@@ -94,6 +96,7 @@ static void resolve_attack(Battle *b)
     if(b->turn_index>=2 || b->result!=BATTLE_ONGOING) return;
     b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     int side=b->order[b->turn_index++];
+    b->acting_side=side;
     Battler *a=side==0?&b->ally:&b->enemy;
     Battler *d=side==0?&b->enemy:&b->ally;
     int slot=b->choices[side];
@@ -124,7 +127,7 @@ static void advance_turn(Battle *b)
         b->turn_state=TURN_COMPLETE;
         begin_turn(b);
     } else if(b->order[b->turn_index]==0) {
-        b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
+        b->acting_side=-1;b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
     } else resolve_attack(b);
 }
 static float approach_hp(float shown,int hp,float step)
@@ -149,7 +152,7 @@ void battle_animate(Battle *b,float seconds,int motion)
 }
 static void begin_turn(Battle *b)
 {
-    b->turn_state=TURN_BEGIN;++b->turn_number;
+    b->acting_side=-1;b->turn_state=TURN_BEGIN;++b->turn_number;
     b->turn_index=0;b->choices[0]=-1;
     b->turn_state=TURN_SELECT_ENEMY;
     b->choices[1]=choose_enemy(b);
@@ -208,7 +211,7 @@ void battle_update(Battle *b,const Input *input)
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
     if(b->phase==BATTLE_CAPTURE) {
-        if(input->cancel) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(!input->confirm) return;
         if(!party_has_space(&b->party)) {
             message(b,"PARTY AND COLLECTION ARE FULL.\nNO MORE SPACE FOR NEW VEYLINGS.",AFTER_MENU);return;
@@ -232,7 +235,7 @@ void battle_update(Battle *b,const Input *input)
         return;
     }
     if(b->phase==BATTLE_SWITCH) {
-        if(input->cancel && !b->forced_switch) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel && !b->forced_switch) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(nav) b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
         if(!input->confirm) return;
         int selected=b->switch_cursor;
@@ -244,11 +247,11 @@ void battle_update(Battle *b,const Input *input)
         b->move_cursor=0;
         snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
         b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
-        if(!forced) complete_player_action(b);
+        if(!forced) complete_player_action(b);else b->acting_side=0;
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
-        if(input->cancel) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(nav) b->item_cursor=(b->item_cursor+nav+ITEM_COUNT)%ITEM_COUNT;
         if(!input->confirm) return;
         int restored=inventory_use_healing(&b->inventory,(ItemId)b->item_cursor,&b->ally);
@@ -280,14 +283,15 @@ void battle_update(Battle *b,const Input *input)
     }
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
-        if(b->after==AFTER_DONE) { sync_active(b);b->phase=BATTLE_DONE; return; }
+        if(b->after==AFTER_DONE) { b->acting_side=-1;sync_active(b);b->phase=BATTLE_DONE; return; }
         if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
-        if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
-        if(b->after==AFTER_GROWTH) { growth_next(b);return; }
+        if(b->after==AFTER_MENU) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
+        if(b->after==AFTER_GROWTH) { b->acting_side=-1;growth_next(b);return; }
         if(b->after==AFTER_SWITCH || b->forced_switch) {
-            sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
+            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
         }
         if(b->result==BATTLE_WIN) {
+            b->acting_side=-1;
             if(!b->reward_given) {
                 int old_xp=b->ally.experience;
                 b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
@@ -301,12 +305,13 @@ void battle_update(Battle *b,const Input *input)
                 snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL 100\nMAX LEVEL REACHED",b->experience_reward,creature_name(&b->ally));
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
+            b->acting_side=-1;
             message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
         } else advance_turn(b);
         return;
     }
     if(b->phase==BATTLE_ATTACKS) {
-        if(input->cancel) { b->phase=BATTLE_MENU; return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
         if(nav) b->move_cursor=(b->move_cursor+nav+4)%4;
         if(!input->confirm) return;
         int available=0;

@@ -63,28 +63,33 @@ void graphics_rectangle(int x, int y, int width, int height,
                   2, NULL, vertices);
 }
 
-void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
+void graphics_texture_tinted(int x,int y,int width,int height,const uint16_t *pixels,int flip,unsigned int tint)
 {
-    typedef struct { float u,v,x,y,z; } TextureVertex;
+    typedef struct { float u,v; unsigned int color; float x,y,z; } TextureVertex;
     TextureVertex *v=sceGuGetMemory(6*sizeof(TextureVertex));
     for(int i=0;i<3;++i) {
         float u0=(float)(i*32),u1=(float)((i+1)*32);
         float x0=x+width*(float)i/3,x1=x+width*(float)(i+1)/3;
-        v[i*2]=(TextureVertex){flip?96-u0:u0,0,x0,(float)y,0};
-        v[i*2+1]=(TextureVertex){flip?96-u1:u1,96,x1,(float)(y+height),0};
+        v[i*2]=(TextureVertex){flip?96-u0:u0,0,tint,x0,(float)y,0};
+        v[i*2+1]=(TextureVertex){flip?96-u1:u1,96,tint,x1,(float)(y+height),0};
     }
     sceGuEnable(GU_TEXTURE_2D);
     sceGuEnable(GU_BLEND);
     sceGuBlendFunc(GU_ADD,GU_SRC_ALPHA,GU_ONE_MINUS_SRC_ALPHA,0,0);
     sceGuTexMode(GU_PSM_4444,0,0,0);
     sceGuTexImage(0,128,128,128,pixels);
-    sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
+    sceGuTexFunc(GU_TFX_MODULATE,GU_TCC_RGBA);
     sceGuTexFilter(GU_LINEAR,GU_LINEAR);
     sceGuTexWrap(GU_CLAMP,GU_CLAMP);
     sceGuTexFlush();
-    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,6,NULL,v);
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D,6,NULL,v);
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
+}
+
+void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
+{
+    graphics_texture_tinted(x,y,width,height,pixels,flip,0xffffffffu);
 }
 
 void graphics_end(void)

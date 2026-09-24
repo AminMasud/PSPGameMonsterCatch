@@ -9,8 +9,10 @@
 static unsigned char pixels[272][480][3];
 static unsigned int rectangles;
 static unsigned int textures;
-void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+static unsigned int texture_tints[7];
+void graphics_texture_tinted(int x,int y,int w,int h,const uint16_t *texture,int flip,unsigned int tint)
 {
+    assert(textures<7);texture_tints[textures]=tint;
     ++textures;
     assert(w>0 && h>0 && texture);
     for(int py=0;py<h;++py) for(int px=0;px<w;++px) {
@@ -21,10 +23,15 @@ void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
         if(x+px<0 || x+px>=480 || y+py<0 || y+py>=272) continue;
         for(int channel=0;channel<3;++channel) {
             int source=((value>>(channel*4))&15)*17;
+            source=source*(int)((tint>>(channel*8))&255)/255;
             unsigned char *dest=&pixels[y+py][x+px][channel];
             *dest=(unsigned char)((source*alpha+*dest*(255-alpha)+127)/255);
         }
     }
+}
+void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+{
+    graphics_texture_tinted(x,y,w,h,texture,flip,0xffffffffu);
 }
 void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 {
@@ -39,7 +46,8 @@ void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 }
 static void render(const Game *g,const char *path)
 {
-    memset(pixels,0,sizeof(pixels)); rectangles=0;textures=0;
+    memset(pixels,0,sizeof(pixels));memset(texture_tints,0,sizeof(texture_tints));
+    rectangles=0;textures=0;
     game_draw(g);
     assert(rectangles < 6000); /* Conservative <576 KiB GU command estimate. */
     assert(textures<=7); /* At most six list portraits and one detail portrait. */
@@ -392,6 +400,28 @@ int main(void)
     render(&g,"previews/battle-impact.ppm");
     battle_animate(&g.battle,.05f,0);
     assert(g.battle.hit_time==0 && g.battle.enemy_hp_shown==g.battle.enemy.hp);
+    /* Phase 11: action messages spotlight only the actor; command selection
+       restores both sprites to their normal brightness. */
+    Party spotlight_party={0};spotlight_party.count=1;
+    creature_create(&spotlight_party.members[0],SPECIES_CINDLET,5);
+    battle_begin_party(&g.battle,&spotlight_party,SPECIES_MOSSPRIG,3,42);g.in_battle=1;
+    g.battle.ally.hp=g.battle.ally.max_hp=1000;g.battle.ally.speed=30;
+    g.battle.enemy.hp=g.battle.enemy.max_hp=1000;g.battle.enemy.speed=20;
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MENU && g.battle.acting_side==-1);
+    render(&g,"previews/spotlight-idle.ppm");
+    assert(texture_tints[0]==0xffffffffu && texture_tints[1]==0xffffffffu);
+    g.battle.cursor=0;battle_update(&g.battle,&(Input){.confirm=1});
+    g.battle.move_cursor=0;battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MESSAGE && g.battle.acting_side==0);
+    render(&g,"previews/spotlight-ally.ppm");
+    assert(texture_tints[0]==0xff7e7c74u && texture_tints[1]==0xffffffffu);
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MESSAGE && g.battle.acting_side==1);
+    render(&g,"previews/spotlight-enemy.ppm");
+    assert(texture_tints[0]==0xffffffffu && texture_tints[1]==0xff7e7c74u);
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MENU && g.battle.acting_side==-1);
     for(int id=0;id<SPECIES_COUNT;++id) {
         char path[80];
         battle_begin_party(&g.battle,&g.party,id,id%3==2?16:id%3==1?8:3,42);
@@ -435,6 +465,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, capture retention, party menu, inventory/shop/healing, storage swaps/scrolling, battle lead, drawing budget");
+    puts("PASS: world systems, progression, capture retention, party/inventory, battle lead, drawing budget, actor spotlight states");
     return 0;
 }

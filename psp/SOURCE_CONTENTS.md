@@ -1,4 +1,4 @@
-# Complete Phase 10 source contents
+# Complete Phase 11 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -487,7 +487,7 @@ typedef struct {
     CreatureGrowth growth;
     int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;
     float animation, hit_time, ally_hp_shown, enemy_hp_shown;
-    int hit_side;
+    int hit_side, acting_side; /* 0 ally, 1 enemy, -1 outside action messages. */
     char message[160];
 } Battle;
 void battler_starter(Battler *b);
@@ -674,6 +674,9 @@ void graphics_rectangle(int x, int y, int width, int height,
                         unsigned int color);
 /* 96x96 canvas in a 128x128 RGBA4444 texture; flip mirrors horizontally. */
 void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip);
+/* RGB tint is multiplied with the texture; alpha continues to come from it. */
+void graphics_texture_tinted(int x,int y,int width,int height,
+                             const uint16_t *pixels,int flip,unsigned int tint);
 void graphics_end(void);
 void graphics_shutdown(void);
 
@@ -850,6 +853,7 @@ int party_deposit(Party *party,int index);
 #define PET_CANVAS_SIZE 96
 extern const uint16_t pet_pixels[SPECIES_COUNT][PET_TEXTURE_SIZE * PET_TEXTURE_SIZE];
 void pet_draw(int species,int x,int y,int size,int flip);
+void pet_draw_tinted(int species,int x,int y,int size,int flip,unsigned int tint);
 #endif
 ````
 
@@ -1004,7 +1008,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 10
+PSP_EBOOT_TITLE = Emberwake - Phase 11
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1037,24 +1041,24 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 10 Battle Turn State Machine
+# Emberwake — Phase 11 Active-Turn Battle Spotlight
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
-apiece, and adds a round-based battle controller in which a faster enemy acts
-before player command selection. The PNG number minus one is the internal
-species ID. All 30 forms have stats, descriptions, attacks, capture support,
-and their own supplied artwork.
+apiece, a round-based battle controller in which a faster enemy acts before
+player command selection, and a clear spotlight on the Veyling performing each
+action. The PNG number minus one is the internal species ID. All 30 forms have
+stats, descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE10.PBP**, titled **Emberwake - Phase 10**. Copy it to:
+Use **EBOOT-PHASE11.PBP**, titled **Emberwake - Phase 11**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PETS.PBP and numbered phase builds are retained
-locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PETS.PBP, and numbered phase
+builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1123,6 +1127,12 @@ ties are random. Canceling or navigating menus does not reroll the enemy action
 or change the order. The controller separately tracks round start, enemy choice,
 player input, first and second action resolution, faint checks, result checks,
 and round completion.
+
+While an action message is visible, the acting Veyling stays at full brightness
+inside a warm corner glow and the other sprite is dimmed. The highlight switches
+with the actor and clears for command selection, attack selection, replacement
+menus, and result messages. Names, HP panels, and battle text are never dimmed.
+With animation disabled, the highlight remains visible without pulsing.
 
 FIGHT chooses one of four attacks. Each attempt consumes one use, including
 misses. A creature knocked out by the first action cannot perform the queued
@@ -1256,8 +1266,10 @@ bytes of system RAM; the two screen buffers retain the existing VRAM allocation.
 assets/generated/pets.rgba4444 and pets.json are committed build inputs. The
 manifest records the source and texture checksums. src/pet_assets.S embeds the
 texture data, pet_draw.c chooses the numbered sprite, and graphics.c draws
-alpha-blended textured strips before restoring the rectangle rendering state.
-No PNG decoder, runtime asset loading, or additional PSP libraries are required.
+alpha-blended textured strips with an optional hardware color tint before
+restoring the rectangle rendering state. The spotlight adds only eight small
+GU rectangles and reuses the two existing sprite draws. No PNG decoder, runtime
+asset loading, or additional PSP libraries are required.
 
 - include/: public interfaces and data models.
 - src/: game systems, GU renderer, menus, audio, savedata service and migration.
@@ -1280,12 +1292,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP
+    make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1300,24 +1312,25 @@ stubs together, with pspaudiolib first and the utility import library last.
 All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
-and repeated rounds without duplicates. The full suite also covers movement,
-all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
-all ten two-step evolution chains, wild availability of every form, 32-slot
-storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
-text bounds, drawing budget, and PCM audio.
+repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
+checks the normal, ally-action, and enemy-action tint states. The full suite also
+covers movement, all portals, collisions, capture, inventory, menus, all 30 forms
+at levels 1–100, all ten two-step evolution chains, wild availability of every
+form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
+savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include pet-001.png through pet-030.png, party/collection/battle/menu scenes,
-and pet-roster.png from the asset compiler. They are not hardware screenshots.
+include spotlight-idle.png, spotlight-ally.png, spotlight-enemy.png, pet-001.png
+through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png from
+the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Fight a slower Veyling and verify the command menu opens before it attacks.
-2. Fight a faster Veyling and verify its attack occurs before command selection.
-3. Verify each side can faint on the first or second action without an extra hit.
-4. Fail a capture, use an item, switch, and fail RUN after an enemy-first action;
-   verify the enemy does not attack twice in that round.
-5. Load an old save with L; verify converted creatures, levels, items, and location.
-6. Save, quit, relaunch, load, then check art, audio, HOME exit, and suspend/resume.
+1. Choose an attack and verify the ally receives the glow while the enemy dims.
+2. Advance once and verify the glow moves to the enemy for its action.
+3. Verify both sprites return to normal brightness at the command menu.
+4. Repeat with an enemy faster than the ally; its spotlight must appear first.
+5. Check misses, knockouts, items, captures, RUN, and swaps for the correct actor.
+6. Disable animation and verify the static highlight remains clear and readable.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -1546,6 +1559,16 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
     snprintf(line,sizeof(line),"HP %d / %d",unit->hp,unit->max_hp);
     text_draw(x+8,y+44,line,C(224,227,218),1);
 }
+static void spotlight_frame(int x,int y,int frame)
+{
+    int pulse=frame<4;
+    unsigned int color=pulse?C(255,190,92):C(224,151,72);
+    int edge=20;
+    graphics_rectangle(x,y,edge,3,color);graphics_rectangle(x,y,3,edge,color);
+    graphics_rectangle(x+96-edge,y,edge,3,color);graphics_rectangle(x+93,y,3,edge,color);
+    graphics_rectangle(x,y+93,edge,3,color);graphics_rectangle(x,y+96-edge,3,edge,color);
+    graphics_rectangle(x+96-edge,y+93,edge,3,color);graphics_rectangle(x+93,y+96-edge,3,edge,color);
+}
 void battle_draw(const Battle *b)
 {
     graphics_rectangle(0,0,480,272,C(48,65,74));
@@ -1555,8 +1578,15 @@ void battle_draw(const Battle *b)
     static const int bob[]={0,-1,-2,-1,0,1,2,1};
     int frame=(int)(b->animation*6)%8;
     int shake=b->hit_time>0?((int)(b->hit_time*40)%2?3:-3):0;
-    pet_draw(b->enemy.species,310+(b->hit_side==1?shake:0),14+bob[frame],96,0);
-    pet_draw(b->ally.species,48+(b->hit_side==0?shake:0),78+bob[(frame+4)%8],96,1);
+    int enemy_x=310+(b->hit_side==1?shake:0),enemy_y=14+bob[frame];
+    int ally_x=48+(b->hit_side==0?shake:0),ally_y=78+bob[(frame+4)%8];
+    int spotlight=b->phase==BATTLE_MESSAGE?b->acting_side:-1;
+    unsigned int enemy_tint=spotlight<0 || spotlight==1?C(255,255,255):C(116,124,126);
+    unsigned int ally_tint=spotlight<0 || spotlight==0?C(255,255,255):C(116,124,126);
+    if(spotlight==1) spotlight_frame(enemy_x,enemy_y,frame);
+    if(spotlight==0) spotlight_frame(ally_x,ally_y,frame);
+    pet_draw_tinted(b->enemy.species,enemy_x,enemy_y,96,0,enemy_tint);
+    pet_draw_tinted(b->ally.species,ally_x,ally_y,96,1,ally_tint);
     if (b->hit_time>0) {
         int x=b->hit_side?355:95,y=b->hit_side?60:127;
         graphics_rectangle(x-12,y,28,3,C(255,221,139));
@@ -1689,6 +1719,7 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
+    b->acting_side=-1;
     b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
@@ -1745,6 +1776,7 @@ static void check_action_result(Battle *b)
 }
 static void complete_player_action(Battle *b)
 {
+    b->acting_side=0;
     b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     ++b->turn_index;
     check_action_result(b);
@@ -1754,6 +1786,7 @@ static void resolve_attack(Battle *b)
     if(b->turn_index>=2 || b->result!=BATTLE_ONGOING) return;
     b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     int side=b->order[b->turn_index++];
+    b->acting_side=side;
     Battler *a=side==0?&b->ally:&b->enemy;
     Battler *d=side==0?&b->enemy:&b->ally;
     int slot=b->choices[side];
@@ -1784,7 +1817,7 @@ static void advance_turn(Battle *b)
         b->turn_state=TURN_COMPLETE;
         begin_turn(b);
     } else if(b->order[b->turn_index]==0) {
-        b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
+        b->acting_side=-1;b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
     } else resolve_attack(b);
 }
 static float approach_hp(float shown,int hp,float step)
@@ -1809,7 +1842,7 @@ void battle_animate(Battle *b,float seconds,int motion)
 }
 static void begin_turn(Battle *b)
 {
-    b->turn_state=TURN_BEGIN;++b->turn_number;
+    b->acting_side=-1;b->turn_state=TURN_BEGIN;++b->turn_number;
     b->turn_index=0;b->choices[0]=-1;
     b->turn_state=TURN_SELECT_ENEMY;
     b->choices[1]=choose_enemy(b);
@@ -1868,7 +1901,7 @@ void battle_update(Battle *b,const Input *input)
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
     if(b->phase==BATTLE_CAPTURE) {
-        if(input->cancel) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(!input->confirm) return;
         if(!party_has_space(&b->party)) {
             message(b,"PARTY AND COLLECTION ARE FULL.\nNO MORE SPACE FOR NEW VEYLINGS.",AFTER_MENU);return;
@@ -1892,7 +1925,7 @@ void battle_update(Battle *b,const Input *input)
         return;
     }
     if(b->phase==BATTLE_SWITCH) {
-        if(input->cancel && !b->forced_switch) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel && !b->forced_switch) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(nav) b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
         if(!input->confirm) return;
         int selected=b->switch_cursor;
@@ -1904,11 +1937,11 @@ void battle_update(Battle *b,const Input *input)
         b->move_cursor=0;
         snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
         b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
-        if(!forced) complete_player_action(b);
+        if(!forced) complete_player_action(b);else b->acting_side=0;
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
-        if(input->cancel) { b->phase=BATTLE_MENU;return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(nav) b->item_cursor=(b->item_cursor+nav+ITEM_COUNT)%ITEM_COUNT;
         if(!input->confirm) return;
         int restored=inventory_use_healing(&b->inventory,(ItemId)b->item_cursor,&b->ally);
@@ -1940,14 +1973,15 @@ void battle_update(Battle *b,const Input *input)
     }
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
-        if(b->after==AFTER_DONE) { sync_active(b);b->phase=BATTLE_DONE; return; }
+        if(b->after==AFTER_DONE) { b->acting_side=-1;sync_active(b);b->phase=BATTLE_DONE; return; }
         if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
-        if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
-        if(b->after==AFTER_GROWTH) { growth_next(b);return; }
+        if(b->after==AFTER_MENU) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
+        if(b->after==AFTER_GROWTH) { b->acting_side=-1;growth_next(b);return; }
         if(b->after==AFTER_SWITCH || b->forced_switch) {
-            sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
+            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
         }
         if(b->result==BATTLE_WIN) {
+            b->acting_side=-1;
             if(!b->reward_given) {
                 int old_xp=b->ally.experience;
                 b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
@@ -1961,12 +1995,13 @@ void battle_update(Battle *b,const Input *input)
                 snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL 100\nMAX LEVEL REACHED",b->experience_reward,creature_name(&b->ally));
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
+            b->acting_side=-1;
             message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
         } else advance_turn(b);
         return;
     }
     if(b->phase==BATTLE_ATTACKS) {
-        if(input->cancel) { b->phase=BATTLE_MENU; return; }
+        if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
         if(nav) b->move_cursor=(b->move_cursor+nav+4)%4;
         if(!input->confirm) return;
         int available=0;
@@ -2763,28 +2798,33 @@ void graphics_rectangle(int x, int y, int width, int height,
                   2, NULL, vertices);
 }
 
-void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
+void graphics_texture_tinted(int x,int y,int width,int height,const uint16_t *pixels,int flip,unsigned int tint)
 {
-    typedef struct { float u,v,x,y,z; } TextureVertex;
+    typedef struct { float u,v; unsigned int color; float x,y,z; } TextureVertex;
     TextureVertex *v=sceGuGetMemory(6*sizeof(TextureVertex));
     for(int i=0;i<3;++i) {
         float u0=(float)(i*32),u1=(float)((i+1)*32);
         float x0=x+width*(float)i/3,x1=x+width*(float)(i+1)/3;
-        v[i*2]=(TextureVertex){flip?96-u0:u0,0,x0,(float)y,0};
-        v[i*2+1]=(TextureVertex){flip?96-u1:u1,96,x1,(float)(y+height),0};
+        v[i*2]=(TextureVertex){flip?96-u0:u0,0,tint,x0,(float)y,0};
+        v[i*2+1]=(TextureVertex){flip?96-u1:u1,96,tint,x1,(float)(y+height),0};
     }
     sceGuEnable(GU_TEXTURE_2D);
     sceGuEnable(GU_BLEND);
     sceGuBlendFunc(GU_ADD,GU_SRC_ALPHA,GU_ONE_MINUS_SRC_ALPHA,0,0);
     sceGuTexMode(GU_PSM_4444,0,0,0);
     sceGuTexImage(0,128,128,128,pixels);
-    sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
+    sceGuTexFunc(GU_TFX_MODULATE,GU_TCC_RGBA);
     sceGuTexFilter(GU_LINEAR,GU_LINEAR);
     sceGuTexWrap(GU_CLAMP,GU_CLAMP);
     sceGuTexFlush();
-    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,6,NULL,v);
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D,6,NULL,v);
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
+}
+
+void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
+{
+    graphics_texture_tinted(x,y,width,height,pixels,flip,0xffffffffu);
 }
 
 void graphics_end(void)
@@ -3498,6 +3538,11 @@ void pet_draw(int species,int x,int y,int size,int flip)
 {
     if(species<0 || species>=SPECIES_COUNT || size<=0) return;
     graphics_texture(x,y,size,size,pet_pixels[species],flip);
+}
+void pet_draw_tinted(int species,int x,int y,int size,int flip,unsigned int tint)
+{
+    if(species<0 || species>=SPECIES_COUNT || size<=0) return;
+    graphics_texture_tinted(x,y,size,size,pet_pixels[species],flip,tint);
 }
 ````
 
@@ -4606,7 +4651,7 @@ static void prepare(Battle *b,int enemy_first,unsigned int seed,int reserves)
     b->enemy.hp=b->enemy.max_hp=1000;b->enemy.speed=20;
     for(int m=0;m<4;++m) { b->enemy.moves[m]=-1;b->enemy.uses[m]=0; }
     b->enemy.moves[0]=MOVE_NUDGE;b->enemy.uses[0]=100;
-    assert(b->turn_number==0 && b->turn_state==TURN_BEGIN);
+    assert(b->turn_number==0 && b->turn_state==TURN_BEGIN && b->acting_side==-1);
 }
 static void attack(Battle *b)
 {
@@ -4618,15 +4663,18 @@ static void player_menu(Battle *b,int enemy_first)
 {
     if(enemy_first) {
         assert(b->phase==BATTLE_MESSAGE && strstr(b->message,"ENEMY USED"));
-        assert(b->turn_index==1);
+        assert(b->turn_index==1 && b->acting_side==1);
         press(b);
     }
-    assert(b->phase==BATTLE_MENU && b->turn_state==TURN_WAIT_PLAYER);
+    assert(b->phase==BATTLE_MENU && b->turn_state==TURN_WAIT_PLAYER && b->acting_side==-1);
 }
 static void end_result(Battle *b)
 {
     int ally_uses=b->ally.uses[0],enemy_uses=b->enemy.uses[0];
     unsigned int turn=b->turn_number;
+    assert(b->acting_side>=0);
+    press(b);
+    assert(b->phase==BATTLE_MESSAGE && b->acting_side==-1);
     for(int i=0;i<40 && b->phase!=BATTLE_DONE;++i) {
         if(b->phase==BATTLE_LEARN) cancel(b);else press(b);
     }
@@ -4649,11 +4697,11 @@ static void repeated_turns(int enemy_first)
         for(int i=0;i<30;++i) battle_update(&b,&(Input){.cancel=1});
         assert(b.ally.hp==hp && b.enemy.hp==enemy_hp && b.random==random);
         attack(&b);
-        assert(strstr(b.message,"ALLY USED") && b.ally.uses[0]==100-turn);
+        assert(strstr(b.message,"ALLY USED") && b.ally.uses[0]==100-turn && b.acting_side==0);
         if(!enemy_first) {
             assert(b.enemy.uses[0]==101-turn);
             press(&b);
-            assert(strstr(b.message,"ENEMY USED"));
+            assert(strstr(b.message,"ENEMY USED") && b.acting_side==1);
         }
         assert(b.enemy.uses[0]==100-turn && b.turn_index==2);
         hp=b.ally.hp;enemy_hp=b.enemy.hp;
@@ -4676,6 +4724,7 @@ static void knockouts(void)
         }
         assert(b.result==(loser==0?BATTLE_LOSS:BATTLE_WIN));
         assert(b.turn_number==1 && b.turn_state==TURN_COMPLETE);
+        assert(b.acting_side==1-loser);
         int loser_acted=loser==first;
         assert((loser==0?b.ally.uses[0]:b.enemy.uses[0])==100-loser_acted);
         assert((loser==0?b.enemy.uses[0]:b.ally.uses[0])==99);
@@ -4712,7 +4761,7 @@ static void enemy_first_commands(void)
         if(command==1) { b.random=1;press(&b); } /* Failed capture (69/100). */
         if(command==2) { b.switch_cursor=1;press(&b); }
         if(command==3) press(&b);
-        assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MESSAGE);
+        assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MESSAGE && b.acting_side==0);
         assert(b.enemy.uses[0]==99 && b.turn_index==2 && b.turn_number==1);
         b.ally.speed=30; /* Next round is player-first, isolating this round. */
         press(&b);
@@ -4739,11 +4788,11 @@ static void forced_replacement(void)
         Battle b;prepare(&b,1,123,1);b.ally.hp=1;
         b.party.members[1].speed=fast_reserve?30:10;
         press(&b);
-        assert(b.forced_switch && b.ally.uses[0]==100 && b.enemy.uses[0]==99);
-        press(&b);assert(b.phase==BATTLE_SWITCH);
+        assert(b.forced_switch && b.ally.uses[0]==100 && b.enemy.uses[0]==99 && b.acting_side==1);
+        press(&b);assert(b.phase==BATTLE_SWITCH && b.acting_side==-1);
         cancel(&b);assert(b.phase==BATTLE_SWITCH && b.turn_number==1);
         b.switch_cursor=1;press(&b);
-        assert(b.enemy.uses[0]==99 && b.ally.hp==1000 && b.turn_number==1);
+        assert(b.enemy.uses[0]==99 && b.ally.hp==1000 && b.turn_number==1 && b.acting_side==0);
         press(&b);
         assert(b.turn_number==2 && b.active==1 && !b.forced_switch);
         player_menu(&b,!fast_reserve);
@@ -4756,10 +4805,10 @@ static void fallback_and_locked_order(void)
 {
     Battle b;prepare(&b,1,123,0);
     b.enemy.moves[0]=-1; /* Invalid entries with stray uses cannot be selected. */
-    press(&b);assert(strstr(b.message,"PRESS ON") && b.enemy.uses[0]==100);
+    press(&b);assert(strstr(b.message,"PRESS ON") && b.enemy.uses[0]==100 && b.acting_side==1);
     player_menu(&b,1);
     for(int i=0;i<4;++i) b.ally.uses[i]=0;
-    attack(&b);assert(strstr(b.message,"PRESS ON"));
+    attack(&b);assert(strstr(b.message,"PRESS ON") && b.acting_side==0);
     prepare(&b,0,123,0);press(&b);assert(b.order[0]==0);
     b.enemy.speed=999;attack(&b);
     assert(strstr(b.message,"ALLY USED") && b.enemy.uses[0]==100);
@@ -4770,7 +4819,7 @@ int main(void)
 {
     repeated_turns(0);repeated_turns(1);equal_speed();knockouts();
     enemy_first_commands();forced_replacement();fallback_and_locked_order();
-    puts("PASS: Phase 10 enemy-before-menu, player-first, ties, all knockout orders, no duplicated actions, command costs, forced replacements, fallback");
+    puts("PASS: Phase 10 turn order/actions and Phase 11 spotlight actor ownership/menu clearing");
     return 0;
 }
 ````
@@ -5429,7 +5478,8 @@ for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
-             'zappip', 'bubfin', 'battle-impact', 'saved-dialogue') + tuple(f'pet-{i:03d}' for i in range(1,31)):
+             'zappip', 'bubfin', 'battle-impact', 'spotlight-idle',
+             'spotlight-ally', 'spotlight-enemy', 'saved-dialogue') + tuple(f'pet-{i:03d}' for i in range(1,31)):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'
@@ -5699,8 +5749,10 @@ int main(void)
 static unsigned char pixels[272][480][3];
 static unsigned int rectangles;
 static unsigned int textures;
-void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+static unsigned int texture_tints[7];
+void graphics_texture_tinted(int x,int y,int w,int h,const uint16_t *texture,int flip,unsigned int tint)
 {
+    assert(textures<7);texture_tints[textures]=tint;
     ++textures;
     assert(w>0 && h>0 && texture);
     for(int py=0;py<h;++py) for(int px=0;px<w;++px) {
@@ -5711,10 +5763,15 @@ void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
         if(x+px<0 || x+px>=480 || y+py<0 || y+py>=272) continue;
         for(int channel=0;channel<3;++channel) {
             int source=((value>>(channel*4))&15)*17;
+            source=source*(int)((tint>>(channel*8))&255)/255;
             unsigned char *dest=&pixels[y+py][x+px][channel];
             *dest=(unsigned char)((source*alpha+*dest*(255-alpha)+127)/255);
         }
     }
+}
+void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+{
+    graphics_texture_tinted(x,y,w,h,texture,flip,0xffffffffu);
 }
 void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 {
@@ -5729,7 +5786,8 @@ void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 }
 static void render(const Game *g,const char *path)
 {
-    memset(pixels,0,sizeof(pixels)); rectangles=0;textures=0;
+    memset(pixels,0,sizeof(pixels));memset(texture_tints,0,sizeof(texture_tints));
+    rectangles=0;textures=0;
     game_draw(g);
     assert(rectangles < 6000); /* Conservative <576 KiB GU command estimate. */
     assert(textures<=7); /* At most six list portraits and one detail portrait. */
@@ -6082,6 +6140,28 @@ int main(void)
     render(&g,"previews/battle-impact.ppm");
     battle_animate(&g.battle,.05f,0);
     assert(g.battle.hit_time==0 && g.battle.enemy_hp_shown==g.battle.enemy.hp);
+    /* Phase 11: action messages spotlight only the actor; command selection
+       restores both sprites to their normal brightness. */
+    Party spotlight_party={0};spotlight_party.count=1;
+    creature_create(&spotlight_party.members[0],SPECIES_CINDLET,5);
+    battle_begin_party(&g.battle,&spotlight_party,SPECIES_MOSSPRIG,3,42);g.in_battle=1;
+    g.battle.ally.hp=g.battle.ally.max_hp=1000;g.battle.ally.speed=30;
+    g.battle.enemy.hp=g.battle.enemy.max_hp=1000;g.battle.enemy.speed=20;
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MENU && g.battle.acting_side==-1);
+    render(&g,"previews/spotlight-idle.ppm");
+    assert(texture_tints[0]==0xffffffffu && texture_tints[1]==0xffffffffu);
+    g.battle.cursor=0;battle_update(&g.battle,&(Input){.confirm=1});
+    g.battle.move_cursor=0;battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MESSAGE && g.battle.acting_side==0);
+    render(&g,"previews/spotlight-ally.ppm");
+    assert(texture_tints[0]==0xff7e7c74u && texture_tints[1]==0xffffffffu);
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MESSAGE && g.battle.acting_side==1);
+    render(&g,"previews/spotlight-enemy.ppm");
+    assert(texture_tints[0]==0xffffffffu && texture_tints[1]==0xff7e7c74u);
+    battle_update(&g.battle,&(Input){.confirm=1});
+    assert(g.battle.phase==BATTLE_MENU && g.battle.acting_side==-1);
     for(int id=0;id<SPECIES_COUNT;++id) {
         char path[80];
         battle_begin_party(&g.battle,&g.party,id,id%3==2?16:id%3==1?8:3,42);
@@ -6125,7 +6205,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, capture retention, party menu, inventory/shop/healing, storage swaps/scrolling, battle lead, drawing budget");
+    puts("PASS: world systems, progression, capture retention, party/inventory, battle lead, drawing budget, actor spotlight states");
     return 0;
 }
 ````

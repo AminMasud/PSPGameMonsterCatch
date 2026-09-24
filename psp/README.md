@@ -1,21 +1,21 @@
-# Emberwake — Phase 10 Battle Turn State Machine
+# Emberwake — Phase 11 Active-Turn Battle Spotlight
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
-apiece, and adds a round-based battle controller in which a faster enemy acts
-before player command selection. The PNG number minus one is the internal
-species ID. All 30 forms have stats, descriptions, attacks, capture support,
-and their own supplied artwork.
+apiece, a round-based battle controller in which a faster enemy acts before
+player command selection, and a clear spotlight on the Veyling performing each
+action. The PNG number minus one is the internal species ID. All 30 forms have
+stats, descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE10.PBP**, titled **Emberwake - Phase 10**. Copy it to:
+Use **EBOOT-PHASE11.PBP**, titled **Emberwake - Phase 11**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PETS.PBP and numbered phase builds are retained
-locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PETS.PBP, and numbered phase
+builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -84,6 +84,12 @@ ties are random. Canceling or navigating menus does not reroll the enemy action
 or change the order. The controller separately tracks round start, enemy choice,
 player input, first and second action resolution, faint checks, result checks,
 and round completion.
+
+While an action message is visible, the acting Veyling stays at full brightness
+inside a warm corner glow and the other sprite is dimmed. The highlight switches
+with the actor and clears for command selection, attack selection, replacement
+menus, and result messages. Names, HP panels, and battle text are never dimmed.
+With animation disabled, the highlight remains visible without pulsing.
 
 FIGHT chooses one of four attacks. Each attempt consumes one use, including
 misses. A creature knocked out by the first action cannot perform the queued
@@ -217,8 +223,10 @@ bytes of system RAM; the two screen buffers retain the existing VRAM allocation.
 assets/generated/pets.rgba4444 and pets.json are committed build inputs. The
 manifest records the source and texture checksums. src/pet_assets.S embeds the
 texture data, pet_draw.c chooses the numbered sprite, and graphics.c draws
-alpha-blended textured strips before restoring the rectangle rendering state.
-No PNG decoder, runtime asset loading, or additional PSP libraries are required.
+alpha-blended textured strips with an optional hardware color tint before
+restoring the rectangle rendering state. The spotlight adds only eight small
+GU rectangles and reuses the two existing sprite draws. No PNG decoder, runtime
+asset loading, or additional PSP libraries are required.
 
 - include/: public interfaces and data models.
 - src/: game systems, GU renderer, menus, audio, savedata service and migration.
@@ -241,12 +249,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP
+    make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -261,24 +269,25 @@ stubs together, with pspaudiolib first and the utility import library last.
 All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
-and repeated rounds without duplicates. The full suite also covers movement,
-all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
-all ten two-step evolution chains, wild availability of every form, 32-slot
-storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
-text bounds, drawing budget, and PCM audio.
+repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
+checks the normal, ally-action, and enemy-action tint states. The full suite also
+covers movement, all portals, collisions, capture, inventory, menus, all 30 forms
+at levels 1–100, all ten two-step evolution chains, wild availability of every
+form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
+savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include pet-001.png through pet-030.png, party/collection/battle/menu scenes,
-and pet-roster.png from the asset compiler. They are not hardware screenshots.
+include spotlight-idle.png, spotlight-ally.png, spotlight-enemy.png, pet-001.png
+through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png from
+the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Fight a slower Veyling and verify the command menu opens before it attacks.
-2. Fight a faster Veyling and verify its attack occurs before command selection.
-3. Verify each side can faint on the first or second action without an extra hit.
-4. Fail a capture, use an item, switch, and fail RUN after an enemy-first action;
-   verify the enemy does not attack twice in that round.
-5. Load an old save with L; verify converted creatures, levels, items, and location.
-6. Save, quit, relaunch, load, then check art, audio, HOME exit, and suspend/resume.
+1. Choose an attack and verify the ally receives the glow while the enemy dims.
+2. Advance once and verify the glow moves to the enemy for its action.
+3. Verify both sprites return to normal brightness at the command menu.
+4. Repeat with an enemy faster than the ally; its spotlight must appear first.
+5. Check misses, knockouts, items, captures, RUN, and swaps for the correct actor.
+6. Disable animation and verify the static highlight remains clear and readable.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
