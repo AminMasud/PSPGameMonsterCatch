@@ -46,6 +46,13 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].gate=sunthread;
         n->people[n->count-1].open_x=29;
         n->people[n->count-1].open_y=10;
+        const Gate *hollowstone=map_gate(MAP_FOREST,28,5);
+        add(n,28,5,hollowstone->gatekeeper,hollowstone->locked_dialogue.first,
+            hollowstone->locked_dialogue.second,28);
+        n->people[n->count-1].actor.facing=FACE_DOWN;
+        n->people[n->count-1].gate=hollowstone;
+        n->people[n->count-1].open_x=29;
+        n->people[n->count-1].open_y=6;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {

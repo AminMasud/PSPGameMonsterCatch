@@ -17,6 +17,7 @@ output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
              'forest-gatekeeper-locked', 'forest-gatekeeper-open',
+             'cave-gatekeeper-locked', 'cave-gatekeeper-open',
              'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',

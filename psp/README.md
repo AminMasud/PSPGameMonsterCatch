@@ -1,4 +1,4 @@
-# Emberwake — Phase 19 Forest Gatekeepers
+# Emberwake — Phase 20 Lock the Cave
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -7,19 +7,20 @@ player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
-flag-controlled entrances, and progression-aware forest gatekeepers. The PNG number minus one is the internal
+flag-controlled entrances, progression-aware forest gatekeepers, and a sealed
+Hollowstone Cave entrance. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE19.PBP**, titled **Emberwake - Phase 19**. Copy it to:
+Use **EBOOT-PHASE20.PBP**, titled **Emberwake - Phase 20**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE18.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE19.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -63,7 +64,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave; Varel guards the east road to the marsh |
+| Fernveil Woods | Sen, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
 | Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
@@ -132,6 +133,15 @@ that the Guardian has yielded, and opens the road. This position and dialogue
 are reconstructed from the saved progression state after every map entry or
 load. The reverse road remains open so an older save already in Sunthread Marsh
 cannot become trapped.
+
+Maren now stands visibly inside the Hollowstone Cave doorway. The entrance uses
+the same `Gate` data and collision path as the forest roads and requires
+`PROGRESSION_CAVE_UNLOCKED`. Maren explains that the Veyling Guardians of
+Fernveil and the Northern Woods must both be defeated. When the cave flag is
+present, Maren steps beside the path, announces that the seal is open, and the
+doorway becomes traversable. Cave state is rebuilt from the saved flag. The
+return portal remains open so an existing save inside Hollowstone can always
+leave safely.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -341,12 +351,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP
+    make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -384,6 +394,9 @@ invalid data, movement blocking, and the complete Ren unlock flow.
 The Phase 19 integration checks both forest gatekeepers, Varel's exact Guardian
 requirement, changed post-flag dialogue, immediate step-aside behavior, blocked
 and open traversal, reverse-route safety, and save/load restoration.
+The Phase 20 integration checks the visibly occupied cave doorway, both-Guardian
+requirement text, shared gate collision, cave-flag unlock, changed dialogue,
+step-aside position, two-way travel, old-save escape route, and persistence.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -393,7 +406,8 @@ Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
-forest-gatekeeper-open.png, spotlight-idle.png,
+forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
+cave-gatekeeper-open.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
@@ -409,7 +423,10 @@ PSP test route:
 5. In Fernveil Woods, follow the main road east. Verify Varel blocks Sunthread
    Marsh and explains that Fernveil's Veyling Guardian must be defeated. Save and
    load there and verify the road remains locked.
-6. Load an existing version-2 save and verify roster, items, money, and location
+6. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
+   and explains that the Fernveil and Northern Woods Guardians must be defeated.
+   Save and load there and verify the cave remains sealed.
+7. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,

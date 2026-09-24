@@ -145,7 +145,7 @@ int main(void)
             }
         }
     }
-    assert(portals==10 && locked_gates==2);
+    assert(portals==10 && locked_gates==3);
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -210,7 +210,7 @@ int main(void)
     place(&g,MAP_FOREST,29,11);
     const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
-    assert(g.npcs.count==2 && g.npcs.people[1].gate==sunthread_gate);
+    assert(g.npcs.count==3 && g.npcs.people[1].gate==sunthread_gate);
     assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
@@ -241,11 +241,33 @@ int main(void)
     place(&g,MAP_FOREST,2,11);
     update(&g,(Input){-1,0,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING);
+    /* Phase 20: Hollowstone uses the same flag-driven gate and NPC behavior. */
     place(&g,MAP_FOREST,28,6);
-    update(&g,(Input){0,-1,0,0,0,0},10);
+    const Gate *cave_gate=map_gate(MAP_FOREST,28,5);
+    assert(cave_gate && cave_gate->required_flag==PROGRESSION_CAVE_UNLOCKED);
+    assert(g.npcs.count==3 && g.npcs.people[2].gate==cave_gate &&
+           !strcmp(g.npcs.people[2].name,"MAREN"));
+    update(&g,(Input){.vertical=-1},10);
+    assert(g.map_id==MAP_FOREST && g.player.tile_y==6 && gate_is_locked(cave_gate,&g.progression));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"MAREN") &&
+           strstr(g.dialogue.pages[1],"NORTHERN WOODS"));
+    render(&g,"previews/cave-gatekeeper-locked.ppm");
+    update(&g,(Input){.cancel=1},1);
+    assert(progression_set(&g.progression,PROGRESSION_CAVE_UNLOCKED));
+    npc_apply_progress(&g.npcs,g.npc_battle_progress.defeated,&g.progression);
+    assert(g.npcs.people[2].actor.tile_x==29 && g.npcs.people[2].actor.tile_y==6);
+    assert(gate_can_enter(cave_gate,&g.progression));
+    g.player.facing=FACE_RIGHT;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"HAVE YIELDED"));
+    render(&g,"previews/cave-gatekeeper-open.ppm");
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_CAVE);
-    update(&g,(Input){0,1,0,0,0,0},10);
-    assert(g.map_id==MAP_FOREST);
+    update(&g,(Input){.vertical=1},10);
+    assert(g.map_id==MAP_FOREST && g.npcs.people[2].actor.tile_x==29 &&
+           g.npcs.people[2].actor.tile_y==6);
 
     place(&g,MAP_CLEARING,7,11);
     update(&g,(Input){0,-1,0,0,0,0},20);
@@ -649,7 +671,9 @@ int main(void)
     npc_load(&restored_npcs,MAP_FOREST);
     npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
     assert(restored_npcs.people[1].actor.tile_x==29 && restored_npcs.people[1].actor.tile_y==10);
+    assert(restored_npcs.people[2].actor.tile_x==29 && restored_npcs.people[2].actor.tile_y==6);
     assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
+    assert(gate_can_enter(map_gate(MAP_FOREST,28,5),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
     npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
     assert(progression_has(&phase16_save,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
@@ -659,6 +683,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 19 forest gatekeepers, locked gates, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 20 cave lock, forest gatekeepers, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }
