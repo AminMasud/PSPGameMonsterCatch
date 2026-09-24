@@ -1,19 +1,21 @@
-# Emberwake — Pet Roster
+# Emberwake — Phase 10 Battle Turn State Machine
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
-apiece. The PNG number minus one is the internal species ID. All 30 forms have
-stats, descriptions, attacks, capture support, and their own supplied artwork.
+apiece, and adds a round-based battle controller in which a faster enemy acts
+before player command selection. The PNG number minus one is the internal
+species ID. All 30 forms have stats, descriptions, attacks, capture support,
+and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PETS.PBP**, titled **Emberwake - Pet Roster**. Copy it to:
+Use **EBOOT-PHASE10.PBP**, titled **Emberwake - Phase 10**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE8.PBP and EBOOT-PHASE9.PBP builds are retained
-locally, but they do not contain the new roster.
+Memory Stick. Earlier EBOOT-PETS.PBP and numbered phase builds are retained
+locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -75,9 +77,17 @@ than a new team; RUN is guaranteed on the third attempt.
 
 ## Battles and progression
 
-FIGHT chooses one of four attacks. Faster creatures act first; speed ties are
-random. Each attempt consumes one use, including misses. A knocked-out creature
-cannot retaliate. Each action/result advances with X. Spent attacks cannot be
+At the start of each round, the enemy chooses one action and turn order is locked
+from the creatures' speeds. A faster enemy attacks immediately, before the game
+opens the player command menu. A faster player receives the menu first; speed
+ties are random. Canceling or navigating menus does not reroll the enemy action
+or change the order. The controller separately tracks round start, enemy choice,
+player input, first and second action resolution, faint checks, result checks,
+and round completion.
+
+FIGHT chooses one of four attacks. Each attempt consumes one use, including
+misses. A creature knocked out by the first action cannot perform the queued
+second action. Each action/result advances with X. Spent attacks cannot be
 selected; when all attacks are spent, PRESS ON is a weak unlimited fallback.
 Circle returns from attack, item, capture, and voluntary-switch menus without
 spending a turn. RUN succeeds 70% of the time and always on the third attempt.
@@ -114,8 +124,10 @@ other outcomes return to the same exploration position. Four safe steps follow.
 CAPTURE uses the Resonance Loom, with three charges per battle. The confirmation
 shows the chance; X attempts, Circle cancels. A successful capture adds the wild
 creature to the first free party slot, or to storage if the party is full.
-A failed capture spends one charge and gives the enemy one action. Full capacity,
-no charges, or canceling spends no turn. Knocked-out targets cannot be caught.
+A failed capture spends one charge and consumes the player's action. The enemy
+performs its one scheduled action only if it has not already acted that round.
+Full capacity, no charges, or canceling spends no turn. Knocked-out targets
+cannot be caught.
 
     chance = clamp(35 - 12*stage + floor(50*(maxHP-HP)/maxHP) + 10*(strength-1), 5, 95)
 
@@ -130,16 +142,19 @@ withdrawals, and swapping when the party is full. The final party member cannot
 be deposited. There is no release/delete action. Transfers preserve all state.
 Circle returns to the Field Kit; Triangle closes it completely.
 
-In battle, voluntary switching costs a turn and gives the enemy one action.
-Replacing a knocked-out ally is free and mandatory while a healthy reserve
-remains. The entire party must be defeated before the battle is lost.
+In battle, voluntary switching consumes the player's action. The enemy performs
+its scheduled action only if it has not already acted. Replacing a knocked-out
+ally is free and mandatory while a healthy reserve remains; the replacement
+starts a fresh round and never inherits the knocked-out ally's queued attack.
+The entire party must be defeated before the battle is lost.
 
 ITEMS heals the active battler in combat or the lead partner from the Field Kit.
 Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
 Invalid, full-HP, fainted, or out-of-stock uses consume nothing. A valid combat
-use gives the enemy one action. Buy supplies with Embermarks after finishing
-Tavi's dialogue in the lodge. Face either green healing dais and press X to
-restore the whole roster's HP and attack uses.
+use consumes the player's action; the enemy acts afterward only when still due
+in that round. Buy supplies with Embermarks after finishing Tavi's dialogue in
+the lodge. Face either green healing dais and press X to restore the whole
+roster's HP and attack uses.
 
 ## Existing saves
 
@@ -226,12 +241,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP
+    make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -243,23 +258,27 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All nine C suites run with AddressSanitizer and UndefinedBehaviorSanitizer.
-They cover movement, all portals, collisions, battles, capture, inventory,
-menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
-availability of every form, 32-slot storage, v1 migration, v2 game save/load with
-36 creatures, savedata lifecycle, text bounds, drawing budget, and PCM audio.
+All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
+first/second-action knockout combination, command actions, forced replacements,
+and repeated rounds without duplicates. The full suite also covers movement,
+all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
+all ten two-step evolution chains, wild availability of every form, 32-slot
+storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
+text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
 include pet-001.png through pet-030.png, party/collection/battle/menu scenes,
 and pet-roster.png from the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Launch the new EBOOT and confirm Cindlet's art in a battle and in CREATURES.
-2. Load an old save with L; verify converted creatures, levels, items, and location.
-3. Visit the woods, cave, and marsh to catch members of all ten families.
-4. Raise a base form to level 8, then 16; check artwork and attacks at both stages.
-5. Browse/deposit/withdraw creatures, then save, quit, relaunch, and load.
-6. Check texture transparency, animation, audio, HOME exit, and suspend/resume.
+1. Fight a slower Veyling and verify the command menu opens before it attacks.
+2. Fight a faster Veyling and verify its attack occurs before command selection.
+3. Verify each side can faint on the first or second action without an extra hit.
+4. Fail a capture, use an item, switch, and fail RUN after an enemy-first action;
+   verify the enemy does not attack twice in that round.
+5. Load an old save with L; verify converted creatures, levels, items, and location.
+6. Save, quit, relaunch, load, then check art, audio, HOME exit, and suspend/resume.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.

@@ -36,7 +36,7 @@ static int total_uses(const Creature *c)
     return total;
 }
 
-static void start(Battle *b,const Party *p,unsigned int seed)
+static void prepare(Battle *b,const Party *p,unsigned int seed)
 {
     battle_begin_party(b,p,SPECIES_MOSSPRIG,3,seed);
     assert(b->phase==BATTLE_MESSAGE && b->capture_charges==3);
@@ -47,6 +47,11 @@ static void start(Battle *b,const Party *p,unsigned int seed)
         b->enemy.moves[i]=MOVE_NUDGE;
         b->enemy.uses[i]=24;
     }
+}
+
+static void start(Battle *b,const Party *p,unsigned int seed)
+{
+    prepare(b,p,seed);
     confirm(b);
     assert(b->phase==BATTLE_MENU);
 }
@@ -175,7 +180,9 @@ static void capture_charges_and_cancel(unsigned int failure_seed)
     assert(b.random==random_before && total_uses(&b.enemy)==96);
     assert(b.ally.hp==p.members[0].hp);
     for(int i=0;i<3;++i) {
-        b.random=failure_seed;
+        /* Enemy move selection now consumes RNG at round start. Reset to a
+           known failed capture roll instead of the pre-turn seed. */
+        b.random=1;
         open_capture(&b);confirm(&b);
         assert(b.capture_charges==2-i && b.result==BATTLE_ONGOING);
         assert(total_uses(&b.enemy)==96-i);
@@ -234,9 +241,9 @@ static void forced_replacement_and_team_loss(void)
     Party p=make_party(3);
     p.members[0].hp=1;p.members[2].hp=0;
     Battle b;
-    start(&b,&p,12);b.enemy.speed=999;
+    prepare(&b,&p,12);b.enemy.speed=999;
     int ally_uses=total_uses(&b.ally);
-    attack(&b);
+    confirm(&b);
     assert(b.ally.hp==0 && b.result==BATTLE_ONGOING && b.forced_switch);
     assert(total_uses(&b.ally)==ally_uses && total_uses(&b.enemy)==95);
     confirm(&b);
@@ -247,6 +254,9 @@ static void forced_replacement_and_team_loss(void)
     assert(b.phase==BATTLE_SWITCH && b.forced_switch);
     b.switch_cursor=2;confirm(&b);messages(&b);
     assert(b.phase==BATTLE_SWITCH && b.forced_switch && total_uses(&b.enemy)==95);
+    /* Make the replacement faster so its fresh round opens at the command
+       menu; the dedicated turn test also covers a slower replacement. */
+    b.enemy.speed=0;
     b.switch_cursor=1;confirm(&b);messages(&b);
     assert(b.phase==BATTLE_MENU && b.active==1 && !b.forced_switch);
     assert(total_uses(&b.enemy)==95); /* Replacement is free after a knockout. */
@@ -254,6 +264,8 @@ static void forced_replacement_and_team_loss(void)
     assert(b.enemy.hp==b.enemy.max_hp); /* Knocked-out ally's turn was discarded. */
     b.ally.hp=1;
     attack(&b);
+    assert(b.ally.hp==1 && b.result==BATTLE_ONGOING);
+    confirm(&b);
     assert(b.ally.hp==0 && b.result==BATTLE_LOSS && !b.forced_switch);
     messages(&b);
     assert(b.phase==BATTLE_DONE && total_uses(&b.enemy)==94);

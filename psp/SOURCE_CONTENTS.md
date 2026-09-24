@@ -1,4 +1,4 @@
-# Complete Pet Roster source contents
+# Complete Phase 10 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -463,7 +463,13 @@ void audio_settings(int music,int effects);
 typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
 typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED, BATTLE_CAUGHT } BattleResult;
-typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_SWITCH, AFTER_DONE } BattleAfter;
+typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_SWITCH, AFTER_DONE, AFTER_BEGIN_TURN } BattleAfter;
+/* Turn progression is separate from UI pages and message acknowledgements. */
+typedef enum {
+    TURN_BEGIN, TURN_SELECT_ENEMY, TURN_WAIT_PLAYER,
+    TURN_RESOLVE_FIRST, TURN_RESOLVE_SECOND,
+    TURN_CHECK_FAINTED, TURN_CHECK_RESULT, TURN_COMPLETE
+} BattleTurnState;
 typedef struct {
     Battler ally, enemy;
     Party party;
@@ -475,6 +481,8 @@ typedef struct {
     uint32_t random;
     int cursor, move_cursor, item_cursor, previous_direction;
     int choices[2], order[2], turn_index;
+    BattleTurnState turn_state;
+    unsigned int turn_number;
     int escape_attempts;
     CreatureGrowth growth;
     int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;
@@ -996,7 +1004,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Pet Roster
+PSP_EBOOT_TITLE = Emberwake - Phase 10
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1029,22 +1037,24 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Pet Roster
+# Emberwake — Phase 10 Battle Turn State Machine
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
-apiece. The PNG number minus one is the internal species ID. All 30 forms have
-stats, descriptions, attacks, capture support, and their own supplied artwork.
+apiece, and adds a round-based battle controller in which a faster enemy acts
+before player command selection. The PNG number minus one is the internal
+species ID. All 30 forms have stats, descriptions, attacks, capture support,
+and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PETS.PBP**, titled **Emberwake - Pet Roster**. Copy it to:
+Use **EBOOT-PHASE10.PBP**, titled **Emberwake - Phase 10**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE8.PBP and EBOOT-PHASE9.PBP builds are retained
-locally, but they do not contain the new roster.
+Memory Stick. Earlier EBOOT-PETS.PBP and numbered phase builds are retained
+locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1106,9 +1116,17 @@ than a new team; RUN is guaranteed on the third attempt.
 
 ## Battles and progression
 
-FIGHT chooses one of four attacks. Faster creatures act first; speed ties are
-random. Each attempt consumes one use, including misses. A knocked-out creature
-cannot retaliate. Each action/result advances with X. Spent attacks cannot be
+At the start of each round, the enemy chooses one action and turn order is locked
+from the creatures' speeds. A faster enemy attacks immediately, before the game
+opens the player command menu. A faster player receives the menu first; speed
+ties are random. Canceling or navigating menus does not reroll the enemy action
+or change the order. The controller separately tracks round start, enemy choice,
+player input, first and second action resolution, faint checks, result checks,
+and round completion.
+
+FIGHT chooses one of four attacks. Each attempt consumes one use, including
+misses. A creature knocked out by the first action cannot perform the queued
+second action. Each action/result advances with X. Spent attacks cannot be
 selected; when all attacks are spent, PRESS ON is a weak unlimited fallback.
 Circle returns from attack, item, capture, and voluntary-switch menus without
 spending a turn. RUN succeeds 70% of the time and always on the third attempt.
@@ -1145,8 +1163,10 @@ other outcomes return to the same exploration position. Four safe steps follow.
 CAPTURE uses the Resonance Loom, with three charges per battle. The confirmation
 shows the chance; X attempts, Circle cancels. A successful capture adds the wild
 creature to the first free party slot, or to storage if the party is full.
-A failed capture spends one charge and gives the enemy one action. Full capacity,
-no charges, or canceling spends no turn. Knocked-out targets cannot be caught.
+A failed capture spends one charge and consumes the player's action. The enemy
+performs its one scheduled action only if it has not already acted that round.
+Full capacity, no charges, or canceling spends no turn. Knocked-out targets
+cannot be caught.
 
     chance = clamp(35 - 12*stage + floor(50*(maxHP-HP)/maxHP) + 10*(strength-1), 5, 95)
 
@@ -1161,16 +1181,19 @@ withdrawals, and swapping when the party is full. The final party member cannot
 be deposited. There is no release/delete action. Transfers preserve all state.
 Circle returns to the Field Kit; Triangle closes it completely.
 
-In battle, voluntary switching costs a turn and gives the enemy one action.
-Replacing a knocked-out ally is free and mandatory while a healthy reserve
-remains. The entire party must be defeated before the battle is lost.
+In battle, voluntary switching consumes the player's action. The enemy performs
+its scheduled action only if it has not already acted. Replacing a knocked-out
+ally is free and mandatory while a healthy reserve remains; the replacement
+starts a fresh round and never inherits the knocked-out ally's queued attack.
+The entire party must be defeated before the battle is lost.
 
 ITEMS heals the active battler in combat or the lead partner from the Field Kit.
 Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
 Invalid, full-HP, fainted, or out-of-stock uses consume nothing. A valid combat
-use gives the enemy one action. Buy supplies with Embermarks after finishing
-Tavi's dialogue in the lodge. Face either green healing dais and press X to
-restore the whole roster's HP and attack uses.
+use consumes the player's action; the enemy acts afterward only when still due
+in that round. Buy supplies with Embermarks after finishing Tavi's dialogue in
+the lodge. Face either green healing dais and press X to restore the whole
+roster's HP and attack uses.
 
 ## Existing saves
 
@@ -1257,12 +1280,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP
+    make PSP_EBOOT=EBOOT-PHASE10.PBP EXTRA_TARGETS=EBOOT-PHASE10.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1274,23 +1297,27 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All nine C suites run with AddressSanitizer and UndefinedBehaviorSanitizer.
-They cover movement, all portals, collisions, battles, capture, inventory,
-menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
-availability of every form, 32-slot storage, v1 migration, v2 game save/load with
-36 creatures, savedata lifecycle, text bounds, drawing budget, and PCM audio.
+All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
+first/second-action knockout combination, command actions, forced replacements,
+and repeated rounds without duplicates. The full suite also covers movement,
+all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
+all ten two-step evolution chains, wild availability of every form, 32-slot
+storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
+text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
 include pet-001.png through pet-030.png, party/collection/battle/menu scenes,
 and pet-roster.png from the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Launch the new EBOOT and confirm Cindlet's art in a battle and in CREATURES.
-2. Load an old save with L; verify converted creatures, levels, items, and location.
-3. Visit the woods, cave, and marsh to catch members of all ten families.
-4. Raise a base form to level 8, then 16; check artwork and attacks at both stages.
-5. Browse/deposit/withdraw creatures, then save, quit, relaunch, and load.
-6. Check texture transparency, animation, audio, HOME exit, and suspend/resume.
+1. Fight a slower Veyling and verify the command menu opens before it attacks.
+2. Fight a faster Veyling and verify its attack occurs before command selection.
+3. Verify each side can faint on the first or second action without an extra hit.
+4. Fail a capture, use an item, switch, and fail RUN after an enemy-first action;
+   verify the enemy does not attack twice in that round.
+5. Load an old save with L; verify converted creatures, levels, items, and location.
+6. Save, quit, relaunch, load, then check art, audio, HOME exit, and suspend/resume.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -1662,7 +1689,7 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
-    b->phase=BATTLE_MESSAGE; b->after=AFTER_MENU;
+    b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
@@ -1679,10 +1706,15 @@ static void message(Battle *b,const char *text,BattleAfter after)
     snprintf(b->message,sizeof(b->message),"%s",text);
     b->phase=BATTLE_MESSAGE; b->after=after;
 }
+static int valid_move(const Battler *unit,int slot)
+{
+    return slot>=0 && slot<BATTLE_MOVES && unit->moves[slot]>=0 &&
+           unit->moves[slot]<MOVE_COUNT && unit->uses[slot]>0;
+}
 static int choose_enemy(Battle *b)
 {
     int slots[4],count=0;
-    for(int i=0;i<4;++i) if(b->enemy.uses[i]>0) slots[count++]=i;
+    for(int i=0;i<4;++i) if(valid_move(&b->enemy,i)) slots[count++]=i;
     return count?slots[random_next(b)%(unsigned int)count]:-1;
 }
 static void sync_active(Battle *b)
@@ -1696,17 +1728,36 @@ static int reserve_available(const Battle *b)
         if(i!=b->active && b->party.members[i].hp>0) return 1;
     return 0;
 }
-static void enemy_response(Battle *b)
+static void check_action_result(Battle *b)
 {
-    b->choices[1]=choose_enemy(b);b->order[1]=1;b->turn_index=1;
+    b->turn_state=TURN_CHECK_FAINTED;
+    sync_active(b);
+    int enemy_fainted=b->enemy.hp<=0,ally_fainted=b->ally.hp<=0;
+    b->forced_switch=ally_fainted && !enemy_fainted && reserve_available(b);
+    b->turn_state=TURN_CHECK_RESULT;
+    if(enemy_fainted) b->result=BATTLE_WIN;
+    else if(ally_fainted && !b->forced_switch) b->result=BATTLE_LOSS;
+    if(enemy_fainted || ally_fainted) {
+        /* A knocked-out participant cannot finish a queued action. A reserve
+           starts a fresh round after the forced replacement is acknowledged. */
+        b->turn_index=2;b->turn_state=TURN_COMPLETE;
+    }
 }
-static void next_action(Battle *b)
+static void complete_player_action(Battle *b)
 {
-    if(b->turn_index>=2) { b->phase=BATTLE_MENU; return; }
+    b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
+    ++b->turn_index;
+    check_action_result(b);
+}
+static void resolve_attack(Battle *b)
+{
+    if(b->turn_index>=2 || b->result!=BATTLE_ONGOING) return;
+    b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     int side=b->order[b->turn_index++];
     Battler *a=side==0?&b->ally:&b->enemy;
     Battler *d=side==0?&b->enemy:&b->ally;
     int slot=b->choices[side];
+    if(!valid_move(a,slot)) slot=-1;
     /* PRESS ON is an unlimited weak fallback, only when every move is spent. */
     const Attack fallback={"PRESS ON",15,100,ELEMENT_PLAIN,0};
     const Attack *move=slot<0?&fallback:attack_get(a->moves[slot]);
@@ -1724,12 +1775,17 @@ static void next_action(Battle *b)
                  effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
     }
     b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;
-    if(d->hp==0) {
-        if(side==0) b->result=BATTLE_WIN;
-        else if(reserve_available(b)) b->forced_switch=1;
-        else b->result=BATTLE_LOSS;
-        /* Damage is shown first; the next confirmation shows the outcome. */
-    }
+    check_action_result(b);
+}
+static void begin_turn(Battle *b);
+static void advance_turn(Battle *b)
+{
+    if(b->turn_index>=2) {
+        b->turn_state=TURN_COMPLETE;
+        begin_turn(b);
+    } else if(b->order[b->turn_index]==0) {
+        b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
+    } else resolve_attack(b);
 }
 static float approach_hp(float shown,int hp,float step)
 {
@@ -1751,13 +1807,18 @@ void battle_animate(Battle *b,float seconds,int motion)
     b->ally_hp_shown=approach_hp(b->ally_hp_shown,b->ally.hp,b->ally.max_hp*seconds*3);
     b->enemy_hp_shown=approach_hp(b->enemy_hp_shown,b->enemy.hp,b->enemy.max_hp*seconds*3);
 }
-static void begin_turn(Battle *b,int slot)
+static void begin_turn(Battle *b)
 {
-    b->choices[0]=slot; b->choices[1]=choose_enemy(b);
+    b->turn_state=TURN_BEGIN;++b->turn_number;
+    b->turn_index=0;b->choices[0]=-1;
+    b->turn_state=TURN_SELECT_ENEMY;
+    b->choices[1]=choose_enemy(b);
     int enemy_first=b->enemy.speed>b->ally.speed;
     if(b->enemy.speed==b->ally.speed) enemy_first=(int)(random_next(b)%2);
-    b->order[0]=enemy_first; b->order[1]=1-enemy_first; b->turn_index=0;
-    next_action(b);
+    b->order[0]=enemy_first; b->order[1]=1-enemy_first;
+    /* Faster enemies act before we open command selection. Order and their
+       chosen move remain fixed while the player navigates/cancels menus. */
+    advance_turn(b);
 }
 static int navigation(Battle *b,const Input *input)
 {
@@ -1816,15 +1877,16 @@ void battle_update(Battle *b,const Input *input)
             message(b,"THE RESONANCE LOOM IS EMPTY.\nIT RECHARGES AFTER THIS BATTLE.",AFTER_MENU);return;
         }
         --b->capture_charges;
+        complete_player_action(b);
         if(capture_attempt(&b->enemy,1,random_next(b)%100)) {
             sync_active(b);
             int destination=party_add(&b->party,&b->enemy);
             b->result=BATTLE_CAUGHT;
+            b->turn_state=TURN_COMPLETE;
             snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nTEAM RESTORED AFTER BATTLE.",creature_name(&b->enemy),
                      destination==1?"ADDED TO YOUR PARTY.":"SENT TO YOUR COLLECTION.");
             b->phase=BATTLE_MESSAGE;b->after=AFTER_DONE;
         } else {
-            enemy_response(b);
             message(b,"THE RESONANCE THREAD FADES.\nTHE WILD VEYLING STAYS ALERT.",AFTER_TURN);
         }
         return;
@@ -1841,8 +1903,8 @@ void battle_update(Battle *b,const Input *input)
         int forced=b->forced_switch;b->forced_switch=0;
         b->move_cursor=0;
         snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
-        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_MENU:AFTER_TURN;
-        if(!forced) enemy_response(b);
+        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
+        if(!forced) complete_player_action(b);
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
@@ -1856,7 +1918,7 @@ void battle_update(Battle *b,const Input *input)
                     "THAT ITEM CANNOT BE USED HERE.",AFTER_MENU);
             return;
         }
-        sync_active(b);enemy_response(b);
+        complete_player_action(b);
         snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d HP RESTORED.",creature_name(&b->ally),
                  inventory_item_name((ItemId)b->item_cursor),restored);
         b->phase=BATTLE_MESSAGE;b->after=AFTER_TURN;
@@ -1879,6 +1941,7 @@ void battle_update(Battle *b,const Input *input)
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
         if(b->after==AFTER_DONE) { sync_active(b);b->phase=BATTLE_DONE; return; }
+        if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
         if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
         if(b->after==AFTER_GROWTH) { growth_next(b);return; }
         if(b->after==AFTER_SWITCH || b->forced_switch) {
@@ -1899,7 +1962,7 @@ void battle_update(Battle *b,const Input *input)
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
             message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
-        } else next_action(b);
+        } else advance_turn(b);
         return;
     }
     if(b->phase==BATTLE_ATTACKS) {
@@ -1907,13 +1970,13 @@ void battle_update(Battle *b,const Input *input)
         if(nav) b->move_cursor=(b->move_cursor+nav+4)%4;
         if(!input->confirm) return;
         int available=0;
-        for(int i=0;i<4;++i) available+=b->ally.uses[i];
-        if(!available) { begin_turn(b,-1); return; }
-        if(b->ally.uses[b->move_cursor]<=0) {
+        for(int i=0;i<4;++i) available+=valid_move(&b->ally,i);
+        if(!available) { b->choices[0]=-1;resolve_attack(b);return; }
+        if(!valid_move(&b->ally,b->move_cursor)) {
             message(b,"THAT ATTACK HAS NO USES LEFT.\nCHOOSE ANOTHER ATTACK.",AFTER_MENU);
             return;
         }
-        begin_turn(b,b->move_cursor);
+        b->choices[0]=b->move_cursor;resolve_attack(b);
         return;
     }
     if(nav) b->cursor=(b->cursor+nav+5)%5;
@@ -1928,11 +1991,12 @@ void battle_update(Battle *b,const Input *input)
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:
         ++b->escape_attempts;
+        complete_player_action(b);
         if(b->escape_attempts>=3 || random_next(b)%100<70) {
             b->result=BATTLE_ESCAPED;
+            b->turn_state=TURN_COMPLETE;
             message(b,"YOU GOT AWAY SAFELY.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
         } else {
-            enemy_response(b);
             message(b,"THE WAY OUT IS BLOCKED.\nTHE WILD VEYLING MOVES CLOSER.",AFTER_TURN);
         }
         break;
@@ -4108,7 +4172,7 @@ static int total_uses(const Creature *c)
     return total;
 }
 
-static void start(Battle *b,const Party *p,unsigned int seed)
+static void prepare(Battle *b,const Party *p,unsigned int seed)
 {
     battle_begin_party(b,p,SPECIES_MOSSPRIG,3,seed);
     assert(b->phase==BATTLE_MESSAGE && b->capture_charges==3);
@@ -4119,6 +4183,11 @@ static void start(Battle *b,const Party *p,unsigned int seed)
         b->enemy.moves[i]=MOVE_NUDGE;
         b->enemy.uses[i]=24;
     }
+}
+
+static void start(Battle *b,const Party *p,unsigned int seed)
+{
+    prepare(b,p,seed);
     confirm(b);
     assert(b->phase==BATTLE_MENU);
 }
@@ -4247,7 +4316,9 @@ static void capture_charges_and_cancel(unsigned int failure_seed)
     assert(b.random==random_before && total_uses(&b.enemy)==96);
     assert(b.ally.hp==p.members[0].hp);
     for(int i=0;i<3;++i) {
-        b.random=failure_seed;
+        /* Enemy move selection now consumes RNG at round start. Reset to a
+           known failed capture roll instead of the pre-turn seed. */
+        b.random=1;
         open_capture(&b);confirm(&b);
         assert(b.capture_charges==2-i && b.result==BATTLE_ONGOING);
         assert(total_uses(&b.enemy)==96-i);
@@ -4306,9 +4377,9 @@ static void forced_replacement_and_team_loss(void)
     Party p=make_party(3);
     p.members[0].hp=1;p.members[2].hp=0;
     Battle b;
-    start(&b,&p,12);b.enemy.speed=999;
+    prepare(&b,&p,12);b.enemy.speed=999;
     int ally_uses=total_uses(&b.ally);
-    attack(&b);
+    confirm(&b);
     assert(b.ally.hp==0 && b.result==BATTLE_ONGOING && b.forced_switch);
     assert(total_uses(&b.ally)==ally_uses && total_uses(&b.enemy)==95);
     confirm(&b);
@@ -4319,6 +4390,9 @@ static void forced_replacement_and_team_loss(void)
     assert(b.phase==BATTLE_SWITCH && b.forced_switch);
     b.switch_cursor=2;confirm(&b);messages(&b);
     assert(b.phase==BATTLE_SWITCH && b.forced_switch && total_uses(&b.enemy)==95);
+    /* Make the replacement faster so its fresh round opens at the command
+       menu; the dedicated turn test also covers a slower replacement. */
+    b.enemy.speed=0;
     b.switch_cursor=1;confirm(&b);messages(&b);
     assert(b.phase==BATTLE_MENU && b.active==1 && !b.forced_switch);
     assert(total_uses(&b.enemy)==95); /* Replacement is free after a knockout. */
@@ -4326,6 +4400,8 @@ static void forced_replacement_and_team_loss(void)
     assert(b.enemy.hp==b.enemy.max_hp); /* Knocked-out ally's turn was discarded. */
     b.ally.hp=1;
     attack(&b);
+    assert(b.ally.hp==1 && b.result==BATTLE_ONGOING);
+    confirm(&b);
     assert(b.ally.hp==0 && b.result==BATTLE_LOSS && !b.forced_switch);
     messages(&b);
     assert(b.phase==BATTLE_DONE && total_uses(&b.enemy)==94);
@@ -4397,10 +4473,14 @@ static void press(Battle *b)
 {
     battle_update(b,&(Input){0,0,1,0,0,0});
 }
-static void start(Battle *b,unsigned int seed)
+static void prepare(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
     battle_begin(b,&ally,SPECIES_MOSSPRIG,3,seed);
+}
+static void start(Battle *b,unsigned int seed)
+{
+    prepare(b,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)
@@ -4435,10 +4515,10 @@ int main(void)
     assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
     battle_update(&b,&(Input){0,0,1,0,0,0}); assert(b.phase==BATTLE_DONE);
 
-    start(&b,12);
+    prepare(&b,12);
     b.ally.hp=1; b.enemy.speed=999;
     for(int i=0;i<4;++i) b.enemy.moves[i]=MOVE_NUDGE;
-    choose(&b,0);
+    press(&b);
     assert(b.result==BATTLE_LOSS && b.ally.hp==0 && b.ally.uses[0]==24);
     finish_messages(&b); assert(b.phase==BATTLE_DONE);
 
@@ -4496,6 +4576,201 @@ int main(void)
     assert(attack_effectiveness(ELEMENT_EMBER,ELEMENT_EMBER)==1);
     b.enemy.defense=0;assert(battle_damage(&b.ally,&b.enemy,attack_get(MOVE_NUDGE),100)>0);
     puts("PASS: turns, speed, HP, victory/defeat, accuracy, uses, fallback, menu, escape, damage");
+    return 0;
+}
+````
+
+## tests/battle_turn_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "battle.h"
+
+static void press(Battle *b) { battle_update(b,&(Input){.confirm=1}); }
+static void cancel(Battle *b) { battle_update(b,&(Input){.cancel=1}); }
+static void prepare(Battle *b,int enemy_first,unsigned int seed,int reserves)
+{
+    Party p={0};p.count=reserves+1;
+    for(int i=0;i<p.count;++i) {
+        creature_create(&p.members[i],SPECIES_CINDLET,5);
+        p.members[i].hp=p.members[i].max_hp=1000;
+        p.members[i].speed=enemy_first?10:30;
+        strcpy(p.members[i].nickname,i?"RESERVE":"ALLY");
+        for(int m=0;m<4;++m) { p.members[i].moves[m]=-1;p.members[i].uses[m]=0; }
+        p.members[i].moves[0]=MOVE_NUDGE;p.members[i].uses[0]=100;
+    }
+    battle_begin_party(b,&p,SPECIES_MOSSPRIG,3,seed);
+    strcpy(b->enemy.nickname,"ENEMY");
+    b->enemy.hp=b->enemy.max_hp=1000;b->enemy.speed=20;
+    for(int m=0;m<4;++m) { b->enemy.moves[m]=-1;b->enemy.uses[m]=0; }
+    b->enemy.moves[0]=MOVE_NUDGE;b->enemy.uses[0]=100;
+    assert(b->turn_number==0 && b->turn_state==TURN_BEGIN);
+}
+static void attack(Battle *b)
+{
+    assert(b->phase==BATTLE_MENU && b->turn_state==TURN_WAIT_PLAYER);
+    b->cursor=0;press(b);assert(b->phase==BATTLE_ATTACKS);
+    b->move_cursor=0;press(b);
+}
+static void player_menu(Battle *b,int enemy_first)
+{
+    if(enemy_first) {
+        assert(b->phase==BATTLE_MESSAGE && strstr(b->message,"ENEMY USED"));
+        assert(b->turn_index==1);
+        press(b);
+    }
+    assert(b->phase==BATTLE_MENU && b->turn_state==TURN_WAIT_PLAYER);
+}
+static void end_result(Battle *b)
+{
+    int ally_uses=b->ally.uses[0],enemy_uses=b->enemy.uses[0];
+    unsigned int turn=b->turn_number;
+    for(int i=0;i<40 && b->phase!=BATTLE_DONE;++i) {
+        if(b->phase==BATTLE_LEARN) cancel(b);else press(b);
+    }
+    assert(b->phase==BATTLE_DONE && b->turn_number==turn);
+    for(int i=0;i<10;++i) press(b);
+    assert(b->ally.uses[0]==ally_uses && b->enemy.uses[0]==enemy_uses);
+}
+static void repeated_turns(int enemy_first)
+{
+    Battle b;prepare(&b,enemy_first,123,0);
+    press(&b);
+    for(int turn=1;turn<=12;++turn) {
+        assert(b.turn_number==(unsigned int)turn);
+        assert(b.ally.uses[0]==101-turn);
+        assert(b.enemy.uses[0]==101-turn-enemy_first);
+        player_menu(&b,enemy_first);
+        int hp=b.ally.hp,enemy_hp=b.enemy.hp;
+        uint32_t random=b.random;
+        /* Idle, cancel, and held navigation never consume a turn or reroll AI. */
+        for(int i=0;i<30;++i) battle_update(&b,&(Input){.cancel=1});
+        assert(b.ally.hp==hp && b.enemy.hp==enemy_hp && b.random==random);
+        attack(&b);
+        assert(strstr(b.message,"ALLY USED") && b.ally.uses[0]==100-turn);
+        if(!enemy_first) {
+            assert(b.enemy.uses[0]==101-turn);
+            press(&b);
+            assert(strstr(b.message,"ENEMY USED"));
+        }
+        assert(b.enemy.uses[0]==100-turn && b.turn_index==2);
+        hp=b.ally.hp;enemy_hp=b.enemy.hp;
+        for(int i=0;i<30;++i) battle_update(&b,&(Input){0});
+        cancel(&b); /* Messages require confirmation; cancel cannot replay them. */
+        assert(b.ally.hp==hp && b.enemy.hp==enemy_hp);
+        press(&b);
+    }
+}
+static void knockouts(void)
+{
+    /* Both targets on either action: no action is allowed after a knockout. */
+    for(int first=0;first<=1;++first) for(int loser=0;loser<=1;++loser) {
+        Battle b;prepare(&b,first,123,0);
+        if(loser==0) b.ally.hp=1;else b.enemy.hp=1;
+        press(&b);
+        if(b.result==BATTLE_ONGOING) {
+            player_menu(&b,first);attack(&b);
+            if(b.result==BATTLE_ONGOING) press(&b);
+        }
+        assert(b.result==(loser==0?BATTLE_LOSS:BATTLE_WIN));
+        assert(b.turn_number==1 && b.turn_state==TURN_COMPLETE);
+        int loser_acted=loser==first;
+        assert((loser==0?b.ally.uses[0]:b.enemy.uses[0])==100-loser_acted);
+        assert((loser==0?b.enemy.uses[0]:b.ally.uses[0])==99);
+        end_result(&b);
+    }
+}
+static void equal_speed(void)
+{
+    int seen[2]={0};
+    for(unsigned int seed=1;seed<=100;++seed) {
+        Battle b;prepare(&b,0,seed,0);b.ally.speed=b.enemy.speed;
+        press(&b);int first=b.order[0];++seen[first];
+        player_menu(&b,first);
+        int order=b.order[0],choice=b.choices[1];uint32_t random=b.random;
+        b.cursor=0;press(&b);cancel(&b);
+        assert(b.order[0]==order && b.choices[1]==choice && b.random==random);
+        attack(&b);
+        if(!first) press(&b);
+        assert(b.enemy.uses[0]==99 && b.ally.uses[0]==99 && b.turn_index==2);
+    }
+    assert(seen[0]>0 && seen[1]>0);
+}
+static void enemy_first_commands(void)
+{
+    /* Items, failed capture/escape, and switching are the player's one action.
+       They must not append a second enemy attack to an enemy-first round. */
+    for(int command=1;command<=4;++command) {
+        Battle b;prepare(&b,1,123,1);
+        press(&b);player_menu(&b,1);
+        assert(b.enemy.uses[0]==99 && b.ally.uses[0]==100);
+        b.cursor=command;
+        if(command==4) b.random=4; /* Failed escape (76/100). */
+        press(&b);
+        if(command==1) { b.random=1;press(&b); } /* Failed capture (69/100). */
+        if(command==2) { b.switch_cursor=1;press(&b); }
+        if(command==3) press(&b);
+        assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MESSAGE);
+        assert(b.enemy.uses[0]==99 && b.turn_index==2 && b.turn_number==1);
+        b.ally.speed=30; /* Next round is player-first, isolating this round. */
+        press(&b);
+        assert(b.turn_number==2 && b.phase==BATTLE_MENU && b.enemy.uses[0]==99);
+    }
+    Battle b;prepare(&b,1,123,0);press(&b);player_menu(&b,1);
+    uint32_t random=b.random;
+    for(int command=0;command<4;++command) {
+        b.cursor=command;press(&b);cancel(&b);
+        assert(b.phase==BATTLE_MENU && b.turn_number==1 && b.turn_index==1);
+        assert(b.random==random && b.enemy.uses[0]==99);
+    }
+    b.inventory.quantities[0]=0;b.cursor=3;press(&b);press(&b);press(&b);
+    assert(b.phase==BATTLE_MENU && b.turn_number==1 && b.enemy.uses[0]==99);
+    b.capture_charges=0;b.cursor=1;press(&b);press(&b);press(&b);
+    assert(b.phase==BATTLE_MENU && b.turn_number==1 && b.random==random);
+    b.ally.moves[1]=MOVE_CINDER;b.ally.uses[1]=10;b.ally.uses[0]=0;
+    b.cursor=0;press(&b);press(&b);press(&b);
+    assert(b.phase==BATTLE_MENU && b.turn_number==1 && b.enemy.uses[0]==99);
+}
+static void forced_replacement(void)
+{
+    for(int fast_reserve=0;fast_reserve<=1;++fast_reserve) {
+        Battle b;prepare(&b,1,123,1);b.ally.hp=1;
+        b.party.members[1].speed=fast_reserve?30:10;
+        press(&b);
+        assert(b.forced_switch && b.ally.uses[0]==100 && b.enemy.uses[0]==99);
+        press(&b);assert(b.phase==BATTLE_SWITCH);
+        cancel(&b);assert(b.phase==BATTLE_SWITCH && b.turn_number==1);
+        b.switch_cursor=1;press(&b);
+        assert(b.enemy.uses[0]==99 && b.ally.hp==1000 && b.turn_number==1);
+        press(&b);
+        assert(b.turn_number==2 && b.active==1 && !b.forced_switch);
+        player_menu(&b,!fast_reserve);
+        assert(b.enemy.uses[0]==(fast_reserve?99:98));
+        assert(b.party.members[0].hp==0 && b.party.members[0].uses[0]==100);
+        assert(b.ally.uses[0]==100); /* No queued attack transfers to the reserve. */
+    }
+}
+static void fallback_and_locked_order(void)
+{
+    Battle b;prepare(&b,1,123,0);
+    b.enemy.moves[0]=-1; /* Invalid entries with stray uses cannot be selected. */
+    press(&b);assert(strstr(b.message,"PRESS ON") && b.enemy.uses[0]==100);
+    player_menu(&b,1);
+    for(int i=0;i<4;++i) b.ally.uses[i]=0;
+    attack(&b);assert(strstr(b.message,"PRESS ON"));
+    prepare(&b,0,123,0);press(&b);assert(b.order[0]==0);
+    b.enemy.speed=999;attack(&b);
+    assert(strstr(b.message,"ALLY USED") && b.enemy.uses[0]==100);
+    press(&b);assert(b.enemy.uses[0]==99);
+    press(&b);assert(b.turn_number==2 && b.order[0]==1 && b.enemy.uses[0]==98);
+}
+int main(void)
+{
+    repeated_turns(0);repeated_turns(1);equal_speed();knockouts();
+    enemy_first_commands();forced_replacement();fallback_and_locked_order();
+    puts("PASS: Phase 10 enemy-before-menu, player-first, ties, all knockout orders, no duplicated actions, command costs, forced replacements, fallback");
     return 0;
 }
 ````
@@ -5193,6 +5468,9 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-test
 previews/battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/battle_turn_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-turn-test
+previews/battle-turn-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/creature_test.c src/creature.c src/battle.c src/attacks.c src/party.c src/capture.c src/inventory.c -o previews/creature-test
 previews/creature-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
@@ -5676,6 +5954,7 @@ int main(void)
     assert(g.battle.phase==BATTLE_CAPTURE);
     render(&g,"previews/capture.ppm");
     g.battle.enemy.hp=1;
+    g.battle.random=3; /* Known successful roll after round-start AI selection. */
     update(&g,(Input){.confirm=1},1);
     assert(g.battle.result==BATTLE_CAUGHT);
     render(&g,"previews/captured.ppm");
@@ -5706,6 +5985,7 @@ int main(void)
     assert(!g.roster_open);
     battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
+    g.battle.enemy.speed=0;
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
     render(&g,"previews/battle-switch.ppm");

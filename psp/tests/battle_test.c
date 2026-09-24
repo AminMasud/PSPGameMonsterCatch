@@ -7,10 +7,14 @@ static void press(Battle *b)
 {
     battle_update(b,&(Input){0,0,1,0,0,0});
 }
-static void start(Battle *b,unsigned int seed)
+static void prepare(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
     battle_begin(b,&ally,SPECIES_MOSSPRIG,3,seed);
+}
+static void start(Battle *b,unsigned int seed)
+{
+    prepare(b,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)
@@ -45,10 +49,10 @@ int main(void)
     assert(b.phase==BATTLE_DONE && b.ally.hp==b.ally.max_hp);
     battle_update(&b,&(Input){0,0,1,0,0,0}); assert(b.phase==BATTLE_DONE);
 
-    start(&b,12);
+    prepare(&b,12);
     b.ally.hp=1; b.enemy.speed=999;
     for(int i=0;i<4;++i) b.enemy.moves[i]=MOVE_NUDGE;
-    choose(&b,0);
+    press(&b);
     assert(b.result==BATTLE_LOSS && b.ally.hp==0 && b.ally.uses[0]==24);
     finish_messages(&b); assert(b.phase==BATTLE_DONE);
 

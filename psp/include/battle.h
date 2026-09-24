@@ -10,7 +10,13 @@
 typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
 typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED, BATTLE_CAUGHT } BattleResult;
-typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_SWITCH, AFTER_DONE } BattleAfter;
+typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_SWITCH, AFTER_DONE, AFTER_BEGIN_TURN } BattleAfter;
+/* Turn progression is separate from UI pages and message acknowledgements. */
+typedef enum {
+    TURN_BEGIN, TURN_SELECT_ENEMY, TURN_WAIT_PLAYER,
+    TURN_RESOLVE_FIRST, TURN_RESOLVE_SECOND,
+    TURN_CHECK_FAINTED, TURN_CHECK_RESULT, TURN_COMPLETE
+} BattleTurnState;
 typedef struct {
     Battler ally, enemy;
     Party party;
@@ -22,6 +28,8 @@ typedef struct {
     uint32_t random;
     int cursor, move_cursor, item_cursor, previous_direction;
     int choices[2], order[2], turn_index;
+    BattleTurnState turn_state;
+    unsigned int turn_number;
     int escape_attempts;
     CreatureGrowth growth;
     int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;

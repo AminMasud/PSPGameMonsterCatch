@@ -29,7 +29,7 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
-    b->phase=BATTLE_MESSAGE; b->after=AFTER_MENU;
+    b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
@@ -46,10 +46,15 @@ static void message(Battle *b,const char *text,BattleAfter after)
     snprintf(b->message,sizeof(b->message),"%s",text);
     b->phase=BATTLE_MESSAGE; b->after=after;
 }
+static int valid_move(const Battler *unit,int slot)
+{
+    return slot>=0 && slot<BATTLE_MOVES && unit->moves[slot]>=0 &&
+           unit->moves[slot]<MOVE_COUNT && unit->uses[slot]>0;
+}
 static int choose_enemy(Battle *b)
 {
     int slots[4],count=0;
-    for(int i=0;i<4;++i) if(b->enemy.uses[i]>0) slots[count++]=i;
+    for(int i=0;i<4;++i) if(valid_move(&b->enemy,i)) slots[count++]=i;
     return count?slots[random_next(b)%(unsigned int)count]:-1;
 }
 static void sync_active(Battle *b)
@@ -63,17 +68,36 @@ static int reserve_available(const Battle *b)
         if(i!=b->active && b->party.members[i].hp>0) return 1;
     return 0;
 }
-static void enemy_response(Battle *b)
+static void check_action_result(Battle *b)
 {
-    b->choices[1]=choose_enemy(b);b->order[1]=1;b->turn_index=1;
+    b->turn_state=TURN_CHECK_FAINTED;
+    sync_active(b);
+    int enemy_fainted=b->enemy.hp<=0,ally_fainted=b->ally.hp<=0;
+    b->forced_switch=ally_fainted && !enemy_fainted && reserve_available(b);
+    b->turn_state=TURN_CHECK_RESULT;
+    if(enemy_fainted) b->result=BATTLE_WIN;
+    else if(ally_fainted && !b->forced_switch) b->result=BATTLE_LOSS;
+    if(enemy_fainted || ally_fainted) {
+        /* A knocked-out participant cannot finish a queued action. A reserve
+           starts a fresh round after the forced replacement is acknowledged. */
+        b->turn_index=2;b->turn_state=TURN_COMPLETE;
+    }
 }
-static void next_action(Battle *b)
+static void complete_player_action(Battle *b)
 {
-    if(b->turn_index>=2) { b->phase=BATTLE_MENU; return; }
+    b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
+    ++b->turn_index;
+    check_action_result(b);
+}
+static void resolve_attack(Battle *b)
+{
+    if(b->turn_index>=2 || b->result!=BATTLE_ONGOING) return;
+    b->turn_state=b->turn_index==0?TURN_RESOLVE_FIRST:TURN_RESOLVE_SECOND;
     int side=b->order[b->turn_index++];
     Battler *a=side==0?&b->ally:&b->enemy;
     Battler *d=side==0?&b->enemy:&b->ally;
     int slot=b->choices[side];
+    if(!valid_move(a,slot)) slot=-1;
     /* PRESS ON is an unlimited weak fallback, only when every move is spent. */
     const Attack fallback={"PRESS ON",15,100,ELEMENT_PLAIN,0};
     const Attack *move=slot<0?&fallback:attack_get(a->moves[slot]);
@@ -91,12 +115,17 @@ static void next_action(Battle *b)
                  effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
     }
     b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;
-    if(d->hp==0) {
-        if(side==0) b->result=BATTLE_WIN;
-        else if(reserve_available(b)) b->forced_switch=1;
-        else b->result=BATTLE_LOSS;
-        /* Damage is shown first; the next confirmation shows the outcome. */
-    }
+    check_action_result(b);
+}
+static void begin_turn(Battle *b);
+static void advance_turn(Battle *b)
+{
+    if(b->turn_index>=2) {
+        b->turn_state=TURN_COMPLETE;
+        begin_turn(b);
+    } else if(b->order[b->turn_index]==0) {
+        b->turn_state=TURN_WAIT_PLAYER;b->phase=BATTLE_MENU;
+    } else resolve_attack(b);
 }
 static float approach_hp(float shown,int hp,float step)
 {
@@ -118,13 +147,18 @@ void battle_animate(Battle *b,float seconds,int motion)
     b->ally_hp_shown=approach_hp(b->ally_hp_shown,b->ally.hp,b->ally.max_hp*seconds*3);
     b->enemy_hp_shown=approach_hp(b->enemy_hp_shown,b->enemy.hp,b->enemy.max_hp*seconds*3);
 }
-static void begin_turn(Battle *b,int slot)
+static void begin_turn(Battle *b)
 {
-    b->choices[0]=slot; b->choices[1]=choose_enemy(b);
+    b->turn_state=TURN_BEGIN;++b->turn_number;
+    b->turn_index=0;b->choices[0]=-1;
+    b->turn_state=TURN_SELECT_ENEMY;
+    b->choices[1]=choose_enemy(b);
     int enemy_first=b->enemy.speed>b->ally.speed;
     if(b->enemy.speed==b->ally.speed) enemy_first=(int)(random_next(b)%2);
-    b->order[0]=enemy_first; b->order[1]=1-enemy_first; b->turn_index=0;
-    next_action(b);
+    b->order[0]=enemy_first; b->order[1]=1-enemy_first;
+    /* Faster enemies act before we open command selection. Order and their
+       chosen move remain fixed while the player navigates/cancels menus. */
+    advance_turn(b);
 }
 static int navigation(Battle *b,const Input *input)
 {
@@ -183,15 +217,16 @@ void battle_update(Battle *b,const Input *input)
             message(b,"THE RESONANCE LOOM IS EMPTY.\nIT RECHARGES AFTER THIS BATTLE.",AFTER_MENU);return;
         }
         --b->capture_charges;
+        complete_player_action(b);
         if(capture_attempt(&b->enemy,1,random_next(b)%100)) {
             sync_active(b);
             int destination=party_add(&b->party,&b->enemy);
             b->result=BATTLE_CAUGHT;
+            b->turn_state=TURN_COMPLETE;
             snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nTEAM RESTORED AFTER BATTLE.",creature_name(&b->enemy),
                      destination==1?"ADDED TO YOUR PARTY.":"SENT TO YOUR COLLECTION.");
             b->phase=BATTLE_MESSAGE;b->after=AFTER_DONE;
         } else {
-            enemy_response(b);
             message(b,"THE RESONANCE THREAD FADES.\nTHE WILD VEYLING STAYS ALERT.",AFTER_TURN);
         }
         return;
@@ -208,8 +243,8 @@ void battle_update(Battle *b,const Input *input)
         int forced=b->forced_switch;b->forced_switch=0;
         b->move_cursor=0;
         snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
-        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_MENU:AFTER_TURN;
-        if(!forced) enemy_response(b);
+        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
+        if(!forced) complete_player_action(b);
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
@@ -223,7 +258,7 @@ void battle_update(Battle *b,const Input *input)
                     "THAT ITEM CANNOT BE USED HERE.",AFTER_MENU);
             return;
         }
-        sync_active(b);enemy_response(b);
+        complete_player_action(b);
         snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d HP RESTORED.",creature_name(&b->ally),
                  inventory_item_name((ItemId)b->item_cursor),restored);
         b->phase=BATTLE_MESSAGE;b->after=AFTER_TURN;
@@ -246,6 +281,7 @@ void battle_update(Battle *b,const Input *input)
     if(b->phase==BATTLE_MESSAGE) {
         if(!input->confirm) return; /* Results cannot be accidentally canceled. */
         if(b->after==AFTER_DONE) { sync_active(b);b->phase=BATTLE_DONE; return; }
+        if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
         if(b->after==AFTER_MENU) { b->phase=BATTLE_MENU; return; }
         if(b->after==AFTER_GROWTH) { growth_next(b);return; }
         if(b->after==AFTER_SWITCH || b->forced_switch) {
@@ -266,7 +302,7 @@ void battle_update(Battle *b,const Input *input)
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
             message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
-        } else next_action(b);
+        } else advance_turn(b);
         return;
     }
     if(b->phase==BATTLE_ATTACKS) {
@@ -274,13 +310,13 @@ void battle_update(Battle *b,const Input *input)
         if(nav) b->move_cursor=(b->move_cursor+nav+4)%4;
         if(!input->confirm) return;
         int available=0;
-        for(int i=0;i<4;++i) available+=b->ally.uses[i];
-        if(!available) { begin_turn(b,-1); return; }
-        if(b->ally.uses[b->move_cursor]<=0) {
+        for(int i=0;i<4;++i) available+=valid_move(&b->ally,i);
+        if(!available) { b->choices[0]=-1;resolve_attack(b);return; }
+        if(!valid_move(&b->ally,b->move_cursor)) {
             message(b,"THAT ATTACK HAS NO USES LEFT.\nCHOOSE ANOTHER ATTACK.",AFTER_MENU);
             return;
         }
-        begin_turn(b,b->move_cursor);
+        b->choices[0]=b->move_cursor;resolve_attack(b);
         return;
     }
     if(nav) b->cursor=(b->cursor+nav+5)%5;
@@ -295,11 +331,12 @@ void battle_update(Battle *b,const Input *input)
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:
         ++b->escape_attempts;
+        complete_player_action(b);
         if(b->escape_attempts>=3 || random_next(b)%100<70) {
             b->result=BATTLE_ESCAPED;
+            b->turn_state=TURN_COMPLETE;
             message(b,"YOU GOT AWAY SAFELY.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
         } else {
-            enemy_response(b);
             message(b,"THE WAY OUT IS BLOCKED.\nTHE WILD VEYLING MOVES CLOSER.",AFTER_TURN);
         }
         break;

@@ -20,6 +20,9 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-test
 previews/battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/battle_turn_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-turn-test
+previews/battle-turn-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/creature_test.c src/creature.c src/battle.c src/attacks.c src/party.c src/capture.c src/inventory.c -o previews/creature-test
 previews/creature-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \

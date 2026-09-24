@@ -264,6 +264,7 @@ int main(void)
     assert(g.battle.phase==BATTLE_CAPTURE);
     render(&g,"previews/capture.ppm");
     g.battle.enemy.hp=1;
+    g.battle.random=3; /* Known successful roll after round-start AI selection. */
     update(&g,(Input){.confirm=1},1);
     assert(g.battle.result==BATTLE_CAUGHT);
     render(&g,"previews/captured.ppm");
@@ -294,6 +295,7 @@ int main(void)
     assert(!g.roster_open);
     battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
+    g.battle.enemy.speed=0;
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
     render(&g,"previews/battle-switch.ppm");
