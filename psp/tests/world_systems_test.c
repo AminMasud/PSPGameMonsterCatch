@@ -94,6 +94,16 @@ static const NpcBattleData framework_defeat={
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,
     .progression_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED
 };
+static const BossData framework_guardian={
+    .id=2,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+    .intro={"THE FOREST HEARS EVERY STEP.","SHOW ME THE BOND YOU CARRY."},
+    .victory={"THE PATH ACCEPTS YOUR COURAGE.","CARRY ITS TRUST BEYOND THESE TREES."},
+    .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
+    .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    .presentation=BATTLE_PRESENTATION_GUARDIAN
+};
 int main(void)
 {
     int portals=0,locked_gates=0;
@@ -365,6 +375,53 @@ int main(void)
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5 && g.player.tile_y==11);
     assert(!npc_battle_is_defeated(&g.npc_battle_progress,framework_defeat.id));
     assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURN WHEN"));
+    update(&g,(Input){.cancel=1},1);
+
+    /* Phase 21 boss framework: full flow, special presentation, and one-time rewards. */
+    place(&g,MAP_CLEARING,10,13);
+    assert(boss_data_valid(&framework_guardian));
+    fits(framework_guardian.intro.first);fits(framework_guardian.intro.second);
+    fits(framework_guardian.victory.first);fits(framework_guardian.victory.second);
+    fits(framework_guardian.defeat.first);
+    marks_before=g.inventory.embermarks;
+    assert(game_offer_boss_battle(&g,&framework_guardian,211));
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE);
+    assert(game_offer_boss_battle(&g,&framework_guardian,211));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.boss_battle.flow==NPC_BATTLE_FLOW_READY);
+    assert(!strcmp(g.ready_prompt.opponent,framework_guardian.title));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.boss_battle.flow==NPC_BATTLE_FLOW_ACTIVE);
+    assert(g.battle.npc_battle && g.battle.enemy_count==2 &&
+           g.battle.ai_profile==NPC_AI_BOSS &&
+           g.battle.presentation==BATTLE_PRESENTATION_GUARDIAN);
+    assert(!strcmp(g.battle.opponent_name,framework_guardian.title));
+    g.transition=0;
+    render(&g,"previews/boss-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_LOSS;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && !boss_is_defeated(&g.progression,&framework_guardian));
+    assert(g.inventory.embermarks==marks_before);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURNING PREPARED"));
+    update(&g,(Input){.cancel=1},1);
+
+    assert(game_offer_boss_battle(&g,&framework_guardian,212));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && boss_is_defeated(&g.progression,&framework_guardian));
+    assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_guardian.name));
+    update(&g,(Input){.cancel=1},1);
+    assert(game_offer_boss_battle(&g,&framework_guardian,213));
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
+    assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
     update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
@@ -683,6 +740,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 20 cave lock, forest gatekeepers, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 21 boss flow, cave lock, gatekeepers, NPC persistence, world systems, party/inventory, drawing budget");
     return 0;
 }

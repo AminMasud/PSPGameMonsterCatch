@@ -30,11 +30,15 @@ void battle_draw(const Battle *b)
         party_menu_draw_battle(&b->party,b->active,b->switch_cursor,b->forced_switch,b->switch_message);
         return;
     }
-    graphics_rectangle(0,0,480,272,C(48,65,74));
-    graphics_rectangle(0,88,480,88,C(65,81,77));
-    graphics_rectangle(0,0,480,15,C(19,28,36));
+    int guardian=b->presentation==BATTLE_PRESENTATION_GUARDIAN;
+    graphics_rectangle(0,0,480,272,guardian?C(55,48,67):C(48,65,74));
+    graphics_rectangle(0,88,480,88,guardian?C(79,63,70):C(65,81,77));
+    graphics_rectangle(0,0,480,15,guardian?C(39,24,34):C(19,28,36));
     char heading[80];
-    if(b->npc_battle)
+    if(guardian)
+        snprintf(heading,sizeof(heading),"GUARDIAN  %s  %d/%d",b->opponent_name,
+                 b->enemy_active+1,b->enemy_count);
+    else if(b->npc_battle)
         snprintf(heading,sizeof(heading),"%s  VEYLING %d/%d",b->opponent_name,
                  b->enemy_active+1,b->enemy_count);
     else snprintf(heading,sizeof(heading),"WILD VEYLING ENCOUNTER");
@@ -56,7 +60,7 @@ void battle_draw(const Battle *b)
     }
     status(&b->enemy,18,24,202,b->enemy_hp_shown);
     status(&b->ally,253,109,210,b->ally_hp_shown);
-    graphics_rectangle(6,176,468,90,C(177,144,94));
+    graphics_rectangle(6,176,468,90,guardian?C(214,164,86):C(177,144,94));
     graphics_rectangle(8,178,464,86,C(21,30,38));
     if(b->phase==BATTLE_CAPTURE) {
         char line[80];

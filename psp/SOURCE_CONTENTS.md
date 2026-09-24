@@ -1,4 +1,4 @@
-# Complete Phase 20 source contents
+# Complete Phase 21 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -465,6 +465,11 @@ typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
 typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED, BATTLE_CAUGHT } BattleResult;
 typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_DONE, AFTER_BEGIN_TURN } BattleAfter;
+typedef enum {
+    BATTLE_PRESENTATION_STANDARD,
+    BATTLE_PRESENTATION_GUARDIAN,
+    BATTLE_PRESENTATION_COUNT
+} BattlePresentation;
 /* Turn progression is separate from UI pages and message acknowledgements. */
 typedef enum {
     TURN_BEGIN, TURN_SELECT_ENEMY, TURN_WAIT_PLAYER,
@@ -478,6 +483,7 @@ typedef struct {
     Inventory inventory;
     int active, switch_cursor, forced_switch, capture_charges;
     int enemy_count, enemy_active, npc_battle, ai_profile, next_enemy_pending;
+    BattlePresentation presentation;
     char opponent_name[40];
     BattlePhase phase;
     BattleResult result;
@@ -507,6 +513,38 @@ void battle_update(Battle *b,const Input *input);
 int battle_damage(const Battler *attacker,const Battler *defender,const Attack *attack,int variation);
 void battle_draw(const Battle *b);
 void battle_animate(Battle *b,float seconds,int motion);
+#endif
+````
+
+## include/boss.h
+
+````text
+#ifndef EMBERWAKE_BOSS_H
+#define EMBERWAKE_BOSS_H
+
+#include "battle.h"
+
+#define BOSS_MAX 16
+
+typedef struct {
+    int id;
+    const char *name;
+    const char *title;
+    NpcBattleDialogue intro;
+    NpcBattleDialogue victory;
+    NpcBattleDialogue defeat;
+    NpcBattleMember party[NPC_BATTLE_PARTY_MAX];
+    int party_count;
+    NpcAiProfile ai_profile;
+    int reward_embermarks;
+    ProgressionFlag completion_flag;
+    BattlePresentation presentation;
+} BossData;
+
+int boss_data_valid(const BossData *boss);
+int boss_is_defeated(const ProgressionState *progression,const BossData *boss);
+int boss_mark_victory(ProgressionState *progression,const BossData *boss);
+
 #endif
 ````
 
@@ -639,6 +677,7 @@ int encounter_step(Encounter *e, int area, EncounterResult *result);
 #include "player_menu.h"
 #include "ready_prompt.h"
 #include "npc_battle.h"
+#include "boss.h"
 typedef struct {
     SpeciesId species;
     int level;
@@ -655,6 +694,11 @@ typedef struct {
     uint32_t seed;
     NpcBattleFlow flow;
 } PendingNpcBattle;
+typedef struct {
+    const BossData *data;
+    uint32_t seed;
+    NpcBattleFlow flow;
+} PendingBossBattle;
 typedef struct {
     const Map *map;
     Player player;
@@ -680,6 +724,7 @@ typedef struct {
     NpcBattleProgress npc_battle_progress;
     ProgressionState progression;
     PendingNpcBattle npc_battle;
+    PendingBossBattle boss_battle;
     Battle battle;
     int in_battle;
 } Game;
@@ -688,6 +733,7 @@ void game_init(Game *game);
 int game_offer_important_battle(Game *game,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed);
 int game_offer_npc_battle(Game *game,const NpcBattleData *data,uint32_t seed);
+int game_offer_boss_battle(Game *game,const BossData *data,uint32_t seed);
 void game_update(Game *game, const Input *input, float seconds);
 void game_draw(const Game *game);
 #endif
@@ -1205,7 +1251,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/boss.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1218,7 +1264,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 20
+PSP_EBOOT_TITLE = Emberwake - Phase 21
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1251,7 +1297,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 20 Lock the Cave
+# Emberwake — Phase 21 Generic Boss Battle Framework
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1260,20 +1306,21 @@ player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
-flag-controlled entrances, progression-aware forest gatekeepers, and a sealed
-Hollowstone Cave entrance. The PNG number minus one is the internal
+flag-controlled entrances, progression-aware forest gatekeepers, a sealed
+Hollowstone Cave entrance, and a reusable boss battle framework with optional
+special presentation. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE20.PBP**, titled **Emberwake - Phase 20**. Copy it to:
+Use **EBOOT-PHASE21.PBP**, titled **Emberwake - Phase 21**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE19.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE20.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1410,6 +1457,21 @@ only after the whole NPC party is defeated; the reward and progression flag are
 granted once. Future interactions use the post-victory dialogue instead of
 starting another battle. A loss does not mark the NPC defeated and can show its
 optional defeat dialogue after the normal return to Hearth Clearing.
+
+Boss definitions are a separate reusable layer with a stable boss ID, speaker
+name, battle title, party of up to four Veylings, AI profile, intro, victory and
+optional defeat dialogue, Embermark reward, required completion flag, and an
+optional battle presentation. The boss flow is intro dialogue → ready prompt →
+party battle → outcome dialogue. A completed boss uses its victory dialogue on
+later interactions and does not start another battle.
+
+The completion flag is the source of truth for boss victory and already travels
+through the version-3 save payload. Victory sets it idempotently, grants the
+reward only on the first transition from incomplete to complete, and reapplies
+gatekeeper state immediately. The first optional presentation, GUARDIAN, gives
+boss battles a dark violet field, gold frame, and GUARDIAN header while reusing
+the normal battle controller. Phase 21 intentionally defines the framework and
+its test Guardian only; no boss has been placed in the world yet.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -1604,12 +1666,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP
+    make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1621,7 +1683,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All fourteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All fifteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -1650,13 +1712,18 @@ and open traversal, reverse-route safety, and save/load restoration.
 The Phase 20 integration checks the visibly occupied cave doorway, both-Guardian
 requirement text, shared gate collision, cave-flag unlock, changed dialogue,
 step-aside position, two-way travel, old-save escape route, and persistence.
+The Phase 21 suite validates boss IDs, names and titles, parties, AI profiles,
+dialogue, rewards, required completion flags, presentation modes, and one-time
+completion. Its integration path covers cancel, loss and retry, the guardian
+visual treatment, victory, immediate progression updates, one-time rewards, and
+post-victory interaction without another battle.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -1916,11 +1983,15 @@ void battle_draw(const Battle *b)
         party_menu_draw_battle(&b->party,b->active,b->switch_cursor,b->forced_switch,b->switch_message);
         return;
     }
-    graphics_rectangle(0,0,480,272,C(48,65,74));
-    graphics_rectangle(0,88,480,88,C(65,81,77));
-    graphics_rectangle(0,0,480,15,C(19,28,36));
+    int guardian=b->presentation==BATTLE_PRESENTATION_GUARDIAN;
+    graphics_rectangle(0,0,480,272,guardian?C(55,48,67):C(48,65,74));
+    graphics_rectangle(0,88,480,88,guardian?C(79,63,70):C(65,81,77));
+    graphics_rectangle(0,0,480,15,guardian?C(39,24,34):C(19,28,36));
     char heading[80];
-    if(b->npc_battle)
+    if(guardian)
+        snprintf(heading,sizeof(heading),"GUARDIAN  %s  %d/%d",b->opponent_name,
+                 b->enemy_active+1,b->enemy_count);
+    else if(b->npc_battle)
         snprintf(heading,sizeof(heading),"%s  VEYLING %d/%d",b->opponent_name,
                  b->enemy_active+1,b->enemy_count);
     else snprintf(heading,sizeof(heading),"WILD VEYLING ENCOUNTER");
@@ -1942,7 +2013,7 @@ void battle_draw(const Battle *b)
     }
     status(&b->enemy,18,24,202,b->enemy_hp_shown);
     status(&b->ally,253,109,210,b->ally_hp_shown);
-    graphics_rectangle(6,176,468,90,C(177,144,94));
+    graphics_rectangle(6,176,468,90,guardian?C(214,164,86):C(177,144,94));
     graphics_rectangle(8,178,464,86,C(21,30,38));
     if(b->phase==BATTLE_CAPTURE) {
         char line[80];
@@ -2432,6 +2503,43 @@ void battle_update(Battle *b,const Input *input)
 }
 ````
 
+## src/boss.c
+
+````text
+#include "boss.h"
+
+static int dialogue_valid(NpcBattleDialogue dialogue,int optional)
+{
+    if(!dialogue.first || !dialogue.first[0]) return optional && !dialogue.second;
+    return !dialogue.second || dialogue.second[0];
+}
+
+int boss_data_valid(const BossData *boss)
+{
+    if(!boss || boss->id<0 || boss->id>=BOSS_MAX || !boss->name || !boss->name[0] ||
+       !boss->title || !boss->title[0] || !dialogue_valid(boss->intro,0) ||
+       !dialogue_valid(boss->victory,0) || !dialogue_valid(boss->defeat,1) ||
+       boss->party_count<1 || boss->party_count>NPC_BATTLE_PARTY_MAX ||
+       boss->ai_profile<0 || boss->ai_profile>=NPC_AI_PROFILE_COUNT ||
+       boss->reward_embermarks<0 || !progression_flag_valid(boss->completion_flag) ||
+       boss->presentation<0 || boss->presentation>=BATTLE_PRESENTATION_COUNT) return 0;
+    for(int i=0;i<boss->party_count;++i)
+        if(boss->party[i].species<0 || boss->party[i].species>=SPECIES_COUNT ||
+           boss->party[i].level<1 || boss->party[i].level>CREATURE_MAX_LEVEL) return 0;
+    return 1;
+}
+
+int boss_is_defeated(const ProgressionState *progression,const BossData *boss)
+{
+    return boss_data_valid(boss) && progression_has(progression,boss->completion_flag);
+}
+
+int boss_mark_victory(ProgressionState *progression,const BossData *boss)
+{
+    return boss_data_valid(boss) && progression_set(progression,boss->completion_flag);
+}
+````
+
 ## src/camera.c
 
 ````text
@@ -2899,6 +3007,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
     g->npc_battle=(PendingNpcBattle){0};
+    g->boss_battle=(PendingBossBattle){0};
     return 1;
 }
 static void save_status_update(Game *g)
@@ -2948,6 +3057,7 @@ int game_offer_important_battle(Game *g,const char *opponent,
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
        g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
        g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
     g->pending_battle=(PendingBattle){species,level,seed};
     ready_prompt_open(&g->ready_prompt,opponent);
@@ -2958,7 +3068,8 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
 {
     if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
-       g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
     if(npc_battle_is_defeated(&g->npc_battle_progress,data->id)) {
         dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
         return 1;
@@ -2966,6 +3077,22 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
     g->npc_battle=(PendingNpcBattle){data,seed,NPC_BATTLE_FLOW_INTRO};
     g->pending_battle=(PendingBattle){0};
     dialogue_open(&g->dialogue,data->name,data->before.first,data->before.second);
+    g->transition=0;
+    return 1;
+}
+int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
+{
+    if(!g || !boss_data_valid(data) || g->in_battle || g->ready_prompt.active ||
+       g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+       g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+    if(boss_is_defeated(&g->progression,data)) {
+        dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
+        return 1;
+    }
+    g->boss_battle=(PendingBossBattle){data,seed,NPC_BATTLE_FLOW_INTRO};
+    g->pending_battle=(PendingBattle){0};
+    dialogue_open(&g->dialogue,data->name,data->intro.first,data->intro.second);
     g->transition=0;
     return 1;
 }
@@ -2979,6 +3106,8 @@ static void game_step(Game *g, const Input *input, float seconds)
         if(g->battle.phase==BATTLE_DONE) {
             const NpcBattleData *npc_data=g->npc_battle.flow==NPC_BATTLE_FLOW_ACTIVE?
                 g->npc_battle.data:0;
+            const BossData *boss_data=g->boss_battle.flow==NPC_BATTLE_FLOW_ACTIVE?
+                g->boss_battle.data:0;
             BattleResult result=g->battle.result;
             g->in_battle=0;
             g->party=g->battle.party; /* Includes captures and every switched creature. */
@@ -3005,6 +3134,21 @@ static void game_step(Game *g, const Input *input, float seconds)
                                   npc_data->defeat.first,npc_data->defeat.second);
                 }
                 g->npc_battle=(PendingNpcBattle){0};
+            } else if(boss_data) {
+                if(result==BATTLE_WIN) {
+                    if(boss_mark_victory(&g->progression,boss_data)) {
+                        int reward=boss_data->reward_embermarks;
+                        g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
+                            INT_MAX:g->inventory.embermarks+reward;
+                    }
+                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
+                    dialogue_open(&g->dialogue,boss_data->name,
+                                  boss_data->victory.first,boss_data->victory.second);
+                } else if(result==BATTLE_LOSS && boss_data->defeat.first) {
+                    dialogue_open(&g->dialogue,boss_data->name,
+                                  boss_data->defeat.first,boss_data->defeat.second);
+                }
+                g->boss_battle=(PendingBossBattle){0};
             }
         }
         return;
@@ -3012,7 +3156,15 @@ static void game_step(Game *g, const Input *input, float seconds)
     if(g->ready_prompt.active) {
         ReadyPromptResult choice=ready_prompt_update(&g->ready_prompt,input);
         if(choice==READY_ACCEPTED) {
-            if(g->npc_battle.flow==NPC_BATTLE_FLOW_READY && g->npc_battle.data) {
+            if(g->boss_battle.flow==NPC_BATTLE_FLOW_READY && g->boss_battle.data) {
+                const BossData *data=g->boss_battle.data;
+                if(battle_begin_npc_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                    data->title,data->party,data->party_count,data->ai_profile,g->boss_battle.seed)) {
+                    g->battle.presentation=data->presentation;
+                    g->boss_battle.flow=NPC_BATTLE_FLOW_ACTIVE;
+                    g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+                } else g->boss_battle=(PendingBossBattle){0};
+            } else if(g->npc_battle.flow==NPC_BATTLE_FLOW_READY && g->npc_battle.data) {
                 const NpcBattleData *data=g->npc_battle.data;
                 if(battle_begin_npc_party_with_inventory(&g->battle,&g->party,&g->inventory,
                     data->name,data->party,data->party_count,data->ai_profile,g->npc_battle.seed)) {
@@ -3028,6 +3180,7 @@ static void game_step(Game *g, const Input *input, float seconds)
             }
         } else if(choice==READY_DECLINED) {
             g->pending_battle=(PendingBattle){0};g->npc_battle=(PendingNpcBattle){0};
+            g->boss_battle=(PendingBossBattle){0};
         }
         return;
     }
@@ -3050,11 +3203,15 @@ static void game_step(Game *g, const Input *input, float seconds)
         if (input->cancel) {
             g->dialogue.active=0;g->tavi_shop_pending=0;
             if(g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) g->npc_battle=(PendingNpcBattle){0};
+            if(g->boss_battle.flow==NPC_BATTLE_FLOW_INTRO) g->boss_battle=(PendingBossBattle){0};
         }
         else if (input->confirm) {
             int last_page=g->dialogue.page+1>=g->dialogue.count;
             dialogue_advance(&g->dialogue);
-            if(last_page && g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) {
+            if(last_page && g->boss_battle.flow==NPC_BATTLE_FLOW_INTRO) {
+                g->boss_battle.flow=NPC_BATTLE_FLOW_READY;
+                ready_prompt_open(&g->ready_prompt,g->boss_battle.data->title);
+            } else if(last_page && g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) {
                 g->npc_battle.flow=NPC_BATTLE_FLOW_READY;
                 ready_prompt_open(&g->ready_prompt,g->npc_battle.data->name);
             } else if (last_page && g->tavi_shop_pending) {
@@ -5703,6 +5860,55 @@ int main(void)
 }
 ````
 
+## tests/boss_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include "boss.h"
+
+static const BossData guardian={
+    .id=2,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+    .intro={"THE FOREST HEARS EVERY STEP.","SHOW ME THE BOND YOU CARRY."},
+    .victory={"THE PATH ACCEPTS YOUR COURAGE.","CARRY ITS TRUST BEYOND THESE TREES."},
+    .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
+    .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    .presentation=BATTLE_PRESENTATION_GUARDIAN
+};
+
+int main(void)
+{
+    ProgressionState progression={0};
+    BossData changed=guardian;
+    assert(boss_data_valid(&guardian));
+    assert(!boss_is_defeated(&progression,&guardian));
+    assert(boss_mark_victory(&progression,&guardian));
+    assert(boss_is_defeated(&progression,&guardian));
+    uint32_t completed=progression_save_bits(&progression);
+    assert(!boss_mark_victory(&progression,&guardian));
+    assert(progression_save_bits(&progression)==completed);
+
+    changed=guardian;changed.id=BOSS_MAX;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.name="";assert(!boss_data_valid(&changed));
+    changed=guardian;changed.title=0;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.intro.first=0;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.victory.first="";assert(!boss_data_valid(&changed));
+    changed=guardian;changed.defeat=(NpcBattleDialogue){0};assert(boss_data_valid(&changed));
+    changed=guardian;changed.party_count=0;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.party[0].species=SPECIES_COUNT;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.party[0].level=0;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.ai_profile=NPC_AI_PROFILE_COUNT;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.reward_embermarks=-1;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.completion_flag=PROGRESSION_NONE;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.completion_flag=PROGRESSION_FLAG_COUNT;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.presentation=BATTLE_PRESENTATION_COUNT;assert(!boss_data_valid(&changed));
+    puts("PASS: boss definitions, validation, and one-time completion");
+    return 0;
+}
+````
+
 ## tests/creature_test.c
 
 ````text
@@ -6631,7 +6837,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle',
+for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
              'forest-gatekeeper-locked', 'forest-gatekeeper-open',
              'cave-gatekeeper-locked', 'cave-gatekeeper-open',
@@ -6670,7 +6876,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/boss.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -6695,6 +6901,9 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/npc_battle_test.c src/npc_battle.c src/progression.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
     src/party.c src/capture.c src/inventory.c -o previews/npc-battle-test
 previews/npc-battle-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/boss_test.c src/boss.c src/progression.c -o previews/boss-test
+previews/boss-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/progression_test.c src/progression.c -o previews/progression-test
 previews/progression-test
@@ -7027,6 +7236,16 @@ static const NpcBattleData framework_defeat={
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,
     .progression_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED
 };
+static const BossData framework_guardian={
+    .id=2,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+    .intro={"THE FOREST HEARS EVERY STEP.","SHOW ME THE BOND YOU CARRY."},
+    .victory={"THE PATH ACCEPTS YOUR COURAGE.","CARRY ITS TRUST BEYOND THESE TREES."},
+    .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
+    .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    .presentation=BATTLE_PRESENTATION_GUARDIAN
+};
 int main(void)
 {
     int portals=0,locked_gates=0;
@@ -7298,6 +7517,53 @@ int main(void)
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5 && g.player.tile_y==11);
     assert(!npc_battle_is_defeated(&g.npc_battle_progress,framework_defeat.id));
     assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURN WHEN"));
+    update(&g,(Input){.cancel=1},1);
+
+    /* Phase 21 boss framework: full flow, special presentation, and one-time rewards. */
+    place(&g,MAP_CLEARING,10,13);
+    assert(boss_data_valid(&framework_guardian));
+    fits(framework_guardian.intro.first);fits(framework_guardian.intro.second);
+    fits(framework_guardian.victory.first);fits(framework_guardian.victory.second);
+    fits(framework_guardian.defeat.first);
+    marks_before=g.inventory.embermarks;
+    assert(game_offer_boss_battle(&g,&framework_guardian,211));
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE);
+    assert(game_offer_boss_battle(&g,&framework_guardian,211));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.boss_battle.flow==NPC_BATTLE_FLOW_READY);
+    assert(!strcmp(g.ready_prompt.opponent,framework_guardian.title));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.boss_battle.flow==NPC_BATTLE_FLOW_ACTIVE);
+    assert(g.battle.npc_battle && g.battle.enemy_count==2 &&
+           g.battle.ai_profile==NPC_AI_BOSS &&
+           g.battle.presentation==BATTLE_PRESENTATION_GUARDIAN);
+    assert(!strcmp(g.battle.opponent_name,framework_guardian.title));
+    g.transition=0;
+    render(&g,"previews/boss-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_LOSS;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && !boss_is_defeated(&g.progression,&framework_guardian));
+    assert(g.inventory.embermarks==marks_before);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURNING PREPARED"));
+    update(&g,(Input){.cancel=1},1);
+
+    assert(game_offer_boss_battle(&g,&framework_guardian,212));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && boss_is_defeated(&g.progression,&framework_guardian));
+    assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_guardian.name));
+    update(&g,(Input){.cancel=1},1);
+    assert(game_offer_boss_battle(&g,&framework_guardian,213));
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
+    assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
     update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
@@ -7616,7 +7882,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 20 cave lock, forest gatekeepers, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 21 boss flow, cave lock, gatekeepers, NPC persistence, world systems, party/inventory, drawing budget");
     return 0;
 }
 ````

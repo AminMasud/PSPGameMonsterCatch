@@ -1,4 +1,4 @@
-# Emberwake — Phase 20 Lock the Cave
+# Emberwake — Phase 21 Generic Boss Battle Framework
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -7,20 +7,21 @@ player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
-flag-controlled entrances, progression-aware forest gatekeepers, and a sealed
-Hollowstone Cave entrance. The PNG number minus one is the internal
+flag-controlled entrances, progression-aware forest gatekeepers, a sealed
+Hollowstone Cave entrance, and a reusable boss battle framework with optional
+special presentation. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE20.PBP**, titled **Emberwake - Phase 20**. Copy it to:
+Use **EBOOT-PHASE21.PBP**, titled **Emberwake - Phase 21**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE19.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE20.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -157,6 +158,21 @@ only after the whole NPC party is defeated; the reward and progression flag are
 granted once. Future interactions use the post-victory dialogue instead of
 starting another battle. A loss does not mark the NPC defeated and can show its
 optional defeat dialogue after the normal return to Hearth Clearing.
+
+Boss definitions are a separate reusable layer with a stable boss ID, speaker
+name, battle title, party of up to four Veylings, AI profile, intro, victory and
+optional defeat dialogue, Embermark reward, required completion flag, and an
+optional battle presentation. The boss flow is intro dialogue → ready prompt →
+party battle → outcome dialogue. A completed boss uses its victory dialogue on
+later interactions and does not start another battle.
+
+The completion flag is the source of truth for boss victory and already travels
+through the version-3 save payload. Victory sets it idempotently, grants the
+reward only on the first transition from incomplete to complete, and reapplies
+gatekeeper state immediately. The first optional presentation, GUARDIAN, gives
+boss battles a dark violet field, gold frame, and GUARDIAN header while reusing
+the normal battle controller. Phase 21 intentionally defines the framework and
+its test Guardian only; no boss has been placed in the world yet.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -351,12 +367,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE20.PBP EXTRA_TARGETS=EBOOT-PHASE20.PBP
+    make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -368,7 +384,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All fourteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All fifteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -397,13 +413,18 @@ and open traversal, reverse-route safety, and save/load restoration.
 The Phase 20 integration checks the visibly occupied cave doorway, both-Guardian
 requirement text, shared gate collision, cave-flag unlock, changed dialogue,
 step-aside position, two-way travel, old-save escape route, and persistence.
+The Phase 21 suite validates boss IDs, names and titles, parties, AI profiles,
+dialogue, rewards, required completion flags, presentation modes, and one-time
+completion. Its integration path covers cancel, loss and retry, the guardian
+visual treatment, victory, immediate progression updates, one-time rewards, and
+post-victory interaction without another battle.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,

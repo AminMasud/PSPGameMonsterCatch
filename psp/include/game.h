@@ -11,6 +11,7 @@
 #include "player_menu.h"
 #include "ready_prompt.h"
 #include "npc_battle.h"
+#include "boss.h"
 typedef struct {
     SpeciesId species;
     int level;
@@ -27,6 +28,11 @@ typedef struct {
     uint32_t seed;
     NpcBattleFlow flow;
 } PendingNpcBattle;
+typedef struct {
+    const BossData *data;
+    uint32_t seed;
+    NpcBattleFlow flow;
+} PendingBossBattle;
 typedef struct {
     const Map *map;
     Player player;
@@ -52,6 +58,7 @@ typedef struct {
     NpcBattleProgress npc_battle_progress;
     ProgressionState progression;
     PendingNpcBattle npc_battle;
+    PendingBossBattle boss_battle;
     Battle battle;
     int in_battle;
 } Game;
@@ -60,6 +67,7 @@ void game_init(Game *game);
 int game_offer_important_battle(Game *game,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed);
 int game_offer_npc_battle(Game *game,const NpcBattleData *data,uint32_t seed);
+int game_offer_boss_battle(Game *game,const BossData *data,uint32_t seed);
 void game_update(Game *game, const Input *input, float seconds);
 void game_draw(const Game *game);
 #endif
