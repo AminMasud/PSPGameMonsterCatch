@@ -1,4 +1,4 @@
-# Emberwake — Phase 17 Generic Progression Flags
+# Emberwake — Phase 18 Locked Gate System
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -6,19 +6,20 @@ apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
-East Forest entrance, and a reusable named progression-flag system. The PNG number minus one is the internal
+East Forest entrance, a reusable named progression-flag system, and reusable
+flag-controlled entrances with gatekeeper dialogue. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE17.PBP**, titled **Emberwake - Phase 17**. Copy it to:
+Use **EBOOT-PHASE18.PBP**, titled **Emberwake - Phase 18**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE16.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE17.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -111,6 +112,18 @@ Ren's first victory now sets `PROGRESSION_FIRST_CHALLENGER_DEFEATED` through the
 same data-driven NPC battle definition that marks Ren defeated. Loading a Phase
 16 save also reconciles Ren's defeated ID into this named flag, so existing
 progress continues cleanly.
+
+Every entrance now uses a reusable `Gate` record containing its source tile,
+destination and arrival tile, optional required progression flag, gatekeeper,
+and locked and unlocked dialogue. `gate_is_locked`, `gate_can_enter`, and
+`gate_current_dialogue` provide the common state checks. A locked gate is
+rejected by the same collision path as terrain and NPCs, so it cannot be crossed.
+
+The Hearth Clearing east entrance is the first configured locked gate. It
+requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
+Before victory, Ren starts the existing challenge and the gate blocks entry.
+Afterward, Ren uses the gate's unlocked dialogue and the destination opens. All
+other current entrances remain open; later forests and bosses are not added here.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -312,19 +325,20 @@ additional PSP libraries are required.
 Map tiles: ordinary grass '.', path '=', flowers ',', trees '#', rocks/furniture
 'O', water '~', walls 'W', doorway 'D', exits '<' and '>', interior floor '_',
 healing dais 'H', encounter grass 'g', cave floor 'c', and reeds 'r'. Tree, rock,
-water, and wall tiles block movement. Portal coordinates and destinations are
-explicitly defined in map.c; arrival tiles are clear of return triggers.
+water, and wall tiles block movement. Portal and gate coordinates, requirements,
+dialogue, and destinations are defined in map.c; arrival tiles are clear of
+return triggers.
 
 ## Build and verification
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP
+    make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -336,7 +350,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All thirteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All fourteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -356,6 +370,9 @@ step-aside behavior, repeat interaction, portal access, and saved defeat state.
 The Phase 17 suite checks every named flag, invalid queries, idempotent updates,
 clearing, raw-bit round trips, NPC-granted progression, save/load, and Phase 16
 save reconciliation.
+The Phase 18 suite validates gate definitions, destinations, progression
+requirements, locked and unlocked state, gatekeeper dialogue, open entrances,
+invalid data, movement blocking, and the complete Ren unlock flow.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,

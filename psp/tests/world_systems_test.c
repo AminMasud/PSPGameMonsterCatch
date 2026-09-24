@@ -96,7 +96,7 @@ static const NpcBattleData framework_defeat={
 };
 int main(void)
 {
-    int portals=0;
+    int portals=0,locked_gates=0;
     for(int id=0;id<MAP_COUNT;++id) {
         const Map *m=map_get(id);
         int seen[24][40]={{0}}, queue_x[960],queue_y[960],head=0,tail=1;
@@ -126,6 +126,14 @@ int main(void)
                 const Portal *p=map_portal(id,x,y);
                 if(!p) continue;
                 ++portals;
+                assert(gate_valid(p));
+                if(p->required_flag==PROGRESSION_NONE)
+                    assert(gate_can_enter(p,0));
+                else {
+                    ++locked_gates;
+                    assert(gate_is_locked(p,0) && !gate_can_enter(p,0));
+                    assert(p->gatekeeper && gate_current_dialogue(p,0));
+                }
                 assert(seen[y][x]);
                 assert(map_walkable(m,x,y));
                 assert(map_walkable(map_get(p->to),p->arrival_x,p->arrival_y));
@@ -135,7 +143,7 @@ int main(void)
             }
         }
     }
-    assert(portals==10);
+    assert(portals==10 && locked_gates==1);
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -145,15 +153,27 @@ int main(void)
 
     /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
+    const Gate *east_gate=map_gate(MAP_CLEARING,38,11);
+    assert(east_gate && east_gate->to==MAP_FOREST && east_gate->arrival_x==2 &&
+           east_gate->arrival_y==11 && east_gate->required_flag==PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    assert(gate_is_locked(east_gate,&g.progression) && !gate_can_enter(east_gate,&g.progression));
+    const GateDialogue *gate_words=gate_current_dialogue(east_gate,&g.progression);
+    assert(gate_words && !strcmp(gate_words->first,"THE EAST PATH LEADS INTO FERNVEIL."));
     assert(g.npcs.count==3 && g.npcs.people[2].battle);
+    assert(g.npcs.people[2].gate==east_gate);
     assert(g.npcs.people[2].battle->id==NPC_BATTLE_EAST_CHALLENGER);
     assert(g.npcs.people[2].actor.tile_x==38 && g.npcs.people[2].actor.tile_y==11);
     render(&g,"previews/east-challenger.ppm");
+    Npc east_guard=g.npcs.people[2];g.npcs.count=2;
+    update(&g,(Input){.horizontal=1},10);
+    assert(g.player.tile_x==37 && g.map_id==MAP_CLEARING); /* The gate itself is solid while locked. */
+    g.npcs.people[2]=east_guard;g.npcs.count=3;
     update(&g,(Input){1,0,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_x==37); /* Ren blocks the portal. */
     int east_marks=g.inventory.embermarks;
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"REN"));
+    assert(!strcmp(g.dialogue.pages[0],east_gate->locked_dialogue.first));
     update(&g,(Input){.confirm=1},1);
     update(&g,(Input){.confirm=1},1);
     assert(g.ready_prompt.active && g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
@@ -169,6 +189,7 @@ int main(void)
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
            NPC_BATTLE_EAST_CHALLENGER));
     assert(progression_has(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(!gate_is_locked(east_gate,&g.progression) && gate_can_enter(east_gate,&g.progression));
     assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
     assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
     g.transition=0;
@@ -178,6 +199,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE &&
            !g.ready_prompt.active); /* A defeated Ren only repeats victory dialogue. */
+    assert(!strcmp(g.dialogue.pages[0],east_gate->unlocked_dialogue.first));
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
@@ -608,6 +630,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 16 entrance challenger, world systems, NPC battle persistence, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 18 locked gate, entrance challenger, world systems, NPC persistence, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }

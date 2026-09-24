@@ -7,6 +7,7 @@ typedef struct {
     Player actor;
     const char *name, *first, *second;
     const NpcBattleData *battle;
+    const Gate *gate;
     int defeated_x, defeated_y;
     int patrol_start, patrol_end, direction;
     float wait;

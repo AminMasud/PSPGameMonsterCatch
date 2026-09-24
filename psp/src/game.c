@@ -32,6 +32,13 @@ static char facing_tile(const Game *g)
     else ++x;
     return map_tile(g->map,x,y);
 }
+static int world_blocks(void *context,int x,int y)
+{
+    Game *g=context;
+    const Gate *gate=map_gate(g->map_id,x,y);
+    return npc_blocks(&g->npcs,x,y) ||
+           (gate && !gate_can_enter(gate,&g->progression));
+}
 static void shop_feedback(Game *g, const char *text)
 {
     snprintf(g->shop_message,sizeof(g->shop_message),"%s",text);
@@ -349,9 +356,12 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (npc->battle) {
+            if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
                 game_offer_npc_battle(g,npc->battle,
                     g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
+            } else if (npc->gate) {
+                const GateDialogue *words=gate_current_dialogue(npc->gate,&g->progression);
+                dialogue_open(&g->dialogue,npc->gate->gatekeeper,words->first,words->second);
             } else if (!strcmp(npc->name,"TAVI")) {
                 g->tavi_shop_pending=1;
                 dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
@@ -360,10 +370,10 @@ static void game_step(Game *g, const Input *input, float seconds)
         }
     }
     int old_x = g->player.tile_x, old_y = g->player.tile_y;
-    player_update_blocked(&g->player,g->map,input,seconds,npc_blocks,&g->npcs);
+    player_update_blocked(&g->player,g->map,input,seconds,world_blocks,g);
     if (old_x != g->player.tile_x || old_y != g->player.tile_y) {
         const Portal *portal = map_portal(g->map_id,g->player.tile_x,g->player.tile_y);
-        if (portal) {
+        if (portal && gate_can_enter(portal,&g->progression)) {
             enter_map(g,portal->to,portal->arrival_x,portal->arrival_y);
             return;
         }

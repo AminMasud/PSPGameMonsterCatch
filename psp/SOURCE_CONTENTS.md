@@ -1,4 +1,4 @@
-# Complete Phase 17 source contents
+# Complete Phase 18 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -693,6 +693,37 @@ void game_draw(const Game *game);
 #endif
 ````
 
+## include/gate.h
+
+````text
+#ifndef EMBERWAKE_GATE_H
+#define EMBERWAKE_GATE_H
+
+#include "progression.h"
+
+typedef struct {
+    const char *first;
+    const char *second;
+} GateDialogue;
+
+typedef struct {
+    int from, x, y;
+    int to, arrival_x, arrival_y;
+    ProgressionFlag required_flag;
+    const char *gatekeeper;
+    GateDialogue locked_dialogue;
+    GateDialogue unlocked_dialogue;
+} Gate;
+
+int gate_valid(const Gate *gate);
+int gate_is_locked(const Gate *gate,const ProgressionState *progression);
+int gate_can_enter(const Gate *gate,const ProgressionState *progression);
+const GateDialogue *gate_current_dialogue(const Gate *gate,
+                                          const ProgressionState *progression);
+
+#endif
+````
+
 ## include/graphics.h
 
 ````text
@@ -779,6 +810,7 @@ int inventory_use_healing(Inventory *inventory, ItemId item, Creature *target);
 ````text
 #ifndef EMBERWAKE_MAP_H
 #define EMBERWAKE_MAP_H
+#include "gate.h"
 #define TILE_SIZE 32
 typedef struct {
     int width, height;
@@ -790,10 +822,11 @@ char map_tile(const Map *map, int x, int y);
 int map_walkable(const Map *map, int x, int y);
 /* Append new IDs to preserve existing saves. */
 enum { MAP_CLEARING, MAP_FOREST, MAP_LODGE, MAP_CAVE, MAP_MARSH, MAP_REST, MAP_COUNT };
-typedef struct { int from, x, y, to, arrival_x, arrival_y; } Portal;
+typedef Gate Portal;
 const Map *map_get(int id);
 const char *map_name(int id);
 const Portal *map_portal(int id, int x, int y);
+const Gate *map_gate(int id, int x, int y);
 int map_encounter_area(int id, int x, int y);
 #endif
 ````
@@ -885,6 +918,7 @@ typedef struct {
     Player actor;
     const char *name, *first, *second;
     const NpcBattleData *battle;
+    const Gate *gate;
     int defeated_x, defeated_y;
     int patrol_start, patrol_end, direction;
     float wait;
@@ -1171,7 +1205,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1184,7 +1218,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 17
+PSP_EBOOT_TITLE = Emberwake - Phase 18
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1217,7 +1251,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 17 Generic Progression Flags
+# Emberwake — Phase 18 Locked Gate System
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1225,19 +1259,20 @@ apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
-East Forest entrance, and a reusable named progression-flag system. The PNG number minus one is the internal
+East Forest entrance, a reusable named progression-flag system, and reusable
+flag-controlled entrances with gatekeeper dialogue. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE17.PBP**, titled **Emberwake - Phase 17**. Copy it to:
+Use **EBOOT-PHASE18.PBP**, titled **Emberwake - Phase 18**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE16.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE17.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1330,6 +1365,18 @@ Ren's first victory now sets `PROGRESSION_FIRST_CHALLENGER_DEFEATED` through the
 same data-driven NPC battle definition that marks Ren defeated. Loading a Phase
 16 save also reconciles Ren's defeated ID into this named flag, so existing
 progress continues cleanly.
+
+Every entrance now uses a reusable `Gate` record containing its source tile,
+destination and arrival tile, optional required progression flag, gatekeeper,
+and locked and unlocked dialogue. `gate_is_locked`, `gate_can_enter`, and
+`gate_current_dialogue` provide the common state checks. A locked gate is
+rejected by the same collision path as terrain and NPCs, so it cannot be crossed.
+
+The Hearth Clearing east entrance is the first configured locked gate. It
+requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
+Before victory, Ren starts the existing challenge and the gate blocks entry.
+Afterward, Ren uses the gate's unlocked dialogue and the destination opens. All
+other current entrances remain open; later forests and bosses are not added here.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -1531,19 +1578,20 @@ additional PSP libraries are required.
 Map tiles: ordinary grass '.', path '=', flowers ',', trees '#', rocks/furniture
 'O', water '~', walls 'W', doorway 'D', exits '<' and '>', interior floor '_',
 healing dais 'H', encounter grass 'g', cave floor 'c', and reeds 'r'. Tree, rock,
-water, and wall tiles block movement. Portal coordinates and destinations are
-explicitly defined in map.c; arrival tiles are clear of return triggers.
+water, and wall tiles block movement. Portal and gate coordinates, requirements,
+dialogue, and destinations are defined in map.c; arrival tiles are clear of
+return triggers.
 
 ## Build and verification
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP
+    make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1555,7 +1603,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All thirteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All fourteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -1575,6 +1623,9 @@ step-aside behavior, repeat interaction, portal access, and saved defeat state.
 The Phase 17 suite checks every named flag, invalid queries, idempotent updates,
 clearing, raw-bit round trips, NPC-granted progression, save/load, and Phase 16
 save reconciliation.
+The Phase 18 suite validates gate definitions, destinations, progression
+requirements, locked and unlocked state, gatekeeper dialogue, open entrances,
+invalid data, movement blocking, and the complete Ren unlock flow.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -2690,6 +2741,13 @@ static char facing_tile(const Game *g)
     else ++x;
     return map_tile(g->map,x,y);
 }
+static int world_blocks(void *context,int x,int y)
+{
+    Game *g=context;
+    const Gate *gate=map_gate(g->map_id,x,y);
+    return npc_blocks(&g->npcs,x,y) ||
+           (gate && !gate_can_enter(gate,&g->progression));
+}
 static void shop_feedback(Game *g, const char *text)
 {
     snprintf(g->shop_message,sizeof(g->shop_message),"%s",text);
@@ -3007,9 +3065,12 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (npc->battle) {
+            if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
                 game_offer_npc_battle(g,npc->battle,
                     g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
+            } else if (npc->gate) {
+                const GateDialogue *words=gate_current_dialogue(npc->gate,&g->progression);
+                dialogue_open(&g->dialogue,npc->gate->gatekeeper,words->first,words->second);
             } else if (!strcmp(npc->name,"TAVI")) {
                 g->tavi_shop_pending=1;
                 dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
@@ -3018,10 +3079,10 @@ static void game_step(Game *g, const Input *input, float seconds)
         }
     }
     int old_x = g->player.tile_x, old_y = g->player.tile_y;
-    player_update_blocked(&g->player,g->map,input,seconds,npc_blocks,&g->npcs);
+    player_update_blocked(&g->player,g->map,input,seconds,world_blocks,g);
     if (old_x != g->player.tile_x || old_y != g->player.tile_y) {
         const Portal *portal = map_portal(g->map_id,g->player.tile_x,g->player.tile_y);
-        if (portal) {
+        if (portal && gate_can_enter(portal,&g->progression)) {
             enter_map(g,portal->to,portal->arrival_x,portal->arrival_y);
             return;
         }
@@ -3125,6 +3186,53 @@ void game_draw(const Game *g)
             graphics_rectangle(0,272-height,480,height,GU_RGBA(16,25,31,255));
         }
     }
+}
+````
+
+## src/gate.c
+
+````text
+#include "gate.h"
+
+static int dialogue_valid(GateDialogue dialogue)
+{
+    return dialogue.first && dialogue.first[0] &&
+           (!dialogue.second || dialogue.second[0]);
+}
+
+int gate_valid(const Gate *gate)
+{
+    if(!gate || gate->from<0 || gate->x<0 || gate->y<0 || gate->to<0 ||
+       gate->arrival_x<0 || gate->arrival_y<0) return 0;
+    if(gate->required_flag!=PROGRESSION_NONE &&
+       !progression_flag_valid(gate->required_flag)) return 0;
+    if(!gate->gatekeeper)
+        return gate->required_flag==PROGRESSION_NONE && !gate->locked_dialogue.first &&
+               !gate->locked_dialogue.second && !gate->unlocked_dialogue.first &&
+               !gate->unlocked_dialogue.second;
+    if(!gate->gatekeeper[0] || !dialogue_valid(gate->unlocked_dialogue)) return 0;
+    if(gate->required_flag==PROGRESSION_NONE)
+        return !gate->locked_dialogue.first && !gate->locked_dialogue.second;
+    return dialogue_valid(gate->locked_dialogue);
+}
+
+int gate_is_locked(const Gate *gate,const ProgressionState *progression)
+{
+    return gate && gate->required_flag!=PROGRESSION_NONE &&
+           !progression_has(progression,gate->required_flag);
+}
+
+int gate_can_enter(const Gate *gate,const ProgressionState *progression)
+{
+    return gate && !gate_is_locked(gate,progression);
+}
+
+const GateDialogue *gate_current_dialogue(const Gate *gate,
+                                          const ProgressionState *progression)
+{
+    if(!gate || !gate->gatekeeper) return 0;
+    return gate_is_locked(gate,progression)?&gate->locked_dialogue:
+                                             &gate->unlocked_dialogue;
 }
 ````
 
@@ -3468,18 +3576,24 @@ static const char *const rest_rows[] = {
 };
 static const Map marsh = {28,18,marsh_rows,2,10};
 static const Map rest = {15,9,rest_rows,7,6};
-static const Portal portals[] = {
-    {MAP_CLEARING,38,11,MAP_FOREST,2,11},
-    {MAP_FOREST,1,11,MAP_CLEARING,37,11},
-    {MAP_CLEARING,5,9,MAP_LODGE,7,6},
-    {MAP_LODGE,7,7,MAP_CLEARING,5,10},
-    {MAP_FOREST,28,5,MAP_CAVE,2,10},
-    {MAP_CAVE,2,11,MAP_FOREST,28,6},
-    {MAP_FOREST,30,11,MAP_MARSH,2,10},
-    {MAP_MARSH,1,10,MAP_FOREST,29,11},
-    {MAP_MARSH,24,4,MAP_REST,7,6},
-    {MAP_REST,7,7,MAP_MARSH,24,5}
+#define OPEN_PORTAL(f,px,py,t,ax,ay) \
+    {.from=f,.x=px,.y=py,.to=t,.arrival_x=ax,.arrival_y=ay,.required_flag=PROGRESSION_NONE}
+static const Gate portals[] = {
+    {.from=MAP_CLEARING,.x=38,.y=11,.to=MAP_FOREST,.arrival_x=2,.arrival_y=11,
+     .required_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED,.gatekeeper="REN",
+     .locked_dialogue={"THE EAST PATH LEADS INTO FERNVEIL.","SHOW ME ONE CALM BATTLE FIRST."},
+     .unlocked_dialogue={"YOU ARE READY FOR THE EAST WOODS.","THE PATH IS OPEN. TRAVEL SAFELY."}},
+    OPEN_PORTAL(MAP_FOREST,1,11,MAP_CLEARING,37,11),
+    OPEN_PORTAL(MAP_CLEARING,5,9,MAP_LODGE,7,6),
+    OPEN_PORTAL(MAP_LODGE,7,7,MAP_CLEARING,5,10),
+    OPEN_PORTAL(MAP_FOREST,28,5,MAP_CAVE,2,10),
+    OPEN_PORTAL(MAP_CAVE,2,11,MAP_FOREST,28,6),
+    OPEN_PORTAL(MAP_FOREST,30,11,MAP_MARSH,2,10),
+    OPEN_PORTAL(MAP_MARSH,1,10,MAP_FOREST,29,11),
+    OPEN_PORTAL(MAP_MARSH,24,4,MAP_REST,7,6),
+    OPEN_PORTAL(MAP_REST,7,7,MAP_MARSH,24,5)
 };
+#undef OPEN_PORTAL
 const Map *map_get(int id)
 {
     const Map *const maps[] = {&clearing,&forest,&lodge,&cave,&marsh,&rest};
@@ -3496,6 +3610,10 @@ const Portal *map_portal(int id, int x, int y)
         if (portals[i].from == id && portals[i].x == x && portals[i].y == y)
             return &portals[i];
     return 0;
+}
+const Gate *map_gate(int id, int x, int y)
+{
+    return map_portal(id,x,y);
 }
 int map_encounter_area(int id, int x, int y)
 {
@@ -3642,6 +3760,7 @@ void npc_load(Npcs *n, int map_id)
             east_challenger.before.second,38);
         n->people[n->count-1].actor.facing=FACE_LEFT;
         n->people[n->count-1].battle=&east_challenger;
+        n->people[n->count-1].gate=map_gate(MAP_CLEARING,38,11);
         n->people[n->count-1].defeated_x=37;
         n->people[n->count-1].defeated_y=10;
     } else if (map_id == 1) {
@@ -5647,6 +5766,61 @@ int main(void)
 }
 ````
 
+## tests/gate_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "gate.h"
+
+int main(void)
+{
+    const Gate cave={
+        .from=1,.x=8,.y=4,.to=2,.arrival_x=3,.arrival_y=7,
+        .required_flag=PROGRESSION_CAVE_UNLOCKED,.gatekeeper="WARDEN",
+        .locked_dialogue={"THE CAVE IS SEALED.","RETURN WITH THE CAVE SIGIL."},
+        .unlocked_dialogue={"THE SIGIL ANSWERS.","THE CAVE IS OPEN."}
+    };
+    ProgressionState progression;progression_init(&progression);
+    assert(gate_valid(&cave));
+    assert(gate_is_locked(&cave,&progression));
+    assert(!gate_can_enter(&cave,&progression));
+    const GateDialogue *words=gate_current_dialogue(&cave,&progression);
+    assert(words && !strcmp(words->first,"THE CAVE IS SEALED."));
+
+    assert(progression_set(&progression,PROGRESSION_CAVE_UNLOCKED));
+    assert(!gate_is_locked(&cave,&progression));
+    assert(gate_can_enter(&cave,&progression));
+    words=gate_current_dialogue(&cave,&progression);
+    assert(words && !strcmp(words->first,"THE SIGIL ANSWERS."));
+
+    Gate open={.from=0,.x=1,.y=1,.to=1,.arrival_x=2,.arrival_y=2,
+               .required_flag=PROGRESSION_NONE};
+    assert(gate_valid(&open) && gate_can_enter(&open,&progression));
+    assert(!gate_is_locked(&open,&progression));
+    assert(!gate_current_dialogue(&open,&progression));
+
+    Gate welcome=open;
+    welcome.gatekeeper="GUIDE";
+    welcome.unlocked_dialogue=(GateDialogue){"THE ROAD IS OPEN.",0};
+    assert(gate_valid(&welcome));
+    assert(gate_current_dialogue(&welcome,&progression)==&welcome.unlocked_dialogue);
+
+    Gate bad=cave;bad.required_flag=PROGRESSION_FLAG_COUNT;
+    assert(!gate_valid(&bad));
+    bad=cave;bad.gatekeeper=0;assert(!gate_valid(&bad));
+    bad=cave;bad.locked_dialogue.first=0;assert(!gate_valid(&bad));
+    bad=cave;bad.unlocked_dialogue.first="";assert(!gate_valid(&bad));
+    assert(!gate_valid(0));
+    assert(!gate_can_enter(0,&progression));
+    assert(!gate_current_dialogue(0,&progression));
+
+    puts("PASS: generic locked gates, destinations, flags, gatekeepers, and state dialogue");
+    return 0;
+}
+````
+
 ## tests/host/audio_stub.c
 
 ````text
@@ -6437,7 +6611,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/progression.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -6465,6 +6639,9 @@ previews/npc-battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/progression_test.c src/progression.c -o previews/progression-test
 previews/progression-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/gate_test.c src/gate.c src/progression.c -o previews/gate-test
+previews/gate-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/npc_ai_test.c src/npc_ai.c -o previews/npc-ai-test
 previews/npc-ai-test
@@ -6793,7 +6970,7 @@ static const NpcBattleData framework_defeat={
 };
 int main(void)
 {
-    int portals=0;
+    int portals=0,locked_gates=0;
     for(int id=0;id<MAP_COUNT;++id) {
         const Map *m=map_get(id);
         int seen[24][40]={{0}}, queue_x[960],queue_y[960],head=0,tail=1;
@@ -6823,6 +7000,14 @@ int main(void)
                 const Portal *p=map_portal(id,x,y);
                 if(!p) continue;
                 ++portals;
+                assert(gate_valid(p));
+                if(p->required_flag==PROGRESSION_NONE)
+                    assert(gate_can_enter(p,0));
+                else {
+                    ++locked_gates;
+                    assert(gate_is_locked(p,0) && !gate_can_enter(p,0));
+                    assert(p->gatekeeper && gate_current_dialogue(p,0));
+                }
                 assert(seen[y][x]);
                 assert(map_walkable(m,x,y));
                 assert(map_walkable(map_get(p->to),p->arrival_x,p->arrival_y));
@@ -6832,7 +7017,7 @@ int main(void)
             }
         }
     }
-    assert(portals==10);
+    assert(portals==10 && locked_gates==1);
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -6842,15 +7027,27 @@ int main(void)
 
     /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
+    const Gate *east_gate=map_gate(MAP_CLEARING,38,11);
+    assert(east_gate && east_gate->to==MAP_FOREST && east_gate->arrival_x==2 &&
+           east_gate->arrival_y==11 && east_gate->required_flag==PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    assert(gate_is_locked(east_gate,&g.progression) && !gate_can_enter(east_gate,&g.progression));
+    const GateDialogue *gate_words=gate_current_dialogue(east_gate,&g.progression);
+    assert(gate_words && !strcmp(gate_words->first,"THE EAST PATH LEADS INTO FERNVEIL."));
     assert(g.npcs.count==3 && g.npcs.people[2].battle);
+    assert(g.npcs.people[2].gate==east_gate);
     assert(g.npcs.people[2].battle->id==NPC_BATTLE_EAST_CHALLENGER);
     assert(g.npcs.people[2].actor.tile_x==38 && g.npcs.people[2].actor.tile_y==11);
     render(&g,"previews/east-challenger.ppm");
+    Npc east_guard=g.npcs.people[2];g.npcs.count=2;
+    update(&g,(Input){.horizontal=1},10);
+    assert(g.player.tile_x==37 && g.map_id==MAP_CLEARING); /* The gate itself is solid while locked. */
+    g.npcs.people[2]=east_guard;g.npcs.count=3;
     update(&g,(Input){1,0,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_x==37); /* Ren blocks the portal. */
     int east_marks=g.inventory.embermarks;
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"REN"));
+    assert(!strcmp(g.dialogue.pages[0],east_gate->locked_dialogue.first));
     update(&g,(Input){.confirm=1},1);
     update(&g,(Input){.confirm=1},1);
     assert(g.ready_prompt.active && g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
@@ -6866,6 +7063,7 @@ int main(void)
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
            NPC_BATTLE_EAST_CHALLENGER));
     assert(progression_has(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(!gate_is_locked(east_gate,&g.progression) && gate_can_enter(east_gate,&g.progression));
     assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
     assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
     g.transition=0;
@@ -6875,6 +7073,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE &&
            !g.ready_prompt.active); /* A defeated Ren only repeats victory dialogue. */
+    assert(!strcmp(g.dialogue.pages[0],east_gate->unlocked_dialogue.first));
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
@@ -7305,7 +7504,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 16 entrance challenger, world systems, NPC battle persistence, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 18 locked gate, entrance challenger, world systems, NPC persistence, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }
 ````

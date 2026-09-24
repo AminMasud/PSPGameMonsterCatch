@@ -34,6 +34,7 @@ void npc_load(Npcs *n, int map_id)
             east_challenger.before.second,38);
         n->people[n->count-1].actor.facing=FACE_LEFT;
         n->people[n->count-1].battle=&east_challenger;
+        n->people[n->count-1].gate=map_gate(MAP_CLEARING,38,11);
         n->people[n->count-1].defeated_x=37;
         n->people[n->count-1].defeated_y=10;
     } else if (map_id == 1) {
