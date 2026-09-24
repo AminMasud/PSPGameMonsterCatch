@@ -2,6 +2,7 @@
 #include "party_menu.h"
 #include "graphics.h"
 #include "text.h"
+#include "pet_draw.h"
 
 #define C(r,g,b) (0xff000000u | ((unsigned int)(b)<<16) | ((unsigned int)(g)<<8) | (unsigned int)(r))
 #define LIST_ROWS 6
@@ -115,27 +116,29 @@ static void details_draw(const Creature *creature)
     char line[80];
     snprintf(line,sizeof(line),"%.19s  LV %d",creature_name(creature),creature->level);
     text_draw(244,72,line,C(244,217,169),1);
-    text_draw(244,87,element_name(creature->element),C(166,196,188),1);
+    snprintf(line,sizeof(line),"%s  STAGE %d/3",element_name(creature->element),creature->species%3+1);
+    text_draw(244,87,line,C(166,196,188),1);
+    pet_draw(creature->species,388,69,64,0);
     snprintf(line,sizeof(line),"HP %d / %d",creature->hp,creature->max_hp);
     text_draw(244,100,line,C(229,233,220),1);
-    graphics_rectangle(244,112,210,5,C(57,70,77));
+    graphics_rectangle(244,112,130,5,C(57,70,77));
     if(creature->max_hp>0 && creature->hp>0) {
-        int filled=210*creature->hp/creature->max_hp;
-        if(filled>210) filled=210;
+        int filled=130*creature->hp/creature->max_hp;
+        if(filled>130) filled=130;
         if(filled>0) graphics_rectangle(244,112,filled,5,C(125,201,154));
     }
     snprintf(line,sizeof(line),"ATK %d  DEF %d  SPD %d",creature->attack,creature->defense,creature->speed);
-    text_draw(244,125,line,C(207,216,209),1);
+    text_draw(244,135,line,C(207,216,209),1);
     if(creature->level>=CREATURE_MAX_LEVEL) snprintf(line,sizeof(line),"XP %d - MAX LEVEL",creature->experience);
     else snprintf(line,sizeof(line),"XP %d - NEXT %d",creature->experience,creature_xp_remaining(creature));
-    text_draw(244,139,line,C(233,173,115),1);
+    text_draw(244,148,line,C(233,173,115),1);
     for(int i=0;i<CREATURE_MOVES;++i) {
         if(creature->moves[i]<0) snprintf(line,sizeof(line),"- EMPTY -");
         else {
             const Attack *move=attack_get(creature->moves[i]);
             snprintf(line,sizeof(line),"%.22s %d/%d",move->name,creature->uses[i],move->uses);
         }
-        text_draw(244,154+i*13,line,C(188,205,197),1);
+        text_draw(244,163+i*11,line,C(188,205,197),1);
     }
 }
 
@@ -189,11 +192,12 @@ void party_menu_draw(const PartyMenu *menu, const Party *party)
             int y=67+row*23;
             const Creature *creature=menu->tab?&party->collection[index]:&party->members[index];
             if(index==menu->cursor[menu->tab]) graphics_rectangle(16,y,208,22,C(59,78,76));
+            pet_draw(creature->species,20,y,22,0);
             snprintf(line,sizeof(line),"%02d %.19s",index+1,creature_name(creature));
-            text_draw(22,y+3,line,C(235,230,209),1);
+            text_wrap(46,y+3,144,9,line,C(235,230,209),1);
             if(menu->tab==0 && index==party->lead) text_draw(193,y+3,"LEAD",C(255,201,132),1);
             snprintf(line,sizeof(line),"LV %d  HP %d/%d",creature->level,creature->hp,creature->max_hp);
-            text_draw(40,y+13,line,C(168,199,183),1);
+            text_draw(46,y+13,line,C(168,199,183),1);
         }
         const Creature *selected=menu->tab?&party->collection[menu->cursor[1]]:&party->members[menu->cursor[0]];
         details_draw(selected);

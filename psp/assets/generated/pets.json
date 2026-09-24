@@ -1,0 +1,242 @@
+[
+  {
+    "id": 0,
+    "number": "001",
+    "name": "cindlet",
+    "source": "assets/pets/001.cindlet.png",
+    "sha256": "ae15c891bbeed4990683510b5bbbd8ec5d2c86a8eb0fda152cb277d99465d559",
+    "texture_sha256": "76e8e00bf185a7c347b34b48b274893732ac7d651abb64565785cf4ed4fedfe9"
+  },
+  {
+    "id": 1,
+    "number": "002",
+    "name": "emberyn",
+    "source": "assets/pets/002.emberyn.png",
+    "sha256": "175077309736887d1f95e7dc5208968d764f56de523c8cbff8991d7b02145ce8",
+    "texture_sha256": "af6f6ad8be82fe5753451b5bb911e4692a15bf50bba36fd943b45f239932102c"
+  },
+  {
+    "id": 2,
+    "number": "003",
+    "name": "pyrovern",
+    "source": "assets/pets/003.pyrovern.png",
+    "sha256": "e5b60cf365afa57ae5d25e2accceca4893cbf7f8fa7df32c005f260bab877f22",
+    "texture_sha256": "13ddca76fefecea9fd6ca053906cab4b9e66bfe92acf8872e10f22de55d1976d"
+  },
+  {
+    "id": 3,
+    "number": "004",
+    "name": "bubfin",
+    "source": "assets/pets/004.bubfin.png",
+    "sha256": "00d2cb9bed5d41e3b4cf4f45733e75c0031700387bb1c018f08d11aac9f2de63",
+    "texture_sha256": "86dc6bb65c05d8776f231652a75406e4e6ce52b5ce96b45144a7e171355db122"
+  },
+  {
+    "id": 4,
+    "number": "005",
+    "name": "rivafin",
+    "source": "assets/pets/005.rivafin.png",
+    "sha256": "6d83476cd9a1fbd4494c26a647de1e29dee07c9ee8b3346984878cf3ef3e974e",
+    "texture_sha256": "a84d903e98fe3791f5fe438a7082802dea09655aafc44fda2bf278f9680b0c27"
+  },
+  {
+    "id": 5,
+    "number": "006",
+    "name": "tiderion",
+    "source": "assets/pets/006.tiderion.png",
+    "sha256": "20702ee5396247d4c8c84921feca9f6016ffb9a035716accc46354ad280ff992",
+    "texture_sha256": "d29c139970da7966a14ddcfbba2b064513033fef54c1a959d93f2f7f04335a91"
+  },
+  {
+    "id": 6,
+    "number": "007",
+    "name": "mossprig",
+    "source": "assets/pets/007.mossprig.png",
+    "sha256": "1392b1ffbe81ddb7bb577ff7e8ba1a3635e7f4d85d13b97c72aec6ebe4d25b4f",
+    "texture_sha256": "5cd0faf9b163ba01128241ba0496d163ff88af2f87ac9d94815a0f349df94f55"
+  },
+  {
+    "id": 7,
+    "number": "008",
+    "name": "thornel",
+    "source": "assets/pets/008.thornel.png",
+    "sha256": "34fc905433c0c06c961072d2a1108d43c7c243c62fd83032154fed4d7637228c",
+    "texture_sha256": "8c4540056cb5bfcbb34daa462d73b22a92916530af76f7a1158eb7c2fb13eff1"
+  },
+  {
+    "id": 8,
+    "number": "009",
+    "name": "elderthorn",
+    "source": "assets/pets/009.elderthorn.png",
+    "sha256": "9cc604433057740eadd2dcda18c91ed3e4d0e0d8964e8be9dbb0cf78ffa22e8a",
+    "texture_sha256": "fa21772953ea5f7dccb9c71d27f9db45ee8b19e1809cb72accc28002b7fc3c11"
+  },
+  {
+    "id": 9,
+    "number": "010",
+    "name": "zappip",
+    "source": "assets/pets/010.zappip.png",
+    "sha256": "09df5e7f59d9f275f2881ed4679b3441243f41cbc2a1e30ed6a922ac7e072e49",
+    "texture_sha256": "fd95a60f9945c6d4be625b55679346306eb4e965c5a1a7c6b6fbc7cb91dac2e0"
+  },
+  {
+    "id": 10,
+    "number": "011",
+    "name": "ampreel",
+    "source": "assets/pets/011.ampreel.png",
+    "sha256": "bd388aee3c22a7871b8098345a1cc4f113d63f06a61add96f714f98658992d17",
+    "texture_sha256": "f33a85b2760f6939836b32826564d562f21f625c9749f5059ba4b9e6a5b24148"
+  },
+  {
+    "id": 11,
+    "number": "012",
+    "name": "voltrench",
+    "source": "assets/pets/012.voltrench.png",
+    "sha256": "9fcc3d247aae7187a3cbff0ef14dbc906409b66d1ab8a22332057b0b825f1571",
+    "texture_sha256": "568537a267a2109d50f990d31cc9a80f2e27b380b53ea414a7321c77b85640df"
+  },
+  {
+    "id": 12,
+    "number": "013",
+    "name": "grubbl",
+    "source": "assets/pets/013.grubbl.png",
+    "sha256": "d14c41593211e5585abeb81c8785b07d28d6f86d998ae51e691ff989ae6d0e2b",
+    "texture_sha256": "69f6a5f3c15f9342c9e737db743e0eac038bca5a4eb7eb0924785244666143a6"
+  },
+  {
+    "id": 13,
+    "number": "014",
+    "name": "cragbeet",
+    "source": "assets/pets/014.cragbeet.png",
+    "sha256": "f5148d1b4d03b48bc91bf92aa557e135e8f1668db48e6b7e0ebb77d9f6089e78",
+    "texture_sha256": "f6ec318c07bc10d23a22a6f567d24c209da9c3186714f9a6e0ad7b045986f885"
+  },
+  {
+    "id": 14,
+    "number": "015",
+    "name": "titanocera",
+    "source": "assets/pets/015.titanocera.png",
+    "sha256": "121918e2feb9c60cc07cd87331bf3bda8abee4716c23f319f1a36e37980d3087",
+    "texture_sha256": "b9393736137691d41c277d01d6c5bd9e0b58c59d3f945076ff8dfd96714a3369"
+  },
+  {
+    "id": 15,
+    "number": "016",
+    "name": "veilfin",
+    "source": "assets/pets/016.veilfin.png",
+    "sha256": "70a53cf9f274ec6942362398c78aceca72e578e9c288cb4c45c2d2367f68d154",
+    "texture_sha256": "879373237ba105b9bfc1783fbe91ea69d8e63e82270e9f693cf195094ffa25a4"
+  },
+  {
+    "id": 16,
+    "number": "017",
+    "name": "spectray",
+    "source": "assets/pets/017.spectray.png",
+    "sha256": "9beaf9435ecb698cf4f3477f050260b4115bb3268670ea9b5281a2ea54026ea1",
+    "texture_sha256": "e90444aed25c30d7ae7a716377ebaec8fbc696c0bd667e396ae8f8d2a3b8022e"
+  },
+  {
+    "id": 17,
+    "number": "018",
+    "name": "abyssveil",
+    "source": "assets/pets/018.abyssveil.png",
+    "sha256": "b435dd64d760daea86b1847bfb4203657e9ce07060c6b4fec2d44be0a146005d",
+    "texture_sha256": "fd121902fe6eb568740c5cf0651fc99258c36b600cc149cfac9b611ff367cd96"
+  },
+  {
+    "id": 18,
+    "number": "019",
+    "name": "pebchick",
+    "source": "assets/pets/019.pebchick.png",
+    "sha256": "1338799cd8f4f625d40a043ec55babfda4584af2d303127a1878ac7693373a50",
+    "texture_sha256": "7bf16f68929484eab5892deaccbe0a925c21484576a0a5010aebc7579d88a2d1"
+  },
+  {
+    "id": 19,
+    "number": "020",
+    "name": "frostuin",
+    "source": "assets/pets/020.frostuin.png",
+    "sha256": "3973bdd0cbc0bd24a19c25eaf826e53f99a38f00321829810593b6a20709dc4b",
+    "texture_sha256": "e1912b9531078c25b13f39d4b10a2b01b2583b10587374f2b70affeaa93e0cd2"
+  },
+  {
+    "id": 20,
+    "number": "021",
+    "name": "glacimper",
+    "source": "assets/pets/021.glacimper.png",
+    "sha256": "9bbd4dc0056409b9c487f81f90b1464400c1a16a9757903b023b6dd7decf09d0",
+    "texture_sha256": "f5420158aae476144db1ff8f549f20fcb8a4960ed59d01fdcbe13dfba89bead4"
+  },
+  {
+    "id": 21,
+    "number": "022",
+    "name": "gustlet",
+    "source": "assets/pets/022.gustlet.png",
+    "sha256": "cc436c40d507ef2921a14aebefc45a2e3278ae72d45471549137e5a5589333c4",
+    "texture_sha256": "351cd842292999dd963ccbc747f042fd9ba9b319df109abfdd69f502c4aaf0bd"
+  },
+  {
+    "id": 22,
+    "number": "023",
+    "name": "galetalon",
+    "source": "assets/pets/023.galetalon.png",
+    "sha256": "d239f9c8ca3dd3c0ca5b7a4baa73dfe1045bd8973deb361c7edcebf1562db5e3",
+    "texture_sha256": "aa488a30c3808866cc5557abf9f0d22786e5f7dcc0124025b0f30681c121cce5"
+  },
+  {
+    "id": 23,
+    "number": "024",
+    "name": "skyraptor",
+    "source": "assets/pets/024.skyraptor.png",
+    "sha256": "e91ffb399bb7a7a104f43cedf3032dba1bb46742abbd481ec840ebeace392a77",
+    "texture_sha256": "556b663179d6e0a41690206bd3f413ba9dd5848e785175738212d60394d6230b"
+  },
+  {
+    "id": 24,
+    "number": "025",
+    "name": "toxlet",
+    "source": "assets/pets/025.toxlet.png",
+    "sha256": "fd1ff87d7a6089200d577a6d6f9ce6ac8ba4ce29c838047d805b7898c680ca86",
+    "texture_sha256": "dc9aa0d71d09ff4d5e49a7991b0d94abc12a2a0768b06e3a429bb9094536ba71"
+  },
+  {
+    "id": 25,
+    "number": "026",
+    "name": "venofrog",
+    "source": "assets/pets/026.venofrog.png",
+    "sha256": "7851aa7b800887de1b97b73a3c9666cf429e6e26ac15c2375ef7edecae399a31",
+    "texture_sha256": "6219b641914f9b1b2b51e19119fb44089da8c6d6e5d7e7b5c2f472c926970121"
+  },
+  {
+    "id": 26,
+    "number": "027",
+    "name": "dreadart",
+    "source": "assets/pets/027.dreadart.png",
+    "sha256": "d836313ffa987fc480436f0a50eee7721d8a83d126cdc7684d5bc59346bbae6b",
+    "texture_sha256": "b847866f61a449b413fb756214ffc3ea899496a205be4479a086f0b726ab2934"
+  },
+  {
+    "id": 27,
+    "number": "028",
+    "name": "glimgrub",
+    "source": "assets/pets/028.glimgrub.png",
+    "sha256": "d2d6af7a083527e88964c457478f3f1878efcfeba59718c4a751b316d6c1c66a",
+    "texture_sha256": "3175a813e81f6be829326de6257b9db435bb681c3d49bea3adb256c50497fc8a"
+  },
+  {
+    "id": 28,
+    "number": "029",
+    "name": "cocoglow",
+    "source": "assets/pets/029.cocoglow.png",
+    "sha256": "0cc3e344ca06f55a0093e82889f8a104f40808530a099065cd11d0c04bf8fb0e",
+    "texture_sha256": "46c96dba0a27ce890252f54eb85287120148c54679251fa7cac27402ecaa5c10"
+  },
+  {
+    "id": 29,
+    "number": "030",
+    "name": "lunarae",
+    "source": "assets/pets/030.lunarae.png",
+    "sha256": "ff7068282d03c6432c7988930881219bb21e76beb0f921d735f51ea05b35ba35",
+    "texture_sha256": "80227996bf8965795d4a39ce8e7de94d62fdbf5a1e22c8fc3fd9b8236f5604ee"
+  }
+]

@@ -38,7 +38,7 @@ static int total_uses(const Creature *c)
 
 static void start(Battle *b,const Party *p,unsigned int seed)
 {
-    battle_begin_party(b,p,SPECIES_MOSSLET,3,seed);
+    battle_begin_party(b,p,SPECIES_MOSSPRIG,3,seed);
     assert(b->phase==BATTLE_MESSAGE && b->capture_charges==3);
     assert(b->active==p->lead);
     same_creature(&b->ally,&p->members[p->lead]);
@@ -116,7 +116,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
             if(caught[weak]) {
                 if(!weak && !*success_seed) *success_seed=seed;
                 assert(b.party.count==3 && b.party.stored==0);
-                assert(b.party.members[2].species==SPECIES_MOSSLET);
+                assert(b.party.members[2].species==SPECIES_MOSSPRIG);
                 assert(b.party.members[2].level==3);
                 assert(!b.reward_given && b.experience_reward==0);
                 messages(&b);
@@ -146,7 +146,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
     Creature final_active=b.ally;
     open_capture(&b);confirm(&b);
     assert(b.result==BATTLE_CAUGHT && b.party.count==4 && b.party.stored==1);
-    assert(b.party.collection[0].species==SPECIES_MOSSLET);
+    assert(b.party.collection[0].species==SPECIES_MOSSPRIG);
     assert(!b.reward_given && b.experience_reward==0);
     messages(&b);assert(b.phase==BATTLE_DONE);
     same_creature(&b.party.members[0],&final_active);
@@ -154,7 +154,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
 
     /* A full collection blocks the action before spending a charge or RNG. */
     p.stored=(int)(sizeof(p.collection)/sizeof(p.collection[0]));
-    for(int i=0;i<p.stored;++i) creature_create(&p.collection[i],SPECIES_FLINTLING,3);
+    for(int i=0;i<p.stored;++i) creature_create(&p.collection[i],SPECIES_GRUBBL,3);
     start(&b,&p,*success_seed);
     unsigned int random_before=b.random;
     open_capture(&b);confirm(&b);messages(&b);
@@ -278,7 +278,7 @@ static void victory_updates_only_active(void)
     confirm(&b);
     assert(b.reward_given && b.ally.level==6);
     int earned=b.ally.experience;
-    assert(earned==p.members[1].experience+species_get(SPECIES_MOSSLET)->experience_yield*3);
+    assert(earned==p.members[1].experience+species_get(SPECIES_MOSSPRIG)->experience_yield*3);
     messages(&b);
     assert(b.phase==BATTLE_LEARN);
     b.learn_cursor=1;confirm(&b);messages(&b);

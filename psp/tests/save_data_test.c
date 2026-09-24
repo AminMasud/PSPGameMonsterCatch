@@ -41,11 +41,82 @@ static void complete(int result, int see_finished)
     tick(PSP_UTILITY_DIALOG_NONE);
 }
 
+static void put32(unsigned char *bytes,int offset,int value)
+{
+    int32_t word=value;
+    memcpy(bytes+offset,&word,sizeof(word));
+}
+static void migration_checks(void)
+{
+    /* Build the old layout by byte offsets, independently of the decoder's
+       legacy structs and today's larger collection. */
+    unsigned char bytes[1960]={0},original[1960];
+    const int replacements[]={0,1,6,7,27,29,12,13,15,14,24,21};
+    const int hp[]={24,35,25,39,20,22,27,43,20,33,26,25};
+    put32(bytes,0,SAVE_DATA_MAGIC);put32(bytes,4,1);
+    put32(bytes,8,4);put32(bytes,12,2);put32(bytes,16,10);
+    put32(bytes,24,123);put32(bytes,28,3);
+    put32(bytes,1936,4);put32(bytes,1940,2);put32(bytes,1944,24);
+    put32(bytes,1948,2);put32(bytes,1952,1);put32(bytes,1956,321);
+    for(int slot=0;slot<28;++slot) {
+        int offset=32+slot*68,id=slot%12;
+        put32(bytes,offset,id);put32(bytes,offset+4,7);
+        put32(bytes,offset+8,creature_xp_for_level(7)+20);
+        put32(bytes,offset+12,slot==0?0:hp[id]+35-3);
+        memcpy(bytes+offset+16,"FRIEND",7);
+        for(int move=0;move<4;++move) {
+            put32(bytes,offset+36+move*4,move);
+            put32(bytes,offset+52+move*4,attack_get(move)->uses-1);
+        }
+    }
+    memcpy(original,bytes,sizeof(bytes));
+    SavePayload loaded;
+    assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!memcmp(bytes,original,sizeof(bytes)));
+    assert(loaded.version==2 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.map_id==4 && loaded.tile_x==2 && loaded.tile_y==10 && loaded.embermarks==321);
+    assert(loaded.encounter_random==123 && loaded.encounter_safe_steps==3 && loaded.item_quantities[0]==2);
+    for(int slot=0;slot<28;++slot) {
+        SaveCreature *pet=slot<4?&loaded.party.members[slot]:&loaded.party.collection[slot-4];
+        assert(pet->species==replacements[slot%12] && pet->level==7);
+        assert(pet->hp==(slot==0?0:species_get(pet->species)->base_hp+35-3));
+        assert(!strcmp(pet->nickname,"FRIEND") && pet->experience==creature_xp_for_level(7)+20);
+        for(int move=0;move<4;++move) assert(pet->moves[move]==move && pet->uses[move]==attack_get(move)->uses-1);
+    }
+    for(int i=24;i<COLLECTION_MAX;++i) assert(loaded.party.collection[i].nickname[0]==0);
+    assert(save_data_begin_load()==0);
+    memcpy(active->dataBuf,bytes,sizeof(bytes));active->dataSize=sizeof(bytes);
+    complete(0,1);
+    assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
+    assert(loaded.version==2 && loaded.party.stored==24);
+    for(int level=20;level<=100;level+=80) {
+        memcpy(bytes,original,sizeof(bytes));
+        /* Old Emberlyn at a high level becomes the eligible final form. */
+        put32(bytes,104,level);put32(bytes,108,creature_xp_for_level(level));
+        put32(bytes,112,35+5*level-3);
+        assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+        assert(loaded.party.members[1].species==SPECIES_PYROVERN);
+        assert(loaded.party.members[1].hp==50+5*level-3);
+    }
+    memcpy(bytes,original,sizeof(bytes));
+    SavePayload unchanged=loaded;
+    put32(bytes,32,12);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+    memcpy(bytes,original,sizeof(bytes));put32(bytes,1944,25);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    memcpy(bytes,original,sizeof(bytes));put32(bytes,4,99);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!save_data_decode(original,sizeof(original)-1,&loaded));
+    assert(!save_data_decode(original,4,&loaded));
+    assert(save_data_decode(&unchanged,sizeof(unchanged),&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+}
+
 int main(void)
 {
-    /* Phase 8 format/IDs remain unchanged; Phase 9 only appends content IDs. */
-    assert(sizeof(SavePayload)==1960 && SAVE_DATA_VERSION==1);
-    assert(SPECIES_CINDLET==0 && SPECIES_ECHOCRAG==9);
+    assert(sizeof(SavePayload)==2504 && SAVE_DATA_VERSION==2);
+    assert(SPECIES_CINDLET==0 && SPECIES_LUNARAE==29);
     SavePayload saved={.magic=SAVE_DATA_MAGIC, .version=SAVE_DATA_VERSION,
                        .map_id=1, .tile_x=7, .embermarks=123};
     SavePayload loaded;
@@ -112,8 +183,9 @@ int main(void)
     assert(shutdowns==2);
     tick(PSP_UTILITY_DIALOG_NONE);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED);
+    migration_checks();
     init_result=-1;
     assert(save_data_begin_load()<0 && save_data_status()==SAVE_STATUS_FAILED);
-    puts("PASS: savedata completion with/without FINISHED, errors, cancellation, load validation, busy guard");
+    puts("PASS: savedata lifecycle, v2 roundtrip, full v1 migration, old ID remapping, preserved progress, corrupt save rejection");
     return 0;
 }

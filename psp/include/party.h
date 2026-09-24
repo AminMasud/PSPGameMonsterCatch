@@ -3,7 +3,7 @@
 #include "creature.h"
 
 #define PARTY_MAX 4
-#define COLLECTION_MAX 24
+#define COLLECTION_MAX 32
 
 typedef struct {
     Creature members[PARTY_MAX];

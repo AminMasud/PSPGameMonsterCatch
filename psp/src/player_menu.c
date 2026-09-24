@@ -60,7 +60,7 @@ void player_menu_draw(const PlayerMenu *m,const Party *party,const Inventory *ba
     text_draw(32,148,line,C(191,212,199),1);
     snprintf(line,sizeof(line),"%d EMBERMARKS",bag->embermarks);
     text_draw(32,174,line,C(241,181,108),1);
-    snprintf(line,sizeof(line),"TEAM %d/4   STORED %d/24",party->count,party->stored);
+    snprintf(line,sizeof(line),"TEAM %d/4   STORED %d/%d",party->count,party->stored,COLLECTION_MAX);
     text_draw(32,191,line,C(160,190,181),1);
     if (m->page==MENU_HOME) {
         const char *const names[]={"CREATURES","ITEMS","COLLECTION","PLAYER","SAVE","OPTIONS"};
@@ -85,7 +85,7 @@ void player_menu_draw(const PlayerMenu *m,const Party *party,const Inventory *ba
         text_draw(20,226,"X TOGGLE. OPTIONS APPLY TO THIS PLAY SESSION.",C(170,191,181),1);
     } else {
         text_draw(256,57,"PLAYER",C(244,198,118),2);
-        text_wrap(258,90,195,100,"THE FERNVEIL JOURNEY\n\nTRAVEL EAST THROUGH THE WOODS TO REACH SUNTHREAD MARSH. SEEK TWO NEW VEYLINGS AMONG ITS REEDS.",C(191,212,199),1);
+        text_wrap(258,90,195,100,"THE FERNVEIL JOURNEY\n\nTRAVEL EAST THROUGH THE WOODS TO REACH SUNTHREAD MARSH. SEEK WATER, SPARK AND FROST FAMILIES AMONG ITS REEDS.",C(191,212,199),1);
         text_draw(20,226,"START SAVE   L LOAD   O RETURN TO FIELD KIT",C(170,191,181),1);
     }
     graphics_rectangle(20,247,440,1,C(66,81,81));

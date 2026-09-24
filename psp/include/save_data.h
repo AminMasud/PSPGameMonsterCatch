@@ -2,12 +2,13 @@
 #define EMBERWAKE_SAVE_DATA_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
-#define SAVE_DATA_VERSION 1u
+#define SAVE_DATA_VERSION 2u
 
 typedef struct {
     int species;
@@ -53,5 +54,7 @@ int save_data_begin_load(void);
 void save_data_update(void);
 SaveStatus save_data_status(void);
 int save_data_take_loaded(SavePayload *payload);
+/* Decode v2 or migrate the fixed v1 layout without changing source bytes. */
+int save_data_decode(const void *bytes,size_t size,SavePayload *payload);
 
 #endif

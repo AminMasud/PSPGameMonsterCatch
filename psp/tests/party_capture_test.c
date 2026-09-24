@@ -99,15 +99,15 @@ static void party_checks(void)
 
 static void capture_checks(void)
 {
-    assert(capture_rarity(SPECIES_MOSSLET)==0 && capture_rarity(SPECIES_FLINTLING)==0);
-    assert(capture_rarity(SPECIES_CINDLET)==1 && capture_rarity(SPECIES_TWIGLINT)==1);
-    assert(capture_rarity(SPECIES_DUSKWISP)==1);
-    const int rare[]={SPECIES_EMBERLYN,SPECIES_MOSSHORN,SPECIES_FLINTAUR,SPECIES_GLOWMOTH,SPECIES_ECHOCRAG};
+    assert(capture_rarity(SPECIES_MOSSPRIG)==0 && capture_rarity(SPECIES_GRUBBL)==0);
+    assert(capture_rarity(SPECIES_CINDLET)==0 && capture_rarity(SPECIES_GALETALON)==1);
+    assert(capture_rarity(SPECIES_SPECTRAY)==1);
+    const int rare[]={SPECIES_PYROVERN,SPECIES_ELDERTHORN,SPECIES_TITANOCERA,SPECIES_LUNARAE,SPECIES_SKYRAPTOR};
     for(unsigned int i=0;i<sizeof(rare)/sizeof(rare[0]);++i) assert(capture_rarity((SpeciesId)rare[i])==2);
-    Creature c;creature_create(&c,SPECIES_MOSSLET,5);
+    Creature c;creature_create(&c,SPECIES_MOSSPRIG,5);
     assert(capture_chance(&c,1)==35);
-    c.species=SPECIES_TWIGLINT;assert(capture_chance(&c,1)==23);
-    c.species=SPECIES_ECHOCRAG;assert(capture_chance(&c,1)==11);
+    c.species=SPECIES_GALETALON;assert(capture_chance(&c,1)==23);
+    c.species=SPECIES_TITANOCERA;assert(capture_chance(&c,1)==11);
     for(int id=0;id<SPECIES_COUNT;++id) {
         creature_create(&c,id,10);
         int last=0;
@@ -125,7 +125,7 @@ static void capture_checks(void)
         }
         assert(capture_chance(&c,5)==0 && !capture_attempt(&c,5,0));
     }
-    creature_create(&c,SPECIES_MOSSLET,5);c.hp=1;
+    creature_create(&c,SPECIES_MOSSPRIG,5);c.hp=1;
     assert(capture_chance(&c,INT_MAX)==95);
     assert(capture_chance(&c,INT_MIN)==capture_chance(&c,1));
     assert(!capture_attempt(&c,5,100) && !capture_attempt(&c,5,UINT_MAX));

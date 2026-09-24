@@ -18,7 +18,7 @@ for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
-             'sunfinch', 'reedskip', 'battle-impact', 'saved-dialogue'):
+             'zappip', 'bubfin', 'battle-impact', 'saved-dialogue') + tuple(f'pet-{i:03d}' for i in range(1,31)):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'

@@ -3,9 +3,29 @@
 #include <string.h>
 #include "game.h"
 #include "graphics.h"
+#include "pet_draw.h"
+#include "text.h"
 
 static unsigned char pixels[272][480][3];
 static unsigned int rectangles;
+static unsigned int textures;
+void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+{
+    ++textures;
+    assert(w>0 && h>0 && texture);
+    for(int py=0;py<h;++py) for(int px=0;px<w;++px) {
+        int tx=px*96/w,ty=py*96/h;
+        if(flip) tx=95-tx;
+        uint16_t value=texture[ty*128+tx];
+        int alpha=(value>>12)*17;
+        if(x+px<0 || x+px>=480 || y+py<0 || y+py>=272) continue;
+        for(int channel=0;channel<3;++channel) {
+            int source=((value>>(channel*4))&15)*17;
+            unsigned char *dest=&pixels[y+py][x+px][channel];
+            *dest=(unsigned char)((source*alpha+*dest*(255-alpha)+127)/255);
+        }
+    }
+}
 void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 {
     ++rectangles;
@@ -19,9 +39,10 @@ void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 }
 static void render(const Game *g,const char *path)
 {
-    memset(pixels,0,sizeof(pixels)); rectangles=0;
+    memset(pixels,0,sizeof(pixels)); rectangles=0;textures=0;
     game_draw(g);
     assert(rectangles < 6000); /* Conservative <576 KiB GU command estimate. */
+    assert(textures<=7); /* At most six list portraits and one detail portrait. */
     if (path) {
         FILE *f=fopen(path,"wb"); assert(f);
         fprintf(f,"P6\n480 272\n255\n");
@@ -45,12 +66,8 @@ static void update(Game *g,Input input,int frames)
 }
 static void fits(const char *text)
 {
-    int width=0,lines=1;
-    for(;*text;++text) {
-        if (*text=='\n') { assert(width<=37);width=0;++lines; }
-        else ++width;
-    }
-    assert(width<=37 && lines<=3);
+    int lines=text_wrap(0,0,444,0,text,0xffffffff,1);
+    assert(lines==0 || (lines-1)*9+7<=53);
 }
 int main(void)
 {
@@ -155,7 +172,7 @@ int main(void)
         int count=0;
         encounter_init(&e,123);
         for(int i=0;i<1000;++i) if(encounter_step(&e,area,&result)) {
-            assert(result.level>=(area==1?2:3) && result.level<=(area==1?6:7));
+            assert(result.level>=(area==1?2:3) && result.level<=18);
             ++count;
             for(int j=0;j<4;++j) assert(!encounter_step(&e,area,&result));
         }
@@ -188,7 +205,7 @@ int main(void)
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
     assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_ECHOCRAG,7,99);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_TITANOCERA,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},3);
@@ -199,7 +216,7 @@ int main(void)
     /* Real game integration: victory -> learning choice -> persistent partner. */
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,5);
     g.party.members[g.party.lead].experience=creature_xp_for_level(6)-1;
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;
     update(&g,(Input){0,0,1,0,0,0},4);
     assert(g.battle.ally.level==6);
@@ -214,34 +231,34 @@ int main(void)
 
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,7);
     g.party.members[g.party.lead].experience=creature_xp_for_level(8)-1;
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},6);
-    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EVOLUTION"));
+    assert(g.battle.ally.species==SPECIES_EMBERYN && strstr(g.battle.message,"EVOLUTION"));
     render(&g,"previews/evolution.ppm");
     for(int i=0;i<25 && g.in_battle;++i) {
         if(g.battle.phase==BATTLE_LEARN) update(&g,(Input){0,0,0,1,0,0},1);
         else update(&g,(Input){0,0,1,0,0,0},1);
     }
-    assert(!g.in_battle && g.party.members[g.party.lead].species==SPECIES_EMBERLYN);
+    assert(!g.in_battle && g.party.members[g.party.lead].species==SPECIES_EMBERYN);
     saved_xp=g.party.members[g.party.lead].experience;
     g.player.tile_x=g.player.target_x=5;g.player.tile_y=g.player.target_y=10;
     g.player.x=160;g.player.y=320;g.player.moving=0;
     update(&g,(Input){0,-1,0,0,0,0},10);
-    assert(g.map_id==MAP_LODGE && g.party.members[g.party.lead].species==SPECIES_EMBERLYN && g.party.members[g.party.lead].experience==saved_xp);
+    assert(g.map_id==MAP_LODGE && g.party.members[g.party.lead].species==SPECIES_EMBERYN && g.party.members[g.party.lead].experience==saved_xp);
     update(&g,(Input){0,0,0,0,1,0},1);
     assert(g.dialogue.active);fits(g.dialogue.pages[0]);fits(g.dialogue.pages[1]);
     render(&g,"previews/partner.ppm");
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);
-    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EMBERLYN IS READY"));
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);
+    assert(g.battle.ally.species==SPECIES_EMBERYN && strstr(g.battle.message,"EMBERYN IS READY"));
     /* Capture into a full party flows through battle into collection management. */
     place(&g,MAP_CLEARING,5,11);
     Creature extra;
     for(int i=0;i<3;++i) {
-        creature_create(&extra,SPECIES_MOSSLET+i,4+i);
+        creature_create(&extra,SPECIES_MOSSPRIG+i,4+i);
         assert(party_add(&g.party,&extra)==1);
     }
-    battle_begin_party(&g.battle,&g.party,SPECIES_MOSSLET,3,1);g.in_battle=1;
+    battle_begin_party(&g.battle,&g.party,SPECIES_MOSSPRIG,3,1);g.in_battle=1;
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=1;update(&g,(Input){.confirm=1},1);
     assert(g.battle.phase==BATTLE_CAPTURE);
@@ -252,7 +269,7 @@ int main(void)
     render(&g,"previews/captured.ppm");
     update(&g,(Input){.confirm=1},1);
     assert(!g.in_battle && g.party.count==4 && g.party.stored==1);
-    assert(g.party.collection[0].species==SPECIES_MOSSLET && g.party.collection[0].level==3);
+    assert(g.party.collection[0].species==SPECIES_MOSSPRIG && g.party.collection[0].level==3);
     assert(g.party.collection[0].hp==g.party.collection[0].max_hp);
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
@@ -268,14 +285,14 @@ int main(void)
     assert(g.roster.mode==PARTY_MENU_SWAP);
     render(&g,"previews/collection-swap.ppm");
     update(&g,(Input){.confirm=1},1);
-    assert(g.party.members[0].species==SPECIES_MOSSLET && g.party.collection[0].species==SPECIES_CINDLET);
+    assert(g.party.members[0].species==SPECIES_MOSSPRIG && g.party.collection[0].species==SPECIES_CINDLET);
     update(&g,(Input){.horizontal=-1},1);
     update(&g,(Input){.vertical=1},1);
     update(&g,(Input){.confirm=1},2);
     assert(g.party.lead==1);
     update(&g,(Input){.menu=1},1);
     assert(!g.roster_open);
-    battle_begin_party(&g.battle,&g.party,SPECIES_FLINTLING,5,2);g.in_battle=1;
+    battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
@@ -292,7 +309,7 @@ int main(void)
     assert(g.party.count==1 && !g.party.stored);
     update(&g,(Input){.cancel=1},1);update(&g,(Input){.horizontal=1},1);
     render(&g,"previews/collection-empty.ppm");
-    creature_create(&extra,SPECIES_FLINTLING,5);party_add(&g.party,&extra);
+    creature_create(&extra,SPECIES_GRUBBL,5);party_add(&g.party,&extra);
     assert(party_deposit(&g.party,1));
     update(&g,(Input){.confirm=1},1);
     assert(g.party.count==2 && g.party.stored==0);
@@ -348,27 +365,74 @@ int main(void)
     assert(g.player.tile_x==px);
     update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
     assert(!g.menu_open);
-    int species_seen[12]={0};
-    encounter_init(&e,456);
-    for(int i=0;i<20000;++i) if(encounter_step(&e,3,&result)) {
-        assert(result.level>=5 && result.level<=8);
-        assert(result.species==SPECIES_REEDSKIP || result.species==SPECIES_GLOWMOTH || result.species==SPECIES_SUNFINCH);
-        ++species_seen[result.species];
+    int species_seen[SPECIES_COUNT]={0};
+    for(int area=1;area<=3;++area) {
+        encounter_init(&e,456);
+        for(int i=0;i<200000;++i) if(encounter_step(&e,area,&result)) {
+            int family=result.species/3,stage=result.species%3;
+            assert(result.species>=0 && result.species<SPECIES_COUNT);
+            if(area==1) assert(family==2 || family==7 || family==8 || family==9);
+            if(area==2) assert(family==0 || family==4 || family==5);
+            if(area==3) assert(family==1 || family==3 || family==6);
+            int minimum=stage==2?16:stage==1?8:area==1?2:area==2?3:5;
+            assert(result.level>=minimum && result.level<=minimum+2);
+            ++species_seen[result.species];
+        }
     }
-    assert(species_seen[SPECIES_REEDSKIP]>0 && species_seen[SPECIES_SUNFINCH]>0);
-    battle_begin_party(&g.battle,&g.party,SPECIES_SUNFINCH,7,42);g.in_battle=1;
-    render(&g,"previews/sunfinch.ppm");
-    battle_begin_party(&g.battle,&g.party,SPECIES_REEDSKIP,6,42);
-    render(&g,"previews/reedskip.ppm");
+    for(int i=0;i<SPECIES_COUNT;++i) assert(species_seen[i]>0);
+    battle_begin_party(&g.battle,&g.party,SPECIES_ZAPPIP,7,42);g.in_battle=1;
+    render(&g,"previews/zappip.ppm");
+    battle_begin_party(&g.battle,&g.party,SPECIES_BUBFIN,6,42);
+    render(&g,"previews/bubfin.ppm");
     g.battle.enemy.hp-=10;g.battle.hit_time=.2f;g.battle.hit_side=1;
     battle_animate(&g.battle,.05f,1);
     assert(g.battle.enemy_hp_shown>g.battle.enemy.hp && g.battle.enemy_hp_shown<g.battle.enemy.max_hp);
     render(&g,"previews/battle-impact.ppm");
     battle_animate(&g.battle,.05f,0);
     assert(g.battle.hit_time==0 && g.battle.enemy_hp_shown==g.battle.enemy.hp);
+    for(int id=0;id<SPECIES_COUNT;++id) {
+        char path[80];
+        battle_begin_party(&g.battle,&g.party,id,id%3==2?16:id%3==1?8:3,42);
+        snprintf(path,sizeof(path),"previews/pet-%03d.ppm",id+1);
+        render(&g,path);
+        assert(textures==2);
+        int opaque=0,transparent=0;
+        for(int p=0;p<128*128;++p) {
+            if(pet_pixels[id][p]>>12) ++opaque;else ++transparent;
+        }
+        assert(opaque>100 && transparent>128*32);
+    }
     g.in_battle=0;
     dialogue_open(&g.dialogue,"SESSION SAVED","YOUR PROGRESS IS SAFE ON THE MEMORY STICK.","KEEP MOVING.");
     render(&g,"previews/saved-dialogue.ppm");
+    /* Round-trip all 30 forms and the expanded full collection through the
+       real game snapshot/application paths using an in-memory utility. */
+    place(&g,MAP_MARSH,2,10);
+    for(int i=1;i<PARTY_MAX+COLLECTION_MAX;++i) {
+        Creature pet;creature_create(&pet,i%SPECIES_COUNT,20+i);
+        pet.hp-=i%5;pet.experience+=3;
+        assert(party_add(&g.party,&pet));
+    }
+    assert(g.party.count==4 && g.party.stored==32);
+    g.party.lead=2;g.inventory.embermarks=4242;
+    Party snapshot=g.party;
+    update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
+    assert(save_data_status()==SAVE_STATUS_BUSY);
+    update(&g,(Input){0},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
+    party_init(&g.party);g.inventory.embermarks=0;
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
+    update(&g,(Input){0},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION LOADED"));
+    assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
+    assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
+    for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
+        const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
+        const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
+        assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
+        assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
+    }
     puts("PASS: world systems, progression, capture retention, party menu, inventory/shop/healing, storage swaps/scrolling, battle lead, drawing budget");
     return 0;
 }

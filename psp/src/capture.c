@@ -3,11 +3,7 @@
 
 int capture_rarity(SpeciesId species)
 {
-    switch(species) {
-    case SPECIES_MOSSLET:case SPECIES_FLINTLING:case SPECIES_REEDSKIP:return 0;
-    case SPECIES_CINDLET:case SPECIES_TWIGLINT:case SPECIES_DUSKWISP:return 1;
-    default:return 2;
-    }
+    return species>=0 && species<SPECIES_COUNT ? species%3 : 2;
 }
 
 int capture_chance(const Creature *c,int strength)

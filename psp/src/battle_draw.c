@@ -4,70 +4,9 @@
 #include "capture.h"
 #include "graphics.h"
 #include "text.h"
+#include "pet_draw.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
 
-static void creature_draw(int x,int y,const Battler *unit,int back)
-{
-    Element element=unit->element;
-    int sprite=species_get(unit->species)->battle_sprite;
-    unsigned int body=element==ELEMENT_EMBER?C(224,123,67):
-        element==ELEMENT_GROVE?C(114,167,92):element==ELEMENT_STONE?C(141,149,174):C(155,140,208);
-    graphics_rectangle(x-6,y+48,78,8,C(33,45,53));
-    graphics_rectangle(x+4,y+18,52,32,body);
-    graphics_rectangle(x+12,y+8,36,30,body);
-    graphics_rectangle(x+8,y+45,12,10,body);
-    graphics_rectangle(x+40,y+45,12,10,body);
-    if(element==ELEMENT_EMBER) {
-        graphics_rectangle(x+16,y,8,12,C(255,188,91));
-        graphics_rectangle(x+33,y-5,8,17,C(255,188,91));
-        graphics_rectangle(x+55,y+28,12,8,C(236,162,76));
-    } else if(element==ELEMENT_GROVE) {
-        graphics_rectangle(x+2,y+1,23,8,C(77,121,74));
-        graphics_rectangle(x+34,y-4,22,8,C(168,194,96));
-    } else if(element==ELEMENT_STONE) {
-        graphics_rectangle(x+7,y+4,15,16,C(190,192,197));
-        graphics_rectangle(x+39,y+3,17,19,C(108,115,145));
-    } else {
-        graphics_rectangle(x-14,y+15,24,12,C(185,169,226));
-        graphics_rectangle(x+52,y+15,24,12,C(185,169,226));
-    }
-    /* Species references select small original silhouette details. */
-    if(sprite==1) { /* Emberlyn: large mane and crown. */
-        graphics_rectangle(x-2,y+18,8,25,C(245,171,80));
-        graphics_rectangle(x+56,y+18,8,25,C(245,171,80));
-        graphics_rectangle(x+24,y-9,9,17,C(255,210,104));
-    } else if(sprite==3) { /* Mosshorn */
-        graphics_rectangle(x+2,y-8,7,24,C(191,177,112));
-        graphics_rectangle(x+49,y-8,7,24,C(191,177,112));
-    } else if(sprite==7) { /* Flintaur */
-        graphics_rectangle(x-6,y+16,14,30,C(107,121,151));
-        graphics_rectangle(x+52,y+16,14,30,C(107,121,151));
-    } else if(sprite==4) {
-        graphics_rectangle(x+23,y-10,5,19,C(162,185,96));
-    } else if(sprite==8) {
-        graphics_rectangle(x+21,y-8,20,10,C(208,192,234));
-    } else if(sprite==9) {
-        graphics_rectangle(x+23,y-9,15,17,C(158,174,197));
-    } else if(sprite==10) { /* Reedskip: reed feelers and long springing feet. */
-        graphics_rectangle(x+13,y-13,3,24,C(223,196,112));
-        graphics_rectangle(x+40,y-18,3,28,C(223,196,112));
-        graphics_rectangle(x-2,y+46,22,8,C(153,187,104));
-        graphics_rectangle(x+40,y+46,22,8,C(153,187,104));
-    } else if(sprite==11) { /* Sunfinch: gold crest, beak, and forked tail. */
-        graphics_rectangle(x+17,y-11,8,18,C(249,207,104));
-        graphics_rectangle(x+28,y-17,8,24,C(239,169,76));
-        graphics_rectangle(x+25,y+30,12,7,C(245,189,87));
-        graphics_rectangle(x-13,y+40,17,5,C(249,207,104));
-        graphics_rectangle(x-17,y+49,21,5,C(239,169,76));
-    }
-    if(!back) {
-        graphics_rectangle(x+17,y+23,6,7,C(23,31,41));
-        graphics_rectangle(x+38,y+23,6,7,C(23,31,41));
-        graphics_rectangle(x+27,y+35,8,3,C(58,54,57));
-    } else {
-        graphics_rectangle(x+21,y+20,23,5,C(255,179,94));
-    }
-}
 static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 {
     char line[64];
@@ -93,8 +32,8 @@ void battle_draw(const Battle *b)
     static const int bob[]={0,-1,-2,-1,0,1,2,1};
     int frame=(int)(b->animation*6)%8;
     int shake=b->hit_time>0?((int)(b->hit_time*40)%2?3:-3):0;
-    creature_draw(325+(b->hit_side==1?shake:0),38+bob[frame],&b->enemy,0);
-    creature_draw(65+(b->hit_side==0?shake:0),104+bob[(frame+4)%8],&b->ally,1);
+    pet_draw(b->enemy.species,310+(b->hit_side==1?shake:0),14+bob[frame],96,0);
+    pet_draw(b->ally.species,48+(b->hit_side==0?shake:0),78+bob[(frame+4)%8],96,1);
     if (b->hit_time>0) {
         int x=b->hit_side?355:95,y=b->hit_side?60:127;
         graphics_rectangle(x-12,y,28,3,C(255,221,139));

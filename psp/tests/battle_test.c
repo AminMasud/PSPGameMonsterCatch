@@ -10,7 +10,7 @@ static void press(Battle *b)
 static void start(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
-    battle_begin(b,&ally,SPECIES_MOSSLET,3,seed);
+    battle_begin(b,&ally,SPECIES_MOSSPRIG,3,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)

@@ -1,4 +1,7 @@
-# Complete Phase 9 source contents
+# Complete Pet Roster source contents
+
+Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
+The assets/generated/pets.json manifest records all original PNG and texture checksums.
 
 ## .gitattributes
 
@@ -16,6 +19,253 @@
 *.SFO
 *.d
 previews/
+````
+
+## assets/generated/pets.json
+
+````text
+[
+  {
+    "id": 0,
+    "number": "001",
+    "name": "cindlet",
+    "source": "assets/pets/001.cindlet.png",
+    "sha256": "ae15c891bbeed4990683510b5bbbd8ec5d2c86a8eb0fda152cb277d99465d559",
+    "texture_sha256": "76e8e00bf185a7c347b34b48b274893732ac7d651abb64565785cf4ed4fedfe9"
+  },
+  {
+    "id": 1,
+    "number": "002",
+    "name": "emberyn",
+    "source": "assets/pets/002.emberyn.png",
+    "sha256": "175077309736887d1f95e7dc5208968d764f56de523c8cbff8991d7b02145ce8",
+    "texture_sha256": "af6f6ad8be82fe5753451b5bb911e4692a15bf50bba36fd943b45f239932102c"
+  },
+  {
+    "id": 2,
+    "number": "003",
+    "name": "pyrovern",
+    "source": "assets/pets/003.pyrovern.png",
+    "sha256": "e5b60cf365afa57ae5d25e2accceca4893cbf7f8fa7df32c005f260bab877f22",
+    "texture_sha256": "13ddca76fefecea9fd6ca053906cab4b9e66bfe92acf8872e10f22de55d1976d"
+  },
+  {
+    "id": 3,
+    "number": "004",
+    "name": "bubfin",
+    "source": "assets/pets/004.bubfin.png",
+    "sha256": "00d2cb9bed5d41e3b4cf4f45733e75c0031700387bb1c018f08d11aac9f2de63",
+    "texture_sha256": "86dc6bb65c05d8776f231652a75406e4e6ce52b5ce96b45144a7e171355db122"
+  },
+  {
+    "id": 4,
+    "number": "005",
+    "name": "rivafin",
+    "source": "assets/pets/005.rivafin.png",
+    "sha256": "6d83476cd9a1fbd4494c26a647de1e29dee07c9ee8b3346984878cf3ef3e974e",
+    "texture_sha256": "a84d903e98fe3791f5fe438a7082802dea09655aafc44fda2bf278f9680b0c27"
+  },
+  {
+    "id": 5,
+    "number": "006",
+    "name": "tiderion",
+    "source": "assets/pets/006.tiderion.png",
+    "sha256": "20702ee5396247d4c8c84921feca9f6016ffb9a035716accc46354ad280ff992",
+    "texture_sha256": "d29c139970da7966a14ddcfbba2b064513033fef54c1a959d93f2f7f04335a91"
+  },
+  {
+    "id": 6,
+    "number": "007",
+    "name": "mossprig",
+    "source": "assets/pets/007.mossprig.png",
+    "sha256": "1392b1ffbe81ddb7bb577ff7e8ba1a3635e7f4d85d13b97c72aec6ebe4d25b4f",
+    "texture_sha256": "5cd0faf9b163ba01128241ba0496d163ff88af2f87ac9d94815a0f349df94f55"
+  },
+  {
+    "id": 7,
+    "number": "008",
+    "name": "thornel",
+    "source": "assets/pets/008.thornel.png",
+    "sha256": "34fc905433c0c06c961072d2a1108d43c7c243c62fd83032154fed4d7637228c",
+    "texture_sha256": "8c4540056cb5bfcbb34daa462d73b22a92916530af76f7a1158eb7c2fb13eff1"
+  },
+  {
+    "id": 8,
+    "number": "009",
+    "name": "elderthorn",
+    "source": "assets/pets/009.elderthorn.png",
+    "sha256": "9cc604433057740eadd2dcda18c91ed3e4d0e0d8964e8be9dbb0cf78ffa22e8a",
+    "texture_sha256": "fa21772953ea5f7dccb9c71d27f9db45ee8b19e1809cb72accc28002b7fc3c11"
+  },
+  {
+    "id": 9,
+    "number": "010",
+    "name": "zappip",
+    "source": "assets/pets/010.zappip.png",
+    "sha256": "09df5e7f59d9f275f2881ed4679b3441243f41cbc2a1e30ed6a922ac7e072e49",
+    "texture_sha256": "fd95a60f9945c6d4be625b55679346306eb4e965c5a1a7c6b6fbc7cb91dac2e0"
+  },
+  {
+    "id": 10,
+    "number": "011",
+    "name": "ampreel",
+    "source": "assets/pets/011.ampreel.png",
+    "sha256": "bd388aee3c22a7871b8098345a1cc4f113d63f06a61add96f714f98658992d17",
+    "texture_sha256": "f33a85b2760f6939836b32826564d562f21f625c9749f5059ba4b9e6a5b24148"
+  },
+  {
+    "id": 11,
+    "number": "012",
+    "name": "voltrench",
+    "source": "assets/pets/012.voltrench.png",
+    "sha256": "9fcc3d247aae7187a3cbff0ef14dbc906409b66d1ab8a22332057b0b825f1571",
+    "texture_sha256": "568537a267a2109d50f990d31cc9a80f2e27b380b53ea414a7321c77b85640df"
+  },
+  {
+    "id": 12,
+    "number": "013",
+    "name": "grubbl",
+    "source": "assets/pets/013.grubbl.png",
+    "sha256": "d14c41593211e5585abeb81c8785b07d28d6f86d998ae51e691ff989ae6d0e2b",
+    "texture_sha256": "69f6a5f3c15f9342c9e737db743e0eac038bca5a4eb7eb0924785244666143a6"
+  },
+  {
+    "id": 13,
+    "number": "014",
+    "name": "cragbeet",
+    "source": "assets/pets/014.cragbeet.png",
+    "sha256": "f5148d1b4d03b48bc91bf92aa557e135e8f1668db48e6b7e0ebb77d9f6089e78",
+    "texture_sha256": "f6ec318c07bc10d23a22a6f567d24c209da9c3186714f9a6e0ad7b045986f885"
+  },
+  {
+    "id": 14,
+    "number": "015",
+    "name": "titanocera",
+    "source": "assets/pets/015.titanocera.png",
+    "sha256": "121918e2feb9c60cc07cd87331bf3bda8abee4716c23f319f1a36e37980d3087",
+    "texture_sha256": "b9393736137691d41c277d01d6c5bd9e0b58c59d3f945076ff8dfd96714a3369"
+  },
+  {
+    "id": 15,
+    "number": "016",
+    "name": "veilfin",
+    "source": "assets/pets/016.veilfin.png",
+    "sha256": "70a53cf9f274ec6942362398c78aceca72e578e9c288cb4c45c2d2367f68d154",
+    "texture_sha256": "879373237ba105b9bfc1783fbe91ea69d8e63e82270e9f693cf195094ffa25a4"
+  },
+  {
+    "id": 16,
+    "number": "017",
+    "name": "spectray",
+    "source": "assets/pets/017.spectray.png",
+    "sha256": "9beaf9435ecb698cf4f3477f050260b4115bb3268670ea9b5281a2ea54026ea1",
+    "texture_sha256": "e90444aed25c30d7ae7a716377ebaec8fbc696c0bd667e396ae8f8d2a3b8022e"
+  },
+  {
+    "id": 17,
+    "number": "018",
+    "name": "abyssveil",
+    "source": "assets/pets/018.abyssveil.png",
+    "sha256": "b435dd64d760daea86b1847bfb4203657e9ce07060c6b4fec2d44be0a146005d",
+    "texture_sha256": "fd121902fe6eb568740c5cf0651fc99258c36b600cc149cfac9b611ff367cd96"
+  },
+  {
+    "id": 18,
+    "number": "019",
+    "name": "pebchick",
+    "source": "assets/pets/019.pebchick.png",
+    "sha256": "1338799cd8f4f625d40a043ec55babfda4584af2d303127a1878ac7693373a50",
+    "texture_sha256": "7bf16f68929484eab5892deaccbe0a925c21484576a0a5010aebc7579d88a2d1"
+  },
+  {
+    "id": 19,
+    "number": "020",
+    "name": "frostuin",
+    "source": "assets/pets/020.frostuin.png",
+    "sha256": "3973bdd0cbc0bd24a19c25eaf826e53f99a38f00321829810593b6a20709dc4b",
+    "texture_sha256": "e1912b9531078c25b13f39d4b10a2b01b2583b10587374f2b70affeaa93e0cd2"
+  },
+  {
+    "id": 20,
+    "number": "021",
+    "name": "glacimper",
+    "source": "assets/pets/021.glacimper.png",
+    "sha256": "9bbd4dc0056409b9c487f81f90b1464400c1a16a9757903b023b6dd7decf09d0",
+    "texture_sha256": "f5420158aae476144db1ff8f549f20fcb8a4960ed59d01fdcbe13dfba89bead4"
+  },
+  {
+    "id": 21,
+    "number": "022",
+    "name": "gustlet",
+    "source": "assets/pets/022.gustlet.png",
+    "sha256": "cc436c40d507ef2921a14aebefc45a2e3278ae72d45471549137e5a5589333c4",
+    "texture_sha256": "351cd842292999dd963ccbc747f042fd9ba9b319df109abfdd69f502c4aaf0bd"
+  },
+  {
+    "id": 22,
+    "number": "023",
+    "name": "galetalon",
+    "source": "assets/pets/023.galetalon.png",
+    "sha256": "d239f9c8ca3dd3c0ca5b7a4baa73dfe1045bd8973deb361c7edcebf1562db5e3",
+    "texture_sha256": "aa488a30c3808866cc5557abf9f0d22786e5f7dcc0124025b0f30681c121cce5"
+  },
+  {
+    "id": 23,
+    "number": "024",
+    "name": "skyraptor",
+    "source": "assets/pets/024.skyraptor.png",
+    "sha256": "e91ffb399bb7a7a104f43cedf3032dba1bb46742abbd481ec840ebeace392a77",
+    "texture_sha256": "556b663179d6e0a41690206bd3f413ba9dd5848e785175738212d60394d6230b"
+  },
+  {
+    "id": 24,
+    "number": "025",
+    "name": "toxlet",
+    "source": "assets/pets/025.toxlet.png",
+    "sha256": "fd1ff87d7a6089200d577a6d6f9ce6ac8ba4ce29c838047d805b7898c680ca86",
+    "texture_sha256": "dc9aa0d71d09ff4d5e49a7991b0d94abc12a2a0768b06e3a429bb9094536ba71"
+  },
+  {
+    "id": 25,
+    "number": "026",
+    "name": "venofrog",
+    "source": "assets/pets/026.venofrog.png",
+    "sha256": "7851aa7b800887de1b97b73a3c9666cf429e6e26ac15c2375ef7edecae399a31",
+    "texture_sha256": "6219b641914f9b1b2b51e19119fb44089da8c6d6e5d7e7b5c2f472c926970121"
+  },
+  {
+    "id": 26,
+    "number": "027",
+    "name": "dreadart",
+    "source": "assets/pets/027.dreadart.png",
+    "sha256": "d836313ffa987fc480436f0a50eee7721d8a83d126cdc7684d5bc59346bbae6b",
+    "texture_sha256": "b847866f61a449b413fb756214ffc3ea899496a205be4479a086f0b726ab2934"
+  },
+  {
+    "id": 27,
+    "number": "028",
+    "name": "glimgrub",
+    "source": "assets/pets/028.glimgrub.png",
+    "sha256": "d2d6af7a083527e88964c457478f3f1878efcfeba59718c4a751b316d6c1c66a",
+    "texture_sha256": "3175a813e81f6be829326de6257b9db435bb681c3d49bea3adb256c50497fc8a"
+  },
+  {
+    "id": 28,
+    "number": "029",
+    "name": "cocoglow",
+    "source": "assets/pets/029.cocoglow.png",
+    "sha256": "0cc3e344ca06f55a0093e82889f8a104f40808530a099065cd11d0c04bf8fb0e",
+    "texture_sha256": "46c96dba0a27ce890252f54eb85287120148c54679251fa7cac27402ecaa5c10"
+  },
+  {
+    "id": 29,
+    "number": "030",
+    "name": "lunarae",
+    "source": "assets/pets/030.lunarae.png",
+    "sha256": "ff7068282d03c6432c7988930881219bb21e76beb0f921d735f51ea05b35ba35",
+    "texture_sha256": "80227996bf8965795d4a39ce8e7de94d62fdbf5a1e22c8fc3fd9b8236f5604ee"
+  }
+]
 ````
 
 ## assets/maps/cave.inc
@@ -147,9 +397,12 @@ previews/
 ````text
 #ifndef EMBERWAKE_ATTACKS_H
 #define EMBERWAKE_ATTACKS_H
-typedef enum { ELEMENT_PLAIN, ELEMENT_GROVE, ELEMENT_EMBER, ELEMENT_STONE, ELEMENT_WIND } Element;
+typedef enum { ELEMENT_PLAIN, ELEMENT_GROVE, ELEMENT_EMBER, ELEMENT_STONE, ELEMENT_WIND,
+               ELEMENT_TIDE, ELEMENT_SPARK, ELEMENT_VEIL, ELEMENT_FROST, ELEMENT_TOXIN, ELEMENT_COUNT } Element;
 typedef enum { MOVE_NUDGE, MOVE_CINDER, MOVE_LEAF, MOVE_PEBBLE, MOVE_GUST, MOVE_LUNGE,
-               MOVE_HEAT, MOVE_FLARE, MOVE_VINE, MOVE_FAULT, MOVE_TEMPEST, MOVE_COUNT } MoveId;
+               MOVE_HEAT, MOVE_FLARE, MOVE_VINE, MOVE_FAULT, MOVE_TEMPEST,
+               MOVE_BUBBLE, MOVE_SURGE, MOVE_SPARK, MOVE_VOLT, MOVE_VEIL,
+               MOVE_ABYSS, MOVE_FROST, MOVE_GLACIER, MOVE_TOXIN, MOVE_VENOM, MOVE_COUNT } MoveId;
 typedef struct { const char *name; int power, accuracy; Element element; int uses; } Attack;
 const Attack *attack_get(int id);
 const char *element_name(Element element);
@@ -278,9 +531,16 @@ int capture_attempt(const Creature *creature,int strength,unsigned int roll);
 #define CREATURE_MOVES 4
 #define CREATURE_MAX_LEVEL 100
 typedef enum {
-    SPECIES_CINDLET, SPECIES_EMBERLYN, SPECIES_MOSSLET, SPECIES_MOSSHORN,
-    SPECIES_TWIGLINT, SPECIES_GLOWMOTH, SPECIES_FLINTLING, SPECIES_FLINTAUR,
-    SPECIES_DUSKWISP, SPECIES_ECHOCRAG, SPECIES_REEDSKIP, SPECIES_SUNFINCH, SPECIES_COUNT
+    SPECIES_CINDLET, SPECIES_EMBERYN, SPECIES_PYROVERN,
+    SPECIES_BUBFIN, SPECIES_RIVAFIN, SPECIES_TIDERION,
+    SPECIES_MOSSPRIG, SPECIES_THORNEL, SPECIES_ELDERTHORN,
+    SPECIES_ZAPPIP, SPECIES_AMPREEL, SPECIES_VOLTRENCH,
+    SPECIES_GRUBBL, SPECIES_CRAGBEET, SPECIES_TITANOCERA,
+    SPECIES_VEILFIN, SPECIES_SPECTRAY, SPECIES_ABYSSVEIL,
+    SPECIES_PEBCHICK, SPECIES_FROSTUIN, SPECIES_GLACIMPER,
+    SPECIES_GUSTLET, SPECIES_GALETALON, SPECIES_SKYRAPTOR,
+    SPECIES_TOXLET, SPECIES_VENOFROG, SPECIES_DREADART,
+    SPECIES_GLIMGRUB, SPECIES_COCOGLOW, SPECIES_LUNARAE, SPECIES_COUNT
 } SpeciesId;
 typedef struct { int level, move; } LearnMove;
 typedef struct {
@@ -395,6 +655,7 @@ void game_draw(const Game *game);
 ````text
 #ifndef EMBERWAKE_GRAPHICS_H
 #define EMBERWAKE_GRAPHICS_H
+#include <stdint.h>
 
 #define SCREEN_WIDTH 480
 #define SCREEN_HEIGHT 272
@@ -403,6 +664,8 @@ void graphics_init(void);
 void graphics_begin(void);
 void graphics_rectangle(int x, int y, int width, int height,
                         unsigned int color);
+/* 96x96 canvas in a 128x128 RGBA4444 texture; flip mirrors horizontally. */
+void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip);
 void graphics_end(void);
 void graphics_shutdown(void);
 
@@ -546,7 +809,7 @@ void party_menu_draw(const PartyMenu *menu, const Party *party);
 #include "creature.h"
 
 #define PARTY_MAX 4
-#define COLLECTION_MAX 24
+#define COLLECTION_MAX 32
 
 typedef struct {
     Creature members[PARTY_MAX];
@@ -565,6 +828,20 @@ int party_set_lead(Party *party,int index);
 int party_exchange(Party *party,int stored_index,int party_index);
 /* Keep at least one party member; no operation below heals or replenishes moves. */
 int party_deposit(Party *party,int index);
+#endif
+````
+
+## include/pet_draw.h
+
+````text
+#ifndef EMBERWAKE_PET_DRAW_H
+#define EMBERWAKE_PET_DRAW_H
+#include <stdint.h>
+#include "creature.h"
+#define PET_TEXTURE_SIZE 128
+#define PET_CANVAS_SIZE 96
+extern const uint16_t pet_pixels[SPECIES_COUNT][PET_TEXTURE_SIZE * PET_TEXTURE_SIZE];
+void pet_draw(int species,int x,int y,int size,int flip);
 #endif
 ````
 
@@ -621,12 +898,13 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
 #define EMBERWAKE_SAVE_DATA_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
-#define SAVE_DATA_VERSION 1u
+#define SAVE_DATA_VERSION 2u
 
 typedef struct {
     int species;
@@ -672,6 +950,8 @@ int save_data_begin_load(void);
 void save_data_update(void);
 SaveStatus save_data_status(void);
 int save_data_take_loaded(SavePayload *payload);
+/* Decode v2 or migrate the fixed v1 layout without changing source bytes. */
+int save_data_decode(const void *bytes,size_t size,SavePayload *payload);
 
 #endif
 ````
@@ -703,7 +983,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/audio.o src/audio_synth.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -716,7 +996,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 9
+PSP_EBOOT_TITLE = Emberwake - Pet Roster
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -736,615 +1016,284 @@ src/save_data.o: include/save_data.h
 src/map.o: assets/maps/clearing.inc
 PARAM.SFO: Makefile
 -include $(OBJS:.o=.d)
+
+src/pet_assets.o: assets/generated/pets.rgba4444
+.PHONY: check-pets rebuild-pets
+check-pets:
+	python3 tools/check_pet_assets.py
+rebuild-pets:
+	python3 tools/build_pet_assets.py
+$(TARGET).elf: | check-pets
 ````
 
 ## README.md
 
 ````text
-# Emberwake — Phase 9
+# Emberwake — Pet Roster
 
-Original PSP homebrew RPG prototype in C / PSPSDK. The creatures are called
-**Veylings**. Phase 9 adds original synthesized music and sound effects, animated
-battles and terrain, screen transitions, a complete player menu, Sunthread Marsh,
-Lantern Rest, and two new Veylings. Existing captures, party/collection management,
-progression, inventory, shop, healing, and Memory Stick saves remain available.
-Phase 8 saves are compatible: the version-1 payload remains 1960 bytes, and old
-species/map IDs retain their meanings. Load manually with L after launching.
+PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
+placeholder creatures with the user's 30 PNGs: ten families with three forms
+apiece. The PNG number minus one is the internal species ID. All 30 forms have
+stats, descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-The Phase 9 build is **EBOOT-PHASE9.PBP**. Older EBOOT files are retained;
-use the explicitly named Phase 9 artifact.
-
-Copy EBOOT-PHASE9.PBP to the Memory Stick, naming the destination:
+Use **EBOOT-PETS.PBP**, titled **Emberwake - Pet Roster**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
-Launch **Emberwake - Phase 9** from Game > Memory Stick.
+The images and audio are embedded. No separate asset folders are needed on the
+Memory Stick. Earlier EBOOT-PHASE8.PBP and EBOOT-PHASE9.PBP builds are retained
+locally, but they do not contain the new roster.
 
-- D-pad: smooth four-direction tile movement; horizontal wins when two directions
-  are held. Release finishes the current tile.
-- X: speak to a stationary NPC in the tile you face; advance/close dialogue.
-- Circle: close dialogue immediately.
-- Triangle: open the player menu while stationary; Triangle closes it.
-- Select: view the lead partner's stats, experience, and species description while stationary.
-- Start: open the PSP save-data dialog and save the current session.
-- L: open the PSP save-data dialog and load the latest session.
-- HOME: system exit menu, as in earlier phases.
+- D-pad: move; select menu entries. Release finishes the current tile.
+- X: talk, confirm, or advance a message.
+- Circle: close dialogue or return one menu page.
+- Triangle: open the Field Kit while stationary; close all player menus.
+- Select: lead partner's stats, XP, and description while stationary.
+- Start: save while stationary or from the Field Kit.
+- L: load while stationary or from the Field Kit.
+- HOME: PSP exit menu.
 
-X and Circle use new-press detection, so holding a button does not skip pages.
-Dialogue and player menus pause player movement and NPC patrols. Moving NPCs must finish their
-current step before you can speak to them.
+Start a new session with a level-5 Cindlet, or press L to load an existing save.
+Saving/loading is unavailable during battles. Dialogue and menus pause movement
+and NPC patrols. Button actions use new-press detection.
 
-## Phase 9 polish
+## Ten evolution families
 
-Triangle opens the Wayfarer's Field Kit: CREATURES, ITEMS, COLLECTION, PLAYER,
-SAVE, and OPTIONS. Choose with the D-pad and X; Circle returns one page. Party
-and collection browsing return to the Field Kit with Circle; Triangle closes
-the entire menu. Start saves and L loads from the Field Kit as well.
+Base forms evolve on level-up at **level 8**; middle forms evolve at **level 16**.
+Large XP awards can cross both thresholds. Nicknames and known moves survive
+evolution. Every form, including evolved forms, can also be caught in the wild.
 
-ITEMS applies a healing item to the current lead, consuming stock only when it
-restores HP. Set another lead through CREATURES to use an item on that partner.
-PLAYER shows location, currency, roster counts, and a hint toward the new route.
-
-OPTIONS independently toggles music, sound effects, and animation. These are
-session settings and reset on launch; they are not added to the save payload.
-Four original looping phrases cover settlements, wilderness, cave, and battles.
-Menu, impact, healing, encounter, victory, and error sounds are generated by the
-same integer synthesizer. No external audio files are needed. Sound is muted
-while the PSP savedata utility is active, and audio initialization failure allows
-silent play.
-
-Battle sprites bob, impacts shake the target, and HP bars ease toward the new
-value. Water ripples and marsh reeds move. Brief shutters reveal map changes and
-battles, with a location label after entering a map. Disabling animation removes
-these effects and makes HP bars update immediately. Dialogue and battle messages
-now wrap within their panels and use smaller text when needed.
-
-Phase 9 PSP test route:
-1. Load your Phase 8 save with L and check your party, collection, items, and map.
-2. Press Triangle and try all six menu entries. Toggle music, effects, and
-   animation independently; verify gameplay is paused while browsing.
-3. Travel east through Fernveil Woods to the new exit at the end of the path.
-4. Cross the Sunthread Marsh boardwalk. Walk in reeds to find Reedskip, Glowmoth,
-   and the rarer Sunfinch. Fight and capture the new species.
-5. Follow the eastern path north to Lantern Rest. Talk to Ilsen, then face the
-   green healing dais and press X. Return through the south door.
-6. Save in the new area with a new creature, quit, relaunch, load, and verify both.
-7. Check the music changes in the cave and in battle, HP animation, readable
-   dialogue, HOME > Cancel/Quit, and suspend/resume with sound enabled.
-
-## World and test route
-
-| Area | Contents | Connections |
-| --- | --- | --- |
-| Hearth Clearing | Original map, lodge exterior, Mira, patrolling Orin | Lodge door northwest of spawn; woods at east end of horizontal path |
-| Fernveil Woods | Sen, dark tall grass, northern cave entrance | West to clearing; north to cave; east to marsh |
-| Wayfarer Lodge | Indoor floor, furniture, Tavi | South door returns to clearing |
-| Hollowstone Cave | Rock formations, rough encounter floor, Nel | Southwest doorway returns to woods |
-| Sunthread Marsh | Ela, reed encounters, ponds, boardwalk | West to woods; northeastern doorway to Lantern Rest |
-| Lantern Rest | Ilsen, safe floor, healing dais | South door returns to marsh |
-
-Starting at the clearing:
-1. Walk north from the starting tile to enter the lodge's gold-lit doorway.
-2. Walk toward Tavi and press X while facing them. X advances; Circle closes.
-3. Return through the lodge's south doorway.
-4. Find Mira northeast of spawn and Orin patrolling just south of the path.
-   Verify you cannot walk through them and Orin cannot walk through you.
-5. Follow the horizontal sandy path east to the marked exit to the woods.
-6. Walk through dark tall grass until a battle begins. Press X through the
-   introduction, select FIGHT, then select an attack. Standing still never
-   triggers an encounter.
-7. Follow the right-hand path north into the gold-lit cave entrance.
-8. Walk on the rough cave floor for its different encounter table.
-9. Return through both exits; verify no immediate teleport loop.
-10. Check scrolling, collision, HOME > Cancel/Quit, and suspend/resume on PSP.
-
-Leaving and reentering an area resets its NPCs to their starting positions.
-Saving records the current map, tile, facing, encounter seed/safety steps, party,
-collection, progression, item quantities, and Embermarks. NPC patrol positions,
-open menus, active battles, and dialogue are intentionally not saved.
-
-## Encounters
-
-Only completed steps roll for encounters. Paths, flowers, ordinary grass, and
-lodge floors are safe. An encounter has an 18% chance on eligible terrain after
-a four-step grace period following map entry or the previous encounter.
-The grace counter counts completed steps on any terrain.
-
-| Terrain | Common 60% | Uncommon 30% | Rare 10% |
+| PNG numbers | Base → middle → final | Element | Habitat |
 | --- | --- | --- | --- |
-| Woods tall grass | Mosslet, level 2-4 | Twiglint, level 3-5 | Glowmoth, level 4-6 |
-| Cave rough floor | Flintling, level 3-5 | Duskwisp, level 4-6 | Echocrag, level 5-7 |
-| Marsh reeds | Reedskip, level 5-7 | Glowmoth, level 5-7 | Sunfinch, level 6-8 |
+| 001–003 | Cindlet → Emberyn → Pyrovern | Ember | Hollowstone Cave |
+| 004–006 | Bubfin → Rivafin → Tiderion | Tide | Sunthread Marsh |
+| 007–009 | Mossprig → Thornel → Elderthorn | Grove | Fernveil Woods |
+| 010–012 | Zappip → Ampreel → Voltrench | Spark | Sunthread Marsh |
+| 013–015 | Grubbl → Cragbeet → Titanocera | Stone | Hollowstone Cave |
+| 016–018 | Veilfin → Spectray → Abyssveil | Veil | Hollowstone Cave |
+| 019–021 | Pebchick → Frostuin → Glacimper | Frost | Sunthread Marsh |
+| 022–024 | Gustlet → Galetalon → Skyraptor | Wind | Fernveil Woods |
+| 025–027 | Toxlet → Venofrog → Dreadart | Toxin | Fernveil Woods |
+| 028–030 | Glimgrub → Cocoglow → Lunarae | Grove; final form Wind | Fernveil Woods |
 
-Encounters reference stable species IDs in the creature database. Wild creatures
-use species-specific stats and up to four attacks unlocked at their level.
-All eight encounter species can be captured. The item bag is initialized locally
-at the start of a new session and is included in Memory Stick saves.
+The party screen displays stage 1/3, 2/3, or 3/3, list portraits, and a larger
+portrait of the selected creature. Battles use the supplied images. The ally's
+image is mirrored to face the opponent; these are not separately drawn back sprites.
 
-## Battle prototype
+## World and encounters
 
-Your partner starts as **Cindlet**, a level 5 Ember Veyling with four attacks. Wild
-opponents come from the woods, cave, and marsh tables. Battles display both
-creatures, names, levels, elements, numeric HP, and HP bars.
+| Area | Contents and connections |
+| --- | --- |
+| Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; east path to woods |
+| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave, east marsh |
+| Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
+| Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
+| Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
+| Lantern Rest | Ilsen, green healing dais; south to marsh |
 
-Controls:
-- Tap D-pad up/down to select. Left/right also moves one menu entry.
-- X confirms an option or advances the current battle message.
-- Circle returns from attack selection, capture confirmation, or voluntary team
-  selection to the main battle menu without spending a turn.
-- Holding X does not skip messages. Circle cannot dismiss combat results.
+Only completed movement steps trigger encounter rolls. Paths, ordinary grass,
+flowers, boardwalks, and interiors are safe. Eligible terrain has an 18% encounter
+chance after four safe steps following map entry or battle. Standing still never
+triggers an encounter. Entering a map resets NPCs to their starting positions.
 
-FIGHT opens the four attacks with remaining uses, power, accuracy, and element.
-Faster creatures act first; equal speed uses a random tie-break. Each attack
-checks accuracy and consumes one use even if it misses. A defeated creature
-cannot retaliate. Each action has a separate message, followed by the outcome.
+Families within each habitat have equal selection weight. Stage probabilities
+within a chosen family are 90% base, 9% middle, and 1% final. Forest base forms
+are levels 2–4, cave base forms 3–5, and marsh base forms 5–7. Middle forms are
+levels 8–10 and final forms 16–18. Rare evolved encounters can be much stronger
+than a new team; RUN is guaranteed on the third attempt.
 
-Damage is:
+## Battles and progression
+
+FIGHT chooses one of four attacks. Faster creatures act first; speed ties are
+random. Each attempt consumes one use, including misses. A knocked-out creature
+cannot retaliate. Each action/result advances with X. Spent attacks cannot be
+selected; when all attacks are spent, PRESS ON is a weak unlimited fallback.
+Circle returns from attack, item, capture, and voluntary-switch menus without
+spending a turn. RUN succeeds 70% of the time and always on the third attempt.
+
+Damage uses integer arithmetic:
 
     base = ((2 * level / 5 + 2) * power * attack / defense) / 20 + 2
     damage = max(1, base * elemental_multiplier * random(90..100) / 100)
 
-Integer arithmetic is used, with HP clamped at zero. Ember beats Grove, Grove
-beats Stone, Stone beats Wind, and Wind beats Ember (2x damage). Reverse matchups
-and same-element attacks deal half damage. Plain attacks are neutral.
+Strong matchups deal 2x, reverse matchups and matching elements 0.5x, and others
+1x. Plain attacks/defenders are neutral. Strong matchups are Ember→Grove,
+Grove→Stone, Stone→Wind, Wind→Ember, Tide→Ember, Spark→Tide, Grove→Tide,
+Stone→Spark, Ember→Frost, Frost→Wind, Veil→Toxin, Toxin→Grove, and Wind→Toxin.
+The five new elements have ten new attacks. Toxin attacks currently deal damage;
+there is no persistent poison status effect.
 
-NUDGE is accurate and neutral; CINDER ARC is strong against Grove; BOLD LUNGE is
-powerful but less accurate; WHIRL CUT is a Wind option. Selecting an exhausted
-attack does not spend a turn. If all four moves are exhausted, FIGHT offers the
-weak, unlimited PRESS ON attack so combat cannot become stuck.
+Victory awards species XP yield times opponent level to the active battler.
+Earlier participants and stored creatures receive no share. Capture, escape,
+and defeat grant no XP. Level L requires 20 * (L - 1)^2 cumulative XP; the cap is
+100. Stats are base HP + 5*level, attack + 3*level, defense + 2*level, and speed
++ 2*level. Evolution changes the bases.
 
-RUN has a 70% escape chance and is guaranteed on the third attempt. A failed
-escape allows exactly one enemy action. CAPTURE opens the Resonance Loom, and
-CREATURES opens party selection. ITEMS opens the item bag. A successful healing
-item uses the turn and allows one enemy response; an invalid use spends neither.
+New attacks fill empty slots automatically. If all four are occupied, choose a
+move to replace or keep the current moves. Circle declines. Known moves and
+nicknames survive evolution. There is no nickname editor yet.
 
-**Temporary prototype rule:** every party and collection member's HP and attack
-uses refill after every battle, including escape, capture, and defeat. The Loom
-starts each new battle with three charges. Victory, capture, or escape returns
-to the same exploration position. Defeat returns you to Hearth Clearing at the original starting tile.
-All outcomes grant four safe steps before another encounter can roll. This rule
-keeps the battle loop repeatable while the new item and lodge-healing loop is
-being tested.
-Captured creatures, team/collection membership, lead choice, experience, levels,
-evolution, and chosen attacks are retained through subsequent battles and map
-transitions in this running session. The last active battler becomes your lead
-for the next battle. Quitting or restarting now preserves progress after the
-player saves from the overworld.
+**Temporary prototype rule:** every party and stored creature regains all HP and
+attack uses after every battle, including escape, capture, and defeat. The last
+active battler becomes the lead. Defeat returns the player to Hearth Clearing;
+other outcomes return to the same exploration position. Four safe steps follow.
 
-Additional PSP checks:
-1. Enter woods tall grass and try all four attacks across multiple battles.
-2. Check that uses decrease, HP bars change, and each action requires X.
-3. Cancel attack selection with Circle without spending a turn.
-4. Try RUN; a failure should produce only one enemy response.
-5. Win a battle and confirm you return to the same place with your whole team restored.
-6. Lose all party members against a stronger cave opponent and confirm return to the clearing.
-7. Test HOME > Cancel/Quit during both menus and battle messages.
+## Capture, party, storage, and items
 
-## Creature progression
+CAPTURE uses the Resonance Loom, with three charges per battle. The confirmation
+shows the chance; X attempts, Circle cancels. A successful capture adds the wild
+creature to the first free party slot, or to storage if the party is full.
+A failed capture spends one charge and gives the enemy one action. Full capacity,
+no charges, or canceling spends no turn. Knocked-out targets cannot be caught.
 
-Each immutable species definition has a stable ID, name, description, element,
-base HP/attack/defense/speed, experience yield, evolution threshold and target,
-learnset, and sprite references. Individual creatures track species, nickname,
-level, cumulative experience, current HP, derived stats, four learned attack
-slots, and remaining uses. Nicknames are supported in the data model; a rename
-interface is not part of this phase. Graphics are still original placeholders.
+    chance = clamp(35 - 12*stage + floor(50*(maxHP-HP)/maxHP) + 10*(strength-1), 5, 95)
 
-| ID | Species | Element | Evolution |
-| --- | --- | --- | --- |
-| 0 | Cindlet | Ember | Emberlyn at level 8 |
-| 1 | Emberlyn | Ember | Final form |
-| 2 | Mosslet | Grove | Mosshorn at level 8 |
-| 3 | Mosshorn | Grove | Final form |
-| 4 | Twiglint | Grove | No evolution |
-| 5 | Glowmoth | Wind | No evolution |
-| 6 | Flintling | Stone | Flintaur at level 9 |
-| 7 | Flintaur | Stone | Final form |
-| 8 | Duskwisp | Wind | No evolution |
-| 9 | Echocrag | Stone | No evolution |
-| 10 | Reedskip | Grove | No evolution |
-| 11 | Sunfinch | Wind | No evolution |
+Stage is zero-based (0, 1, 2). At full HP, base/middle/final chances are 35%, 23%,
+and 11%. The current Loom uses strength 1. A random 0–99 roll below the chance
+succeeds.
 
-The encounter tables offer eight wild species. Cindlet is the starter, and
-three evolved forms complete the twelve-species database. Captured Mosslet and
-Flintling can evolve through the same progression system as the starter.
+The party holds four creatures; storage now holds **32**, enough to collect all
+30 forms. Triangle opens the Field Kit with CREATURES, ITEMS, COLLECTION, PLAYER,
+SAVE, and OPTIONS. Party and storage tabs support lead selection, deposits,
+withdrawals, and swapping when the party is full. The final party member cannot
+be deposited. There is no release/delete action. Transfers preserve all state.
+Circle returns to the Field Kit; Triangle closes it completely.
 
-A victory awards enemy species experience-yield multiplied by enemy level to
-the active battler at the moment of victory. Earlier participants and stored
-creatures receive no share. Capturing, escaping, or losing grants no XP. XP is
-awarded once per battle. The cumulative
-threshold for level L is 20 * (L - 1)^2, with a level cap of 100. Excess XP carries
-toward the next level; multiple level gains from one award are supported.
-Stat formulas are base HP + 5*level, base attack + 3*level, base defense + 2*level,
-and base speed + 2*level. Evolution uses the new species' bases.
+In battle, voluntary switching costs a turn and gives the enemy one action.
+Replacing a knocked-out ally is free and mandatory while a healthy reserve
+remains. The entire party must be defeated before the battle is lost.
 
-Cindlet begins at level 5 with 320 cumulative XP:
-- Level 6 (500 XP): offers HEAT SPIRAL.
-- Level 8 (980 XP): evolves into Emberlyn and offers eligible attacks for its new form.
-- Level 9 (1280 XP): offers FLARE CREST.
+ITEMS heals the active battler in combat or the lead partner from the Field Kit.
+Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
+Invalid, full-HP, fainted, or out-of-stock uses consume nothing. A valid combat
+use gives the enemy one action. Buy supplies with Embermarks after finishing
+Tavi's dialogue in the lodge. Face either green healing dais and press X to
+restore the whole roster's HP and attack uses.
 
-Empty attack slots fill automatically. If all four are occupied, D-pad selects
-an existing attack to replace; X confirms. KEEP CURRENT MOVES is selected by
-default, and Circle declines. Each newly eligible attack is offered separately.
-Evolution can offer unknown attacks from the evolved learnset, including moves
-you previously declined or replaced. Existing attacks are never silently removed.
+## Existing saves
 
-Level-up, evolution, and learned/replaced attacks each receive a message.
-Evolution updates stats, displayed species name, and the placeholder silhouette.
-The battle menu reports XP remaining. Select in the overworld shows your
-lead partner's stats/total XP, followed by its species description. Progress survives
-battles and changing maps, and is retained across quitting when saved first.
+New saves use **version 2**, a 2504-byte payload, retaining the existing PSP slot
+EMBRWAKE0000 / DATA.BIN. It records map/tile/facing, encounter RNG and safe steps,
+party, lead, storage, levels, XP, nicknames, HP, moves/uses, inventory, and money.
+NPC patrol positions, open menus, dialogue, and battles are not saved.
 
-Progression regression test on PSP:
-1. Press Select while standing still; check Cindlet's level, XP, and description.
-2. Win forest battles and verify total XP increases; escape once and confirm no XP.
-3. Reach level 6, choose a move to replace with HEAT SPIRAL, and use it next battle.
-4. Reach level 8 and check the Emberlyn name, new silhouette, and increased stats.
-5. Try declining an offered attack without losing existing moves.
-6. Enter/leave the lodge and check that level, species, XP, and attacks are retained.
-7. Save, confirm HOME exit still works, relaunch, and load with L to restore progress.
+Version-1 saves from Phases 8/9 load through an explicit migration of the frozen
+1960-byte layout. Old creatures are converted as follows:
 
-## Capture, party, and collection
+| Old creature | New creature |
+| --- | --- |
+| Cindlet | Cindlet |
+| Emberlyn | Emberyn |
+| Mosslet | Mossprig |
+| Mosshorn | Thornel |
+| Twiglint | Glimgrub |
+| Glowmoth | Lunarae |
+| Flintling | Grubbl |
+| Flintaur | Cragbeet |
+| Duskwisp | Veilfin |
+| Echocrag | Titanocera |
+| Reedskip | Toxlet |
+| Sunfinch | Gustlet |
 
-CAPTURE uses an original reusable **Resonance Loom**, with three charges for each
-battle. The confirmation
-screen shows the current success percentage and remaining charges; X attempts
-a capture, and Circle cancels. Lowering the wild creature's HP improves its odds,
-but a knocked-out creature cannot be captured. A successful capture ends the
-battle, adds the creature to the first available party slot or to the collection
-when the party is full, and grants no XP. A failed attempt spends one charge and
-allows exactly one enemy response. Canceling, having no charges, or having both
-party and collection full spends neither a charge nor a turn.
+Migration keeps levels, XP, nicknames, moves/uses, currency, inventory, roster
+positions, lead, and location. HP preserves damage taken against the replacement's
+new maximum; fainted creatures remain fainted. Converted partners already at an
+evolution threshold advance to their eligible form, including level-100 saves.
+Loading does not rewrite the file.
+Saving afterward writes version 2, which earlier game builds cannot load. Unknown
+versions, truncated files, and invalid old species IDs are rejected.
 
-The pure capture calculation is:
+The savedata service waits for shutdown completion and checks the final utility
+result, including utilities that do not expose FINISHED to polling. The game
+validates loaded gameplay values before replacing the current session.
 
-    chance = 35 - 12 * rarity
-             + floor(50 * (maximum_HP - current_HP) / maximum_HP)
-             + 10 * (strength - 1)
+## Sound and animation
 
-The result is clamped to 5-95 percent. Strength is clamped to 1-5; the current
-Loom always uses strength 1. Invalid or fainted targets have a zero chance.
-Common Mosslet/Flintling/Reedskip have rarity 0; Cindlet/Twiglint/Duskwisp have
-rarity 1; Glowmoth/Echocrag/Sunfinch/evolved species have rarity 2. At full HP the
-current Loom's chances are 35%, 23%, and 11% respectively. Each attempt draws a
-0-99 roll and succeeds when the roll is below the percentage.
+Four original synthesized phrases cover settlements, wilderness, cave, and
+battles. Menu, impact, healing, encounter, victory, and error effects are also
+synthesized. The integer callback performs no asset reads or heap allocation.
+Savedata dialogs mute game sound. Failed audio initialization allows silent play.
 
-Press Triangle while stationary outside battle, then select CREATURES or COLLECTION:
+OPTIONS independently toggles music, effects, and animation. These settings apply
+to the current play session. Animation includes battle bobbing, impact shake,
+smooth HP bars, water/reed movement, map shutters, and location labels. Turning
+animation off makes HP changes immediate and removes those motion effects.
+Dialogue wraps inside its panel, using smaller text when needed.
 
-- Left/right changes between PARTY and COLLECTION; up/down selects a creature.
-- In PARTY, X opens SET AS LEAD, MOVE TO COLLECTION, and CANCEL. The lead starts
-  the next battle and appears in the Select summary. A fainted member cannot be
-  selected as lead.
-- In COLLECTION, X withdraws the selected creature when a party slot is free.
-  With a full party, X opens a choice of which party member to swap with it.
-- Circle backs out of the current action, or returns to the Field Kit while browsing.
-  Triangle closes the entire menu from any view.
+## Artwork and source structure
 
-The party holds four members; the collection holds 24. Depositing the final
-party member or depositing into a full collection is blocked. There is no
-release/delete action. Deposits, withdrawals, and swaps preserve each creature's
-species, nickname, level, experience, stats, HP, learned moves, and remaining
-uses. They do not heal or reset a creature. The separate end-of-battle restoration
-rule is the only automatic refill.
+The original images remain unchanged under assets/pets/. The converter crops
+transparent margins, preserves aspect ratio, and fits each form into a 96x96
+canvas. Base/middle/final artwork fits 76/84/92 pixels respectively. Each canvas
+occupies a padded 128x128 RGBA4444 texture. All 30 textures together use 983,040
+bytes of system RAM; the two screen buffers retain the existing VRAM allocation.
 
-In battle, CREATURES lists the party's current HP. Switching voluntarily to a
-different healthy member spends a turn and gives the opponent one action.
-Selecting the active member or a fainted member makes no change and spends no
-turn. If the active member is knocked out and a healthy reserve remains, select
-a replacement; this forced switch is free and cannot be canceled. Defeat occurs
-only when no healthy party reserve remains. Collection members cannot battle
-until withdrawn or swapped into the party outside battle.
+assets/generated/pets.rgba4444 and pets.json are committed build inputs. The
+manifest records the source and texture checksums. src/pet_assets.S embeds the
+texture data, pet_draw.c chooses the numbered sprite, and graphics.c draws
+alpha-blended textured strips before restoring the rectangle rendering state.
+No PNG decoder, runtime asset loading, or additional PSP libraries are required.
 
-## Items and healing
+- include/: public interfaces and data models.
+- src/: game systems, GU renderer, menus, audio, savedata service and migration.
+- assets/maps/: six embedded character-grid maps.
+- assets/pets/: the 30 original PNGs.
+- assets/generated/: compiled textures and their manifest.
+- tools/build_pet_assets.py: asset compiler (Python 3 + Pillow).
+- tools/check_pet_assets.py: build-time integrity check (Python standard library).
+- tests/: host C regression suites, PSP utility stubs, and software previews.
+- SOURCE_CONTENTS.md: complete text-source snapshot; binary assets are referenced
+  through the manifest and committed alongside the source.
 
-The item bag starts each new session with three **Pulse Tonics** and one
-**Hearth Restore**. Pulse Tonics restore up to 25 HP; a Hearth Restore fills the
-active Veyling's HP. Items cannot revive a fainted Veyling, cannot be used at
-full HP, and are consumed only after a valid use.
+Map tiles: ordinary grass '.', path '=', flowers ',', trees '#', rocks/furniture
+'O', water '~', walls 'W', doorway 'D', exits '<' and '>', interior floor '_',
+healing dais 'H', encounter grass 'g', cave floor 'c', and reeds 'r'. Tree, rock,
+water, and wall tiles block movement. Portal coordinates and destinations are
+explicitly defined in map.c; arrival tiles are clear of return triggers.
 
-In battle, choose ITEMS, move through the bag with the D-pad, and press X. A
-valid healing item uses the player's turn and permits exactly one enemy response.
-Circle returns to the battle menu without spending a turn. The inventory is
-copied into the battle state and returned to exploration when the battle ends,
-so quantities remain consistent for the whole session.
+## Build and verification
 
-The Wayfarer Lodge now has a green Hearth Dais in its northwest room. Face the
-dais and press X to restore every party member's HP and attack uses. The lodge
-interaction pauses movement and confirms the refill in dialogue. The dais does
-not add items or change party membership.
+From PowerShell on this machine:
 
-Tavi's existing two-page lodge dialogue remains available. Finish the dialogue
-while facing Tavi to open the Wayfarer supply counter. Embermarks are session
-currency; buy a selected item with X, then close the counter with Circle.
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP'
 
-Phase 8 PSP test route:
-
-1. Press Triangle at the clearing, then choose CREATURES or COLLECTION to inspect the starter and the empty collection.
-   Try depositing the sole party member and verify the explanatory message.
-2. Enter woods tall grass. Open CAPTURE and cancel once; check that charges and
-   HP are unchanged. Damage a wild Veyling and check that its displayed odds rise.
-3. Attempt captures. A failed attempt should spend one charge and produce one
-   enemy response. After all three charges are used, another attempt must not
-   spend a turn. Enter a new battle and verify the Loom is recharged.
-4. Capture a Veyling, inspect it with Triangle, and confirm that catching grants
-   no XP. Capture enough to fill the party; the next catch must go to COLLECTION.
-5. Select a caught creature in PARTY and SET AS LEAD. Close the menu and press
-   Select; the summary and next battle's first battler must use that creature.
-6. Use CREATURES during battle to switch voluntarily and observe one enemy reply.
-   Let a member be knocked out with healthy reserves remaining; choose a free
-   replacement. Win with the caught creature and check that only the final
-   battler receives XP and can learn attacks/evolve through normal progression.
-7. Outside battle, deposit a nonfinal party member, withdraw it into the free
-   slot, then choose a stored creature with a full party to swap. Check each
-   creature's identity, XP, and attacks, and verify the lead indicator remains valid.
-8. Walk through map transitions and reopen the party/collection menu. Check that
-   membership and progression remain intact. After any battle, check restoration
-   of the entire party and collection. Lose the whole party and verify the return
-   to the clearing; the last battler remains the lead after restoration.
-9. Test HOME > Cancel/Quit while browsing collection, confirming captures, and
-   switching.
-10. Enter a battle with reduced HP, choose ITEMS, use a Pulse Tonic, and verify
-    the item count drops and the enemy receives one response. Try a full-HP and
-    out-of-stock use; both should be rejected without an enemy response.
-11. Enter the lodge, face the green Hearth Dais, and press X. Confirm that all
-    party HP and attack uses refill and that the dialogue can be closed normally.
-12. Press START while stationary, complete the PSP save dialog, then change
-    maps and buy or use an item. Press L, load the latest save, and confirm the
-    saved map, party, collection, progression, quantities, and Embermarks return.
-    Cancel a save/load dialog and confirm the current session remains usable.
-
-The automated tests also fill all 28 available creature slots and verify safe
-rejection of another capture, collection scrolling, and blocked deposits into a
-full collection; filling the entire collection manually is optional for PSP testing.
-
-## Architecture and exact source tree
-
-    psp/
-      .gitattributes
-      .gitignore
-      Makefile
-      README.md
-      SOURCE_CONTENTS.md
-      assets/maps/
-        clearing.inc
-        forest.inc
-        lodge.inc
-        cave.inc
-        marsh.inc
-        rest.inc
-      include/
-        attacks.h
-        audio.h
-        audio_synth.h
-        battle.h
-        camera.h
-        capture.h
-        creature.h
-        dialogue.h
-        encounter.h
-        game.h
-        graphics.h
-        input.h
-        map.h
-        npc.h
-        party.h
-        party_menu.h
-        inventory.h
-        save_data.h
-        player.h
-        player_menu.h
-        text.h
-        world_draw.h
-      src/
-        main.c
-        attacks.c
-        audio.c
-        audio_synth.c
-        battle.c
-        battle_draw.c
-        camera.c
-        capture.c
-        creature.c
-        dialogue.c
-        encounter.c
-        game.c
-        graphics.c
-        input.c
-        map.c
-        npc.c
-        party.c
-        party_menu.c
-        inventory.c
-        save_data.c
-        player.c
-        player_menu.c
-        text.c
-        world_draw.c
-      tests/
-        host/audio_stub.c
-        host/pspgu.h
-        host/psputility.h
-        host/psputility_savedata.h
-        host/psputility_sysparam.h
-        host/save_data_stub.c
-        battle_test.c
-        battle_party_test.c
-        inventory_test.c
-        creature_test.c
-        overworld_test.c
-        party_capture_test.c
-        polish_test.c
-        save_data_test.c
-        world_systems_test.c
-        preview.py
-        run.sh
-
-SOURCE_CONTENTS.md contains the full text of all authored PSP project files
-except itself. Generated binaries and previews are ignored by Git.
-
-main.c initializes PSP services, seeds encounter randomness, and runs the existing
-vblank-paced loop. game.c coordinates map entry, step events, NPC interaction,
-and battle entry/return. Player movement accepts an optional occupancy callback;
-NPC collision reserves both current and destination tiles to avoid overlap.
-npc.c owns dialogue data and patrol behavior. dialogue.c stores bounded text
-pages. encounter.c owns random selection and grace steps. map.c owns map lookup,
-terrain collision, encounter areas, and explicit portal destinations.
-
-world_draw.c draws tiles and actors. text.c renders an original 5x7 bitmap font.
-graphics.c retains GU rectangles, double buffering, and vblank synchronization.
-The build links PSPSDK GU, savedata utility, and audio libraries; no external
-engines, art, or audio assets are required.
-
-player_menu.c owns the Field Kit and session options. audio.c manages the PSP
-audio callback and passes control changes through aligned word mailboxes.
-audio_synth.c owns deterministic stereo PCM synthesis without platform calls,
-heap allocation, or floating-point work in the callback. pspaudiolib is linked
-before the PSP import libraries, with the utility library last, to keep import stubs ordered.
-
-## Map format
-
-Each assets/maps/*.inc file contains quoted, comma-terminated C strings: one
-character per tile, one row per string. Rows must match the dimensions in map.c.
-
-| Code | Meaning | Walkable |
-| --- | --- | --- |
-| . | Ordinary grass | Yes |
-| = | Path | Yes |
-| , | Decorative flowers | Yes |
-| # | Tree | No |
-| O | Rock/furniture | No |
-| ~ | Water | No |
-| W | Building wall | No |
-| D | Doorway | Yes |
-| > | Area exit marker | Yes |
-| < | West exit marker | Yes |
-| _ | Safe floor | Yes |
-| H | Hearth healing dais | Yes |
-| g | Woods encounter grass | Yes |
-| c | Cave encounter floor | Yes |
-| r | Marsh encounter reeds | Yes |
-
-Portal behavior is defined by map ID and coordinates in map.c's portals table,
-not by the visual tile alone. Each portal declares an explicit walkable arrival
-tile away from the return trigger. Unknown codes/out-of-bounds locations block
-movement. All maps and graphics are embedded in the EBOOT.
-
-attacks.c defines attack power, accuracy, type, and uses. battle.c owns battle
-turn sequencing, results, escape logic, and damage. battle_draw.c owns the
-battle screen and original placeholder creature graphics. creature.c owns the
-immutable species database and reusable individual-creature data, stat calculation,
-experience thresholds, evolution, and attack learning.
-party.c owns the four-member party and 24-slot collection, lossless transfers,
-lead selection, and restoration. capture.c owns the pure rarity/chance/roll
-calculations. party_menu.c owns the overworld roster controls and drawing.
-battle.c coordinates battle inventory uses and item turns. inventory.c owns item
-definitions, quantities, descriptions, and capped healing rules. game.c owns
-the lodge Hearth Dais interaction and transfers the inventory back to exploration.
-save_data.c owns the versioned PSP savedata payload, save/load dialog lifecycle,
-and validation boundary; game.c snapshots and restores only safe overworld state.
-battle.c coordinates capture charges, caught-creature placement, switching,
-forced replacements, and rewards; game.c transfers the complete roster back to
-exploration and applies the temporary end-of-battle restoration.
-
-To add a map, add its rows, ID, dimensions, name, portal connections, and optional
-NPC definitions / encounter terrain. Keep coordinates within the declared map
-and extend tests for new dimensions if they exceed the current test grid.
-
-## Build commands
-
-This machine uses the existing Ubuntu/WSL PSPDEV environment.
-
-From PowerShell, build the Phase 9 artifact:
-
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && make PSP_EBOOT=EBOOT-PHASE9.PBP EXTRA_TARGETS=EBOOT-PHASE9.PBP'
-
-In a configured Linux/WSL shell, from the psp directory:
-
-    make PSP_EBOOT=EBOOT-PHASE9.PBP EXTRA_TARGETS=EBOOT-PHASE9.PBP
-
-For the conventional EBOOT.PBP output when that file is not open elsewhere:
-
-    make
-
-The user-mode PRX targets 6.60/6.61 custom firmware. The Makefile generates header
-dependencies automatically and repackages the title when its settings change.
-
-## Validation and rendering budget
-
-From the psp directory in Linux/WSL:
+From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
+    make PSP_EBOOT=EBOOT-PETS.PBP EXTRA_TARGETS=EBOOT-PETS.PBP
 
-All nine test executables use AddressSanitizer and UndefinedBehaviorSanitizer.
-Checks include Phase 2 regression coverage plus portal reachability and all ten
-transitions, valid/non-trigger arrival tiles, NPC collisions in both directions,
-patrol limits, dialogue pause/advance/cancel, no stationary encounters, weighted
-table level ranges, encounter grace steps, text bounds, and drawing budget.
-Battle checks additionally cover turn order, accuracy, elemental damage, spent
-moves, fallback attacks, win/loss, no retaliation after knockout, menu controls,
-escape success/failure, battle freezing the world, and defeat returning home.
-Creature checks cover all twelve species at levels 1-100, distinct known attacks,
-XP boundaries, large awards, the level cap, evolution, nickname preservation,
-replacement/decline controls, and rewards being applied only once. Integration
-checks carry an evolved partner and chosen attacks through world transitions.
-party_capture_test.c verifies all party/collection limits, complete state
-preservation across transfers, lead adjustments, restoration, rarity mapping,
-health/strength effects, and exact capture roll boundaries. battle_party_test.c
-covers successful/failed captures, charge exhaustion, full capacity, single
-enemy responses, voluntary/forced switches, whole-team defeat, no capture XP,
-and correct reward ownership. World integration checks exercise party menu
-controls, empty/full collection states, scrolling, transfers, map persistence,
-capture returns, and whole-roster restoration.
-inventory_test.c verifies default quantities, capped tonic healing, full restores,
-and invalid-use rejection. The PSP build links PSPSDK savedata utility support;
-the host world test uses a no-op savedata stub so rendering and gameplay checks
-remain platform independent.
-save_data_test.c exercises the real savedata service with simulated utility
-states. It covers success with and without observing FINISHED, cancellation,
-errors, load size/header validation, overlapping requests, and shutdown retries.
-The service checks the final utility result after shutdown instead of requiring
-the FINISHED state to be observed. Actual Memory Stick persistence still needs
-the PSP save/load test route above.
-polish_test.c checks menu actions, field-item validation, independent options,
-long-text wrapping, audio amplitude bounds, silence after muting, all four
-tracks and seven effects, and deterministic playback across buffer sizes.
-World integration adds the new route, encounters, menu movement blocking, and
-animated/immediate HP updates. Save tests lock the version-1 payload size and
-original IDs. The host test renders the real draw functions into software pixel buffers;
-tests/preview.py converts those buffers to PNG without third-party dependencies.
+The build checks that all PNGs, numbered species IDs, and compiled textures match.
+For changed PNGs, regenerate first using Python 3 with Pillow installed:
 
-Software previews are saved in previews/dialogue.png, previews/encounter.png,
-previews/battle-menu.png, previews/battle-moves.png, previews/learn-move.png,
-previews/evolution.png, previews/partner.png, previews/capture.png,
-previews/captured.png, previews/party.png, previews/collection.png,
-previews/collection-swap.png, previews/battle-switch.png,
-previews/collection-empty.png, and previews/collection-full.png.
-Additional Phase 9 previews include player-menu.png, marsh.png, lantern-rest.png,
-field-items.png, options.png, reedskip.png, sunfinch.png, battle-impact.png, and
-saved-dialogue.png. Four eight-second PCM WAV samples are also written under
-previews/: hearthlight.wav, fernwind.wav, hollow-echo.wav, and loom-duel.wav.
-These previews are not emulator or hardware captures.
+    python3 tools/build_pet_assets.py
 
-Only visible terrain is drawn (at most 160 tiles). The GU list reserves 1 MiB for
-tile, actor, and bitmap text commands. The tested scenes stay below a conservative
-6000-rectangle budget. Two color buffers still occupy 1,114,112 bytes of VRAM.
-The main loop retains its 50 ms elapsed-time cap and HOME callback service.
+`make rebuild-pets` runs the same converter. Ordinary builds use the committed
+compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
+custom firmware. Warnings are treated as errors. Library order keeps PSP import
+stubs together, with pspaudiolib first and the utility import library last.
 
-The Phase 9 release checks are the nine host regression/integration suites and
-PSP compilation/linking with -Wall -Wextra -Werror, followed by packaging
-EBOOT-PHASE9.PBP. Software previews exercise the real drawing functions but do
-not replace hardware testing. Phase 8 save/load was confirmed working by the
-player. Phase 9 sound playback, performance, suspend/resume, and the new route
-still require the PSP test route above.
+All nine C suites run with AddressSanitizer and UndefinedBehaviorSanitizer.
+They cover movement, all portals, collisions, battles, capture, inventory,
+menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
+availability of every form, 32-slot storage, v1 migration, v2 game save/load with
+36 creatures, savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
-Phase 9 is ready for PSP testing.
+Software previews use the real draw functions and embedded texture data. They
+include pet-001.png through pet-030.png, party/collection/battle/menu scenes,
+and pet-roster.png from the asset compiler. They are not hardware screenshots.
 
-## Official references
+PSP test route:
+1. Launch the new EBOOT and confirm Cindlet's art in a battle and in CREATURES.
+2. Load an old save with L; verify converted creatures, levels, items, and location.
+3. Visit the woods, cave, and marsh to catch members of all ten families.
+4. Raise a base form to level 8, then 16; check artwork and attacks at both stages.
+5. Browse/deposit/withdraw creatures, then save, quit, relaunch, and load.
+6. Check texture transparency, animation, audio, HOME exit, and suspend/resume.
 
-- [PSPDEV installation](https://pspdev.github.io/installation.html)
-- [PSPSDK GU reference](https://pspdev.github.io/pspsdk/group__GU.html)
-- [PSPSDK build rules](https://github.com/pspdev/pspsdk/blob/master/src/base/build.mak)
+Host tests and PSP compilation validate the code; actual PSP texture rendering,
+sound, and performance still require this device test.
 ````
 
 ## src/attacks.c
@@ -1362,7 +1311,17 @@ static const Attack attacks[MOVE_COUNT] = {
     {"FLARE CREST",70,90,ELEMENT_EMBER,8},
     {"VINE SWEEP",58,95,ELEMENT_GROVE,10},
     {"FAULT DRUM",62,90,ELEMENT_STONE,10},
-    {"TEMPEST THREAD",56,100,ELEMENT_WIND,10}
+    {"TEMPEST THREAD",56,100,ELEMENT_WIND,10},
+    {"BUBBLE JET",40,95,ELEMENT_TIDE,12},
+    {"TIDAL SURGE",65,90,ELEMENT_TIDE,8},
+    {"SPARK FLICK",38,100,ELEMENT_SPARK,12},
+    {"VOLT COIL",62,95,ELEMENT_SPARK,8},
+    {"VEIL RIPPLE",40,95,ELEMENT_VEIL,12},
+    {"ABYSS PULSE",65,90,ELEMENT_VEIL,8},
+    {"FROST CHIP",40,95,ELEMENT_FROST,12},
+    {"GLACIER CALL",62,95,ELEMENT_FROST,8},
+    {"TOXIN DART",38,100,ELEMENT_TOXIN,12},
+    {"VENOM RUSH",62,95,ELEMENT_TOXIN,8}
 };
 const Attack *attack_get(int id)
 {
@@ -1370,20 +1329,26 @@ const Attack *attack_get(int id)
 }
 const char *element_name(Element element)
 {
-    const char *const names[]={"PLAIN","GROVE","EMBER","STONE","WIND"};
-    return names[element>=ELEMENT_PLAIN && element<=ELEMENT_WIND ? element : ELEMENT_PLAIN];
+    const char *const names[]={"PLAIN","GROVE","EMBER","STONE","WIND","TIDE","SPARK","VEIL","FROST","TOXIN"};
+    return names[element>=ELEMENT_PLAIN && element<ELEMENT_COUNT ? element : ELEMENT_PLAIN];
 }
 int attack_effectiveness(Element a,Element d)
 {
-    if(a==ELEMENT_PLAIN || d==ELEMENT_PLAIN) return 2;
-    if((a==ELEMENT_EMBER && d==ELEMENT_GROVE) ||
-       (a==ELEMENT_GROVE && d==ELEMENT_STONE) ||
-       (a==ELEMENT_STONE && d==ELEMENT_WIND) ||
-       (a==ELEMENT_WIND && d==ELEMENT_EMBER)) return 4;
-    if(a==d || (d==ELEMENT_EMBER && a==ELEMENT_GROVE) ||
-       (d==ELEMENT_GROVE && a==ELEMENT_STONE) ||
-       (d==ELEMENT_STONE && a==ELEMENT_WIND) ||
-       (d==ELEMENT_WIND && a==ELEMENT_EMBER)) return 1;
+    if(a<=ELEMENT_PLAIN || d<=ELEMENT_PLAIN || a>=ELEMENT_COUNT || d>=ELEMENT_COUNT) return 2;
+    const Element strong[][2]={
+        {ELEMENT_EMBER,ELEMENT_GROVE},{ELEMENT_GROVE,ELEMENT_STONE},
+        {ELEMENT_STONE,ELEMENT_WIND},{ELEMENT_WIND,ELEMENT_EMBER},
+        {ELEMENT_TIDE,ELEMENT_EMBER},{ELEMENT_SPARK,ELEMENT_TIDE},
+        {ELEMENT_GROVE,ELEMENT_TIDE},{ELEMENT_STONE,ELEMENT_SPARK},
+        {ELEMENT_EMBER,ELEMENT_FROST},{ELEMENT_FROST,ELEMENT_WIND},
+        {ELEMENT_VEIL,ELEMENT_TOXIN},{ELEMENT_TOXIN,ELEMENT_GROVE},
+        {ELEMENT_WIND,ELEMENT_TOXIN}
+    };
+    if(a==d) return 1;
+    for(unsigned int i=0;i<sizeof(strong)/sizeof(strong[0]);++i) {
+        if(a==strong[i][0] && d==strong[i][1]) return 4;
+        if(d==strong[i][0] && a==strong[i][1]) return 1;
+    }
     return 2;
 }
 ````
@@ -1535,70 +1500,9 @@ void audio_settings(int music,int effects)
 #include "capture.h"
 #include "graphics.h"
 #include "text.h"
+#include "pet_draw.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
 
-static void creature_draw(int x,int y,const Battler *unit,int back)
-{
-    Element element=unit->element;
-    int sprite=species_get(unit->species)->battle_sprite;
-    unsigned int body=element==ELEMENT_EMBER?C(224,123,67):
-        element==ELEMENT_GROVE?C(114,167,92):element==ELEMENT_STONE?C(141,149,174):C(155,140,208);
-    graphics_rectangle(x-6,y+48,78,8,C(33,45,53));
-    graphics_rectangle(x+4,y+18,52,32,body);
-    graphics_rectangle(x+12,y+8,36,30,body);
-    graphics_rectangle(x+8,y+45,12,10,body);
-    graphics_rectangle(x+40,y+45,12,10,body);
-    if(element==ELEMENT_EMBER) {
-        graphics_rectangle(x+16,y,8,12,C(255,188,91));
-        graphics_rectangle(x+33,y-5,8,17,C(255,188,91));
-        graphics_rectangle(x+55,y+28,12,8,C(236,162,76));
-    } else if(element==ELEMENT_GROVE) {
-        graphics_rectangle(x+2,y+1,23,8,C(77,121,74));
-        graphics_rectangle(x+34,y-4,22,8,C(168,194,96));
-    } else if(element==ELEMENT_STONE) {
-        graphics_rectangle(x+7,y+4,15,16,C(190,192,197));
-        graphics_rectangle(x+39,y+3,17,19,C(108,115,145));
-    } else {
-        graphics_rectangle(x-14,y+15,24,12,C(185,169,226));
-        graphics_rectangle(x+52,y+15,24,12,C(185,169,226));
-    }
-    /* Species references select small original silhouette details. */
-    if(sprite==1) { /* Emberlyn: large mane and crown. */
-        graphics_rectangle(x-2,y+18,8,25,C(245,171,80));
-        graphics_rectangle(x+56,y+18,8,25,C(245,171,80));
-        graphics_rectangle(x+24,y-9,9,17,C(255,210,104));
-    } else if(sprite==3) { /* Mosshorn */
-        graphics_rectangle(x+2,y-8,7,24,C(191,177,112));
-        graphics_rectangle(x+49,y-8,7,24,C(191,177,112));
-    } else if(sprite==7) { /* Flintaur */
-        graphics_rectangle(x-6,y+16,14,30,C(107,121,151));
-        graphics_rectangle(x+52,y+16,14,30,C(107,121,151));
-    } else if(sprite==4) {
-        graphics_rectangle(x+23,y-10,5,19,C(162,185,96));
-    } else if(sprite==8) {
-        graphics_rectangle(x+21,y-8,20,10,C(208,192,234));
-    } else if(sprite==9) {
-        graphics_rectangle(x+23,y-9,15,17,C(158,174,197));
-    } else if(sprite==10) { /* Reedskip: reed feelers and long springing feet. */
-        graphics_rectangle(x+13,y-13,3,24,C(223,196,112));
-        graphics_rectangle(x+40,y-18,3,28,C(223,196,112));
-        graphics_rectangle(x-2,y+46,22,8,C(153,187,104));
-        graphics_rectangle(x+40,y+46,22,8,C(153,187,104));
-    } else if(sprite==11) { /* Sunfinch: gold crest, beak, and forked tail. */
-        graphics_rectangle(x+17,y-11,8,18,C(249,207,104));
-        graphics_rectangle(x+28,y-17,8,24,C(239,169,76));
-        graphics_rectangle(x+25,y+30,12,7,C(245,189,87));
-        graphics_rectangle(x-13,y+40,17,5,C(249,207,104));
-        graphics_rectangle(x-17,y+49,21,5,C(239,169,76));
-    }
-    if(!back) {
-        graphics_rectangle(x+17,y+23,6,7,C(23,31,41));
-        graphics_rectangle(x+38,y+23,6,7,C(23,31,41));
-        graphics_rectangle(x+27,y+35,8,3,C(58,54,57));
-    } else {
-        graphics_rectangle(x+21,y+20,23,5,C(255,179,94));
-    }
-}
 static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 {
     char line[64];
@@ -1624,8 +1528,8 @@ void battle_draw(const Battle *b)
     static const int bob[]={0,-1,-2,-1,0,1,2,1};
     int frame=(int)(b->animation*6)%8;
     int shake=b->hit_time>0?((int)(b->hit_time*40)%2?3:-3):0;
-    creature_draw(325+(b->hit_side==1?shake:0),38+bob[frame],&b->enemy,0);
-    creature_draw(65+(b->hit_side==0?shake:0),104+bob[(frame+4)%8],&b->ally,1);
+    pet_draw(b->enemy.species,310+(b->hit_side==1?shake:0),14+bob[frame],96,0);
+    pet_draw(b->ally.species,48+(b->hit_side==0?shake:0),78+bob[(frame+4)%8],96,1);
     if (b->hit_time>0) {
         int x=b->hit_side?355:95,y=b->hit_side?60:127;
         graphics_rectangle(x-12,y,28,3,C(255,221,139));
@@ -2063,11 +1967,7 @@ void camera_update(Camera *camera, const Player *player, const Map *map)
 
 int capture_rarity(SpeciesId species)
 {
-    switch(species) {
-    case SPECIES_MOSSLET:case SPECIES_FLINTLING:case SPECIES_REEDSKIP:return 0;
-    case SPECIES_CINDLET:case SPECIES_TWIGLINT:case SPECIES_DUSKWISP:return 1;
-    default:return 2;
-    }
+    return species>=0 && species<SPECIES_COUNT ? species%3 : 2;
 }
 
 int capture_chance(const Creature *c,int strength)
@@ -2097,43 +1997,98 @@ int capture_attempt(const Creature *c,int strength,unsigned int roll)
 #include <string.h>
 #include "creature.h"
 #define L(l,m) {l,m}
+/* IDs match PNG number minus one. Each consecutive triple is a family. */
 static const Species species[SPECIES_COUNT] = {
- {SPECIES_CINDLET,"CINDLET","A SMALL HEARTH DWELLER.\nITS EARS GLOW LIKE WARM COALS.",ELEMENT_EMBER,
-  24,10,10,8,24,8,SPECIES_EMBERLYN,0,0,
+ {SPECIES_CINDLET,"CINDLET","ITS COAL-DARK FUR HOLDS A TINY FLAME. ITS WARM EARS PRICK UP AT FOOTSTEPS.",ELEMENT_EMBER,
+  24,10,10,8,24,8,SPECIES_EMBERYN,0,0,
   {L(1,MOVE_NUDGE),L(2,MOVE_CINDER),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_HEAT),L(9,MOVE_FLARE)},6},
- {SPECIES_EMBERLYN,"EMBERLYN","ITS COAL MANE KEEPS TRAVELERS\nWARM THROUGH LONG WINTER NIGHTS.",ELEMENT_EMBER,
-  35,18,16,14,45,0,-1,1,1,
+ {SPECIES_EMBERYN,"EMBERYN","FLAMES FLOW ALONG ITS MANE. IT RUNS BESIDE TRAVELERS ON COLD NIGHTS.",ELEMENT_EMBER,
+  35,18,16,14,48,16,SPECIES_PYROVERN,1,1,
   {L(1,MOVE_NUDGE),L(2,MOVE_CINDER),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_HEAT),L(8,MOVE_PEBBLE),L(9,MOVE_FLARE)},7},
- {SPECIES_MOSSLET,"MOSSLET","IT GATHERS DEW IN A SOFT MOSS COAT.\nIT SLEEPS BENEATH FALLEN LEAVES.",ELEMENT_GROVE,
-  25,8,12,6,22,8,SPECIES_MOSSHORN,2,2,
-  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(6,MOVE_VINE)},4},
- {SPECIES_MOSSHORN,"MOSSHORN","BRANCHING HORNS SHELTER SEEDLINGS.\nIT WALKS SOFTLY THROUGH THE WOODS.",ELEMENT_GROVE,
-  39,15,22,8,44,0,-1,3,3,
-  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(6,MOVE_VINE),L(9,MOVE_PEBBLE)},5},
- {SPECIES_TWIGLINT,"TWIGLINT","THIS NIMBLE BRANCH DWELLER HIDES\nIN PATCHES OF SHIFTING SUNLIGHT.",ELEMENT_GROVE,
-  20,12,8,14,27,0,-1,4,4,
-  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_GUST),L(7,MOVE_VINE)},4},
- {SPECIES_GLOWMOTH,"GLOWMOTH","ITS DUSTY WINGS SHIMMER WHEN\nNIGHT BREEZES CROSS THE CANOPY.",ELEMENT_WIND,
-  22,11,9,16,34,0,-1,5,5,
-  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_LUNGE),L(7,MOVE_TEMPEST)},4},
- {SPECIES_FLINTLING,"FLINTLING","IT TAPS STONES TO LEAVE SPARKING\nTRAILS THROUGH THE DARK.",ELEMENT_STONE,
-  27,12,15,5,28,9,SPECIES_FLINTAUR,6,6,
-  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(7,MOVE_FAULT)},4},
- {SPECIES_FLINTAUR,"FLINTAUR","A HEAVY CAVE WANDERER WITH\nRIDGES OF POLISHED FLINT.",ELEMENT_STONE,
-  43,22,25,7,48,0,-1,7,7,
-  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(7,MOVE_FAULT),L(9,MOVE_CINDER)},5},
- {SPECIES_DUSKWISP,"DUSKWISP","A PALE DRIFTER THAT FOLLOWS\nTHE QUIET AIR INSIDE CAVERNS.",ELEMENT_WIND,
-  20,14,8,17,31,0,-1,8,8,
-  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_CINDER),L(7,MOVE_TEMPEST)},4},
- {SPECIES_ECHOCRAG,"ECHOCRAG","ITS HOLLOW CREST CARRIES SOUND\nACROSS UNDERGROUND CHAMBERS.",ELEMENT_STONE,
-  33,14,18,4,38,0,-1,9,9,
-  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(6,MOVE_FAULT)},4},
- {SPECIES_REEDSKIP,"REEDSKIP","ITS REED ANTENNAE FEEL THE BREEZE.\nIT HOPS BETWEEN SUNLIT RIVERBANKS.",ELEMENT_GROVE,
-  26,12,10,15,33,0,-1,10,10,
-  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_LUNGE)},5},
- {SPECIES_SUNFINCH,"SUNFINCH","GOLDEN FEATHERS CATCH THE DAWN.\nITS SONG GUIDES LOST WAYFARERS.",ELEMENT_WIND,
-  25,15,10,18,40,0,-1,11,11,
-  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_CINDER),L(6,MOVE_LUNGE),L(8,MOVE_TEMPEST)},5}
+ {SPECIES_PYROVERN,"PYROVERN","A BLAZING GUARDIAN WITH A CROWN OF FIRE. ITS ROAR SENDS EMBERS SKYWARD.",ELEMENT_EMBER,
+  50,30,26,22,72,0,-1,2,2,
+  {L(1,MOVE_NUDGE),L(2,MOVE_CINDER),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_HEAT),L(8,MOVE_PEBBLE),L(9,MOVE_FLARE),L(16,MOVE_FAULT)},8},
+ {SPECIES_BUBFIN,"BUBFIN","IT BLOWS BUBBLES WHILE PLAYING IN THE SHALLOWS. ITS FINS GLINT LIKE GLASS.",ELEMENT_TIDE,
+  26,9,11,10,23,8,SPECIES_RIVAFIN,3,3,
+  {L(1,MOVE_NUDGE),L(2,MOVE_BUBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_SURGE),L(9,MOVE_GUST)},6},
+ {SPECIES_RIVAFIN,"RIVAFIN","IT CUTS THROUGH RIVER CURRENTS WITH LONG FINS AND A SWEEPING TAIL.",ELEMENT_TIDE,
+  37,17,17,16,47,16,SPECIES_TIDERION,4,4,
+  {L(1,MOVE_NUDGE),L(2,MOVE_BUBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_SURGE),L(9,MOVE_GUST)},6},
+ {SPECIES_TIDERION,"TIDERION","THE RIVER FALLS QUIET WHEN THIS MAJESTIC WATER GUARDIAN PASSES.",ELEMENT_TIDE,
+  52,29,27,24,71,0,-1,5,5,
+  {L(1,MOVE_NUDGE),L(2,MOVE_BUBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_SURGE),L(9,MOVE_GUST),L(16,MOVE_FAULT)},7},
+ {SPECIES_MOSSPRIG,"MOSSPRIG","NEW LEAVES SPROUT FROM ITS SOFT COAT. IT FOLLOWS PATCHES OF SUNLIGHT.",ELEMENT_GROVE,
+  25,8,12,6,22,8,SPECIES_THORNEL,6,6,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_PEBBLE)},6},
+ {SPECIES_THORNEL,"THORNEL","ITS BRANCHING CREST CARRIES FRESH LEAVES THROUGH EVERY SEASON.",ELEMENT_GROVE,
+  36,16,18,12,46,16,SPECIES_ELDERTHORN,7,7,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_PEBBLE)},6},
+ {SPECIES_ELDERTHORN,"ELDERTHORN","ANCIENT ROOTS AND FLOWERS ADORN THIS PATIENT FOREST GUARDIAN.",ELEMENT_GROVE,
+  51,28,28,20,70,0,-1,8,8,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_PEBBLE),L(16,MOVE_FAULT)},7},
+ {SPECIES_ZAPPIP,"ZAPPIP","TINY SPARKS LEAP BETWEEN ITS FINS WHEN IT DARTS THROUGH THE REEDS.",ELEMENT_SPARK,
+  22,12,8,16,27,8,SPECIES_AMPREEL,9,9,
+  {L(1,MOVE_NUDGE),L(2,MOVE_SPARK),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VOLT),L(9,MOVE_GUST)},6},
+ {SPECIES_AMPREEL,"AMPREEL","ITS COILED BODY STORES ELECTRICITY. GOLDEN MARKINGS FLASH BEFORE A STRIKE.",ELEMENT_SPARK,
+  33,20,14,22,51,16,SPECIES_VOLTRENCH,10,10,
+  {L(1,MOVE_NUDGE),L(2,MOVE_SPARK),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VOLT),L(9,MOVE_GUST)},6},
+ {SPECIES_VOLTRENCH,"VOLTRENCH","A GOLDEN CURRENT RUNS ALONG ITS SPINES. IT CHURNS THE WATER INTO LIGHT.",ELEMENT_SPARK,
+  48,32,24,30,75,0,-1,11,11,
+  {L(1,MOVE_NUDGE),L(2,MOVE_SPARK),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VOLT),L(9,MOVE_GUST),L(16,MOVE_FAULT)},7},
+ {SPECIES_GRUBBL,"GRUBBL","IT CARRIES PEBBLES ON ITS SHELL AND BURROWS UNDER WARM STONES.",ELEMENT_STONE,
+  27,12,15,5,28,8,SPECIES_CRAGBEET,12,12,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_FAULT),L(9,MOVE_CINDER)},6},
+ {SPECIES_CRAGBEET,"CRAGBEET","ITS ARMORED LEGS GRIP THE CAVE WALLS. IT POLISHES ITS SHELL ON ROCK.",ELEMENT_STONE,
+  38,20,21,11,52,16,SPECIES_TITANOCERA,13,13,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_FAULT),L(9,MOVE_CINDER)},6},
+ {SPECIES_TITANOCERA,"TITANOCERA","HEAVY STONE PLATES PROTECT THIS POWERFUL HORNED CAVE DWELLER.",ELEMENT_STONE,
+  53,32,31,19,76,0,-1,14,14,
+  {L(1,MOVE_NUDGE),L(2,MOVE_PEBBLE),L(4,MOVE_LUNGE),L(5,MOVE_LEAF),L(6,MOVE_FAULT),L(9,MOVE_CINDER)},6},
+ {SPECIES_VEILFIN,"VEILFIN","A QUIET RAY THAT GLIDES THROUGH SHADOWS. ITS PALE EDGES GLOW AT DUSK.",ELEMENT_VEIL,
+  22,13,9,15,28,8,SPECIES_SPECTRAY,15,15,
+  {L(1,MOVE_NUDGE),L(2,MOVE_VEIL),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_ABYSS),L(9,MOVE_GUST)},6},
+ {SPECIES_SPECTRAY,"SPECTRAY","ITS LONG FINS LEAVE RIBBONS OF VIOLET LIGHT IN THE STILL CAVE AIR.",ELEMENT_VEIL,
+  33,21,15,21,52,16,SPECIES_ABYSSVEIL,16,16,
+  {L(1,MOVE_NUDGE),L(2,MOVE_VEIL),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_ABYSS),L(9,MOVE_GUST)},6},
+ {SPECIES_ABYSSVEIL,"ABYSSVEIL","STARS SEEM TO SHIMMER INSIDE ITS WINGS AS IT DRIFTS THROUGH DARKNESS.",ELEMENT_VEIL,
+  48,33,25,29,76,0,-1,17,17,
+  {L(1,MOVE_NUDGE),L(2,MOVE_VEIL),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_ABYSS),L(9,MOVE_GUST),L(16,MOVE_FAULT)},7},
+ {SPECIES_PEBCHICK,"PEBCHICK","ITS FLUFFY COAT CATCHES SNOWFLAKES. IT WADDLES ALONG COOL RIVERBANKS.",ELEMENT_FROST,
+  28,10,13,7,25,8,SPECIES_FROSTUIN,18,18,
+  {L(1,MOVE_NUDGE),L(2,MOVE_FROST),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_GLACIER),L(9,MOVE_BUBBLE)},6},
+ {SPECIES_FROSTUIN,"FROSTUIN","A CREST OF ICE FORMS WHEN IT CALLS. IT STANDS WATCH OVER CHILLED POOLS.",ELEMENT_FROST,
+  39,18,19,13,49,16,SPECIES_GLACIMPER,19,19,
+  {L(1,MOVE_NUDGE),L(2,MOVE_FROST),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_GLACIER),L(9,MOVE_BUBBLE)},6},
+ {SPECIES_GLACIMPER,"GLACIMPER","IT WEARS A CROWN OF FROST AND SPREADS ITS GREAT WINGS TO SUMMON SNOW.",ELEMENT_FROST,
+  54,30,29,21,73,0,-1,20,20,
+  {L(1,MOVE_NUDGE),L(2,MOVE_FROST),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_GLACIER),L(9,MOVE_BUBBLE),L(16,MOVE_FAULT)},7},
+ {SPECIES_GUSTLET,"GUSTLET","IT PRACTICES SHORT HOPS BEFORE RIDING GENTLE BREEZES ABOVE THE WOODS.",ELEMENT_WIND,
+  23,12,9,16,25,8,SPECIES_GALETALON,21,21,
+  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_LUNGE),L(5,MOVE_CINDER),L(6,MOVE_TEMPEST),L(9,MOVE_PEBBLE)},6},
+ {SPECIES_GALETALON,"GALETALON","ITS SHARP TALONS HOLD FAST WHILE STRONG WINDS RUFFLE ITS FEATHERS.",ELEMENT_WIND,
+  34,20,15,22,49,16,SPECIES_SKYRAPTOR,22,22,
+  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_LUNGE),L(5,MOVE_CINDER),L(6,MOVE_TEMPEST),L(9,MOVE_PEBBLE)},6},
+ {SPECIES_SKYRAPTOR,"SKYRAPTOR","A SWEEP OF ITS BROAD WINGS SENDS SPIRALING GUSTS THROUGH THE CANOPY.",ELEMENT_WIND,
+  49,32,25,30,73,0,-1,23,23,
+  {L(1,MOVE_NUDGE),L(2,MOVE_GUST),L(4,MOVE_LUNGE),L(5,MOVE_CINDER),L(6,MOVE_TEMPEST),L(9,MOVE_PEBBLE),L(16,MOVE_FAULT)},7},
+ {SPECIES_TOXLET,"TOXLET","BRIGHT SPOTS WARN OTHERS TO KEEP THEIR DISTANCE. IT HIDES AMONG LEAVES.",ELEMENT_TOXIN,
+  24,12,10,12,26,8,SPECIES_VENOFROG,24,24,
+  {L(1,MOVE_NUDGE),L(2,MOVE_TOXIN),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VENOM),L(9,MOVE_LEAF)},6},
+ {SPECIES_VENOFROG,"VENOFROG","ITS COLORFUL SKIN SHIMMERS AS IT LEAPS BETWEEN DAMP FOREST ROOTS.",ELEMENT_TOXIN,
+  35,20,16,18,50,16,SPECIES_DREADART,25,25,
+  {L(1,MOVE_NUDGE),L(2,MOVE_TOXIN),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VENOM),L(9,MOVE_LEAF)},6},
+ {SPECIES_DREADART,"DREADART","A SWIFT AND VIVID HUNTER. IT STRIKES FROM COVER WITH PERFECT TIMING.",ELEMENT_TOXIN,
+  50,32,26,26,74,0,-1,26,26,
+  {L(1,MOVE_NUDGE),L(2,MOVE_TOXIN),L(4,MOVE_LUNGE),L(5,MOVE_BUBBLE),L(6,MOVE_VENOM),L(9,MOVE_LEAF),L(16,MOVE_FAULT)},7},
+ {SPECIES_GLIMGRUB,"GLIMGRUB","ITS SOFT GREEN SEGMENTS GLOW FAINTLY AS IT MUNCHES TENDER LEAVES.",ELEMENT_GROVE,
+  24,9,12,9,23,8,SPECIES_COCOGLOW,27,27,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_TEMPEST)},6},
+ {SPECIES_COCOGLOW,"COCOGLOW","GOLDEN SILK PROTECTS ITS CHANGING BODY. A SOFT LIGHT SHINES WITHIN.",ELEMENT_GROVE,
+  35,17,18,15,47,16,SPECIES_LUNARAE,28,28,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_TEMPEST)},6},
+ {SPECIES_LUNARAE,"LUNARAE","MOONLIKE PATTERNS SHINE ON ITS WINGS. IT DRIFTS ABOVE THE SLEEPING WOODS.",ELEMENT_WIND,
+  50,29,28,23,71,0,-1,29,29,
+  {L(1,MOVE_NUDGE),L(2,MOVE_LEAF),L(4,MOVE_LUNGE),L(5,MOVE_GUST),L(6,MOVE_VINE),L(9,MOVE_TEMPEST),L(16,MOVE_FAULT)},7}
 };
 const Species *species_get(int id)
 {
@@ -2220,9 +2175,10 @@ void creature_gain_xp(Creature *c,int amount,CreatureGrowth *g)
         ++c->level;
         const Species *s=species_get(c->species);
         queue_moves(c,s,1,g);
-        if(s->evolution_level>0 && c->level>=s->evolution_level) {
+        while(s->evolution_level>0 && c->level>=s->evolution_level) {
             c->species=(SpeciesId)s->evolved_species;
-            queue_moves(c,species_get(c->species),0,g);
+            s=species_get(c->species);
+            queue_moves(c,s,0,g);
         }
         recalculate(c);
     }
@@ -2254,10 +2210,11 @@ void dialogue_advance(Dialogue *d)
 
 ````text
 #include "encounter.h"
-typedef struct { SpeciesId species; int weight, minimum, maximum; } Entry;
-static const Entry forest[] = {{SPECIES_MOSSLET,60,2,4},{SPECIES_TWIGLINT,30,3,5},{SPECIES_GLOWMOTH,10,4,6}};
-static const Entry cave[] = {{SPECIES_FLINTLING,60,3,5},{SPECIES_DUSKWISP,30,4,6},{SPECIES_ECHOCRAG,10,5,7}};
-static const Entry marsh[] = {{SPECIES_REEDSKIP,60,5,7},{SPECIES_GLOWMOTH,30,5,7},{SPECIES_SUNFINCH,10,6,8}};
+/* Choose a family, then its stage: base 90%, middle 9%, final 1%.
+   Every supplied form is obtainable in the wild as well as by evolution. */
+static const SpeciesId forest[]={SPECIES_MOSSPRIG,SPECIES_GUSTLET,SPECIES_TOXLET,SPECIES_GLIMGRUB};
+static const SpeciesId cave[]={SPECIES_CINDLET,SPECIES_GRUBBL,SPECIES_VEILFIN};
+static const SpeciesId marsh[]={SPECIES_BUBFIN,SPECIES_ZAPPIP,SPECIES_PEBCHICK};
 static uint32_t next(Encounter *e)
 {
     uint32_t x = e->random;
@@ -2273,17 +2230,15 @@ int encounter_step(Encounter *e, int area, EncounterResult *result)
 {
     if (e->safe_steps > 0) { --e->safe_steps; return 0; }
     if (area < 1 || area > 3 || next(e)%100 >= 18) return 0;
-    const Entry *table = area == 1 ? forest : area == 2 ? cave : marsh;
+    const SpeciesId *table = area == 1 ? forest : area == 2 ? cave : marsh;
+    int count=area==1?4:3;
+    int family=(int)(next(e)%(unsigned int)count);
     int roll = (int)(next(e)%100);
-    int index = 0;
-    while (index < 2 && roll >= table[index].weight) {
-        roll -= table[index].weight;
-        ++index;
-    }
-    result->species = table[index].species;
+    int stage=roll<90?0:roll<99?1:2;
+    result->species = (SpeciesId)(table[family]+stage);
     result->name = species_get(result->species)->name;
-    result->level = table[index].minimum +
-        (int)(next(e)%(table[index].maximum-table[index].minimum+1));
+    int minimum=stage==2?16:stage==1?8:area==1?2:area==2?3:5;
+    result->level = minimum+(int)(next(e)%3);
     e->safe_steps = 4;
     return 1;
 }
@@ -2682,6 +2637,7 @@ void game_draw(const Game *g)
 #include <stddef.h>
 #include <pspdisplay.h>
 #include <pspgu.h>
+#include <psputils.h>
 #include "graphics.h"
 
 #define BUFFER_WIDTH 512
@@ -2719,6 +2675,8 @@ void graphics_init(void)
     sceGuSync(0, 0);
     sceDisplayWaitVblankStart();
     sceGuDisplay(GU_TRUE);
+    /* Embedded textures live in system RAM and are immutable after startup. */
+    sceKernelDcacheWritebackAll();
 }
 
 void graphics_begin(void)
@@ -2739,6 +2697,30 @@ void graphics_rectangle(int x, int y, int width, int height,
     sceGuDrawArray(GU_SPRITES,
                   GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_2D,
                   2, NULL, vertices);
+}
+
+void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
+{
+    typedef struct { float u,v,x,y,z; } TextureVertex;
+    TextureVertex *v=sceGuGetMemory(6*sizeof(TextureVertex));
+    for(int i=0;i<3;++i) {
+        float u0=(float)(i*32),u1=(float)((i+1)*32);
+        float x0=x+width*(float)i/3,x1=x+width*(float)(i+1)/3;
+        v[i*2]=(TextureVertex){flip?96-u0:u0,0,x0,(float)y,0};
+        v[i*2+1]=(TextureVertex){flip?96-u1:u1,96,x1,(float)(y+height),0};
+    }
+    sceGuEnable(GU_TEXTURE_2D);
+    sceGuEnable(GU_BLEND);
+    sceGuBlendFunc(GU_ADD,GU_SRC_ALPHA,GU_ONE_MINUS_SRC_ALPHA,0,0);
+    sceGuTexMode(GU_PSM_4444,0,0,0);
+    sceGuTexImage(0,128,128,128,pixels);
+    sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGBA);
+    sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+    sceGuTexWrap(GU_CLAMP,GU_CLAMP);
+    sceGuTexFlush();
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,6,NULL,v);
+    sceGuDisable(GU_BLEND);
+    sceGuDisable(GU_TEXTURE_2D);
 }
 
 void graphics_end(void)
@@ -3061,7 +3043,7 @@ void npc_load(Npcs *n, int map_id)
     } else if (map_id == MAP_CAVE) {
         add(n,5,10,"NEL","FOOTSTEPS ECHO IN THIS CAVE.","VEYLINGS STIR ON THE ROUGH FLOOR.\nTHE SOUTHWEST EXIT LEADS OUT.",5);
     } else if (map_id == MAP_MARSH) {
-        add(n,4,8,"ELA","REEDSKIP HOPS AMONG THESE REEDS.\nSUNFINCH IS A RARER SIGHT.","THE BOARDWALK IS SAFE TO FOLLOW.\nLANTERN REST LIES NORTHEAST.",4);
+        add(n,4,8,"ELA","BUBFIN AND ZAPPIP LIVE IN THE REEDS.\nPEBCHICK LIKES THE COOL BANKS.","THE BOARDWALK IS SAFE TO FOLLOW.\nLANTERN REST LIES NORTHEAST.",4);
     } else if (map_id == MAP_REST) {
         add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
     }
@@ -3124,6 +3106,7 @@ Npc *npc_facing(Npcs *n, const Player *p)
 #include "party_menu.h"
 #include "graphics.h"
 #include "text.h"
+#include "pet_draw.h"
 
 #define C(r,g,b) (0xff000000u | ((unsigned int)(b)<<16) | ((unsigned int)(g)<<8) | (unsigned int)(r))
 #define LIST_ROWS 6
@@ -3237,27 +3220,29 @@ static void details_draw(const Creature *creature)
     char line[80];
     snprintf(line,sizeof(line),"%.19s  LV %d",creature_name(creature),creature->level);
     text_draw(244,72,line,C(244,217,169),1);
-    text_draw(244,87,element_name(creature->element),C(166,196,188),1);
+    snprintf(line,sizeof(line),"%s  STAGE %d/3",element_name(creature->element),creature->species%3+1);
+    text_draw(244,87,line,C(166,196,188),1);
+    pet_draw(creature->species,388,69,64,0);
     snprintf(line,sizeof(line),"HP %d / %d",creature->hp,creature->max_hp);
     text_draw(244,100,line,C(229,233,220),1);
-    graphics_rectangle(244,112,210,5,C(57,70,77));
+    graphics_rectangle(244,112,130,5,C(57,70,77));
     if(creature->max_hp>0 && creature->hp>0) {
-        int filled=210*creature->hp/creature->max_hp;
-        if(filled>210) filled=210;
+        int filled=130*creature->hp/creature->max_hp;
+        if(filled>130) filled=130;
         if(filled>0) graphics_rectangle(244,112,filled,5,C(125,201,154));
     }
     snprintf(line,sizeof(line),"ATK %d  DEF %d  SPD %d",creature->attack,creature->defense,creature->speed);
-    text_draw(244,125,line,C(207,216,209),1);
+    text_draw(244,135,line,C(207,216,209),1);
     if(creature->level>=CREATURE_MAX_LEVEL) snprintf(line,sizeof(line),"XP %d - MAX LEVEL",creature->experience);
     else snprintf(line,sizeof(line),"XP %d - NEXT %d",creature->experience,creature_xp_remaining(creature));
-    text_draw(244,139,line,C(233,173,115),1);
+    text_draw(244,148,line,C(233,173,115),1);
     for(int i=0;i<CREATURE_MOVES;++i) {
         if(creature->moves[i]<0) snprintf(line,sizeof(line),"- EMPTY -");
         else {
             const Attack *move=attack_get(creature->moves[i]);
             snprintf(line,sizeof(line),"%.22s %d/%d",move->name,creature->uses[i],move->uses);
         }
-        text_draw(244,154+i*13,line,C(188,205,197),1);
+        text_draw(244,163+i*11,line,C(188,205,197),1);
     }
 }
 
@@ -3311,11 +3296,12 @@ void party_menu_draw(const PartyMenu *menu, const Party *party)
             int y=67+row*23;
             const Creature *creature=menu->tab?&party->collection[index]:&party->members[index];
             if(index==menu->cursor[menu->tab]) graphics_rectangle(16,y,208,22,C(59,78,76));
+            pet_draw(creature->species,20,y,22,0);
             snprintf(line,sizeof(line),"%02d %.19s",index+1,creature_name(creature));
-            text_draw(22,y+3,line,C(235,230,209),1);
+            text_wrap(46,y+3,144,9,line,C(235,230,209),1);
             if(menu->tab==0 && index==party->lead) text_draw(193,y+3,"LEAD",C(255,201,132),1);
             snprintf(line,sizeof(line),"LV %d  HP %d/%d",creature->level,creature->hp,creature->max_hp);
-            text_draw(40,y+13,line,C(168,199,183),1);
+            text_draw(46,y+13,line,C(168,199,183),1);
         }
         const Creature *selected=menu->tab?&party->collection[menu->cursor[1]]:&party->members[menu->cursor[0]];
         details_draw(selected);
@@ -3425,6 +3411,32 @@ int party_deposit(Party *p,int index)
 }
 ````
 
+## src/pet_assets.S
+
+````text
+/* Original PNGs are compiled offline; no file I/O or PNG decoder on PSP. */
+.section .rodata
+.balign 16
+.global pet_pixels
+pet_pixels:
+.incbin "assets/generated/pets.rgba4444"
+#if !defined(__mips__)
+.section .note.GNU-stack,"",@progbits
+#endif
+````
+
+## src/pet_draw.c
+
+````text
+#include "pet_draw.h"
+#include "graphics.h"
+void pet_draw(int species,int x,int y,int size,int flip)
+{
+    if(species<0 || species>=SPECIES_COUNT || size<=0) return;
+    graphics_texture(x,y,size,size,pet_pixels[species],flip);
+}
+````
+
 ## src/player_menu.c
 
 ````text
@@ -3490,7 +3502,7 @@ void player_menu_draw(const PlayerMenu *m,const Party *party,const Inventory *ba
     text_draw(32,148,line,C(191,212,199),1);
     snprintf(line,sizeof(line),"%d EMBERMARKS",bag->embermarks);
     text_draw(32,174,line,C(241,181,108),1);
-    snprintf(line,sizeof(line),"TEAM %d/4   STORED %d/24",party->count,party->stored);
+    snprintf(line,sizeof(line),"TEAM %d/4   STORED %d/%d",party->count,party->stored,COLLECTION_MAX);
     text_draw(32,191,line,C(160,190,181),1);
     if (m->page==MENU_HOME) {
         const char *const names[]={"CREATURES","ITEMS","COLLECTION","PLAYER","SAVE","OPTIONS"};
@@ -3515,7 +3527,7 @@ void player_menu_draw(const PlayerMenu *m,const Party *party,const Inventory *ba
         text_draw(20,226,"X TOGGLE. OPTIONS APPLY TO THIS PLAY SESSION.",C(170,191,181),1);
     } else {
         text_draw(256,57,"PLAYER",C(244,198,118),2);
-        text_wrap(258,90,195,100,"THE FERNVEIL JOURNEY\n\nTRAVEL EAST THROUGH THE WOODS TO REACH SUNTHREAD MARSH. SEEK TWO NEW VEYLINGS AMONG ITS REEDS.",C(191,212,199),1);
+        text_wrap(258,90,195,100,"THE FERNVEIL JOURNEY\n\nTRAVEL EAST THROUGH THE WOODS TO REACH SUNTHREAD MARSH. SEEK WATER, SPARK AND FROST FAMILIES AMONG ITS REEDS.",C(191,212,199),1);
         text_draw(20,226,"START SAVE   L LOAD   O RETURN TO FIELD KIT",C(170,191,181),1);
     }
     graphics_rectangle(20,247,440,1,C(66,81,81));
@@ -3582,6 +3594,94 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
             p->moving = 0;
         }
     }
+}
+````
+
+## src/save_codec.c
+
+````text
+#include <string.h>
+#include "save_data.h"
+
+/* Frozen Phase 8/9 layout. Never use current capacity constants here. */
+typedef struct {
+    SaveCreature members[4],collection[24];
+    int count,lead,stored;
+} LegacyParty;
+typedef struct {
+    uint32_t magic,version;
+    int map_id,tile_x,tile_y,facing;
+    uint32_t encounter_random;
+    int encounter_safe_steps;
+    LegacyParty party;
+    int item_quantities[2],embermarks;
+} LegacyPayload;
+typedef char legacy_size_must_remain_1960[(sizeof(LegacyPayload)==1960)?1:-1];
+typedef char current_size_must_remain_2504[(sizeof(SavePayload)==2504)?1:-1];
+
+static int migrate_creature(SaveCreature *out,const SaveCreature *old)
+{
+    /* Replacement choices preserve similar silhouettes/elements where possible. */
+    static const SpeciesId replacement[]={
+        SPECIES_CINDLET,SPECIES_EMBERYN,SPECIES_MOSSPRIG,SPECIES_THORNEL,
+        SPECIES_GLIMGRUB,SPECIES_LUNARAE,SPECIES_GRUBBL,SPECIES_CRAGBEET,
+        SPECIES_VEILFIN,SPECIES_TITANOCERA,SPECIES_TOXLET,SPECIES_GUSTLET
+    };
+    static const int old_base_hp[]={24,35,25,39,20,22,27,43,20,33,26,25};
+    if(old->species<0 || old->species>=12 || old->level<1 || old->level>100 ||
+       old->experience<creature_xp_for_level(old->level) ||
+       old->experience>creature_xp_for_level(100) ||
+       !memchr(old->nickname,0,sizeof(old->nickname))) return 0;
+    int old_max=old_base_hp[old->species]+5*old->level;
+    if(old->hp<0 || old->hp>old_max) return 0;
+    for(int i=0;i<4;++i) {
+        if(old->moves[i]<-1 || old->moves[i]>=11 || old->uses[i]<0 ||
+           (old->moves[i]<0 && old->uses[i]!=0) ||
+           (old->moves[i]>=0 && old->uses[i]>attack_get(old->moves[i])->uses)) return 0;
+    }
+    *out=*old;
+    out->species=replacement[old->species];
+    /* Existing high-level partners already qualify for their new forms,
+       including level-100 saves that cannot trigger another level-up. */
+    const Species *form=species_get(out->species);
+    while(form->evolution_level && out->level>=form->evolution_level) {
+        out->species=form->evolved_species;form=species_get(out->species);
+    }
+    int new_max=species_get(out->species)->base_hp+5*out->level;
+    out->hp=old->hp?new_max-(old_max-old->hp):0;
+    if(old->hp && out->hp<1) out->hp=1;
+    return 1;
+}
+
+int save_data_decode(const void *bytes,size_t size,SavePayload *payload)
+{
+    uint32_t header[2];
+    if(!bytes || !payload || size<sizeof(header)) return 0;
+    memcpy(header,bytes,sizeof(header));
+    if(header[0]!=SAVE_DATA_MAGIC) return 0;
+    if(header[1]==SAVE_DATA_VERSION) {
+        if(size!=sizeof(*payload)) return 0;
+        memcpy(payload,bytes,size);
+        return 1; /* game.c validates current gameplay values before applying. */
+    }
+    if(header[1]!=1 || size!=sizeof(LegacyPayload)) return 0;
+    LegacyPayload old;
+    SavePayload next={0};
+    memcpy(&old,bytes,sizeof(old));
+    if(old.party.count<1 || old.party.count>4 || old.party.lead<0 ||
+       old.party.lead>=old.party.count || old.party.stored<0 || old.party.stored>24) return 0;
+    next.magic=SAVE_DATA_MAGIC;next.version=SAVE_DATA_VERSION;
+    next.map_id=old.map_id;next.tile_x=old.tile_x;next.tile_y=old.tile_y;next.facing=old.facing;
+    next.encounter_random=old.encounter_random;next.encounter_safe_steps=old.encounter_safe_steps;
+    next.party.count=old.party.count;next.party.lead=old.party.lead;next.party.stored=old.party.stored;
+    for(int i=0;i<old.party.count;++i)
+        if(!migrate_creature(&next.party.members[i],&old.party.members[i])) return 0;
+    for(int i=0;i<old.party.stored;++i)
+        if(!migrate_creature(&next.party.collection[i],&old.party.collection[i])) return 0;
+    for(int i=0;i<2;++i) next.item_quantities[i]=old.item_quantities[i];
+    next.embermarks=old.embermarks;
+    *payload=next;
+    return 1;
 }
 ````
 
@@ -3669,7 +3769,7 @@ static void savedata_prepare(int mode)
         service.params.newData=&service.new_data;
         snprintf(service.params.sfoParam.title,sizeof(service.params.sfoParam.title),"EMBERWAKE");
         snprintf(service.params.sfoParam.savedataTitle,sizeof(service.params.sfoParam.savedataTitle),"%s",SAVE_NAME);
-        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PHASE 8 SESSION");
+        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PET ROSTER - 30 FORMS");
         service.params.sfoParam.parentalLevel=1;
     }
 }
@@ -3720,11 +3820,8 @@ void save_data_update(void)
     } else if (state==PSP_UTILITY_DIALOG_NONE && service.shutdown_requested) {
         /* FINISHED is a shutdown state, not the save result. Evaluate the
            final result even when polling observes QUIT followed by NONE. */
-        if (service.params.base.result==0 && service.loading &&
-            service.params.dataSize==sizeof(service.payload)) {
-            service.loaded=service.payload;
-            service.loaded_valid=service.loaded.magic==SAVE_DATA_MAGIC &&
-                service.loaded.version==SAVE_DATA_VERSION;
+        if (service.params.base.result==0 && service.loading) {
+            service.loaded_valid=save_data_decode(&service.payload,service.params.dataSize,&service.loaded);
         }
         service.status=service.params.base.result!=0 ||
             (service.loading && !service.loaded_valid) ?
@@ -4013,7 +4110,7 @@ static int total_uses(const Creature *c)
 
 static void start(Battle *b,const Party *p,unsigned int seed)
 {
-    battle_begin_party(b,p,SPECIES_MOSSLET,3,seed);
+    battle_begin_party(b,p,SPECIES_MOSSPRIG,3,seed);
     assert(b->phase==BATTLE_MESSAGE && b->capture_charges==3);
     assert(b->active==p->lead);
     same_creature(&b->ally,&p->members[p->lead]);
@@ -4091,7 +4188,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
             if(caught[weak]) {
                 if(!weak && !*success_seed) *success_seed=seed;
                 assert(b.party.count==3 && b.party.stored==0);
-                assert(b.party.members[2].species==SPECIES_MOSSLET);
+                assert(b.party.members[2].species==SPECIES_MOSSPRIG);
                 assert(b.party.members[2].level==3);
                 assert(!b.reward_given && b.experience_reward==0);
                 messages(&b);
@@ -4121,7 +4218,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
     Creature final_active=b.ally;
     open_capture(&b);confirm(&b);
     assert(b.result==BATTLE_CAUGHT && b.party.count==4 && b.party.stored==1);
-    assert(b.party.collection[0].species==SPECIES_MOSSLET);
+    assert(b.party.collection[0].species==SPECIES_MOSSPRIG);
     assert(!b.reward_given && b.experience_reward==0);
     messages(&b);assert(b.phase==BATTLE_DONE);
     same_creature(&b.party.members[0],&final_active);
@@ -4129,7 +4226,7 @@ static void capture_cases(unsigned int *success_seed,unsigned int *failure_seed)
 
     /* A full collection blocks the action before spending a charge or RNG. */
     p.stored=(int)(sizeof(p.collection)/sizeof(p.collection[0]));
-    for(int i=0;i<p.stored;++i) creature_create(&p.collection[i],SPECIES_FLINTLING,3);
+    for(int i=0;i<p.stored;++i) creature_create(&p.collection[i],SPECIES_GRUBBL,3);
     start(&b,&p,*success_seed);
     unsigned int random_before=b.random;
     open_capture(&b);confirm(&b);messages(&b);
@@ -4253,7 +4350,7 @@ static void victory_updates_only_active(void)
     confirm(&b);
     assert(b.reward_given && b.ally.level==6);
     int earned=b.ally.experience;
-    assert(earned==p.members[1].experience+species_get(SPECIES_MOSSLET)->experience_yield*3);
+    assert(earned==p.members[1].experience+species_get(SPECIES_MOSSPRIG)->experience_yield*3);
     messages(&b);
     assert(b.phase==BATTLE_LEARN);
     b.learn_cursor=1;confirm(&b);messages(&b);
@@ -4303,7 +4400,7 @@ static void press(Battle *b)
 static void start(Battle *b,unsigned int seed)
 {
     Battler ally; battler_starter(&ally);
-    battle_begin(b,&ally,SPECIES_MOSSLET,3,seed);
+    battle_begin(b,&ally,SPECIES_MOSSPRIG,3,seed);
     press(b); assert(b->phase==BATTLE_MENU);
 }
 static void choose(Battle *b,int move)
@@ -4415,7 +4512,7 @@ int main(void)
 static void confirm(Battle *b) { battle_update(b,&(Input){0,0,1,0,0,0}); }
 static void victory(Battle *b,Creature *c)
 {
-    battle_begin(b,c,SPECIES_MOSSLET,3,42);
+    battle_begin(b,c,SPECIES_MOSSPRIG,3,42);
     b->enemy.hp=1;b->ally.speed=999;
     confirm(b);confirm(b);confirm(b); /* Intro, fight, basic attack. */
     assert(b->result==BATTLE_WIN);
@@ -4431,13 +4528,15 @@ static void close_growth(Battle *b)
 }
 int main(void)
 {
-    assert(SPECIES_COUNT==12);
+    assert(SPECIES_COUNT==30);
     for(int id=0;id<SPECIES_COUNT;++id) {
         const Species *s=species_get(id);
         assert((int)s->id==id && s->name[0] && s->description[0]);
         assert(s->base_hp>0 && s->base_attack>0 && s->base_defense>0 && s->base_speed>0);
         assert(s->experience_yield>0 && s->learn_count>0 && s->learn_count<=8);
         assert(s->overworld_sprite==id && s->battle_sprite==id);
+        assert(s->evolution_level==(id%3==0?8:id%3==1?16:0));
+        assert(s->evolved_species==(id%3==2?-1:id+1));
         if(s->evolution_level) assert(s->evolved_species>=0 && s->evolved_species<SPECIES_COUNT && s->evolved_species!=id);
         for(int i=0;i<s->learn_count;++i) {
             assert(s->learnset[i].move>=0 && s->learnset[i].move<MOVE_COUNT);
@@ -4452,6 +4551,18 @@ int main(void)
                 for(int j=0;j<i;++j) assert(c.moves[i]<0 || c.moves[i]!=c.moves[j]);
             }
         }
+    }
+    for(int family=0;family<10;++family) {
+        Creature pet;CreatureGrowth growth;
+        creature_create(&pet,family*3,7);
+        strcpy(pet.nickname,"BUDDY");
+        creature_gain_xp(&pet,creature_xp_for_level(8)-pet.experience,&growth);
+        assert((int)pet.species==family*3+1 && !strcmp(creature_name(&pet),"BUDDY"));
+        creature_gain_xp(&pet,creature_xp_for_level(16)-pet.experience,&growth);
+        assert((int)pet.species==family*3+2 && pet.level==16);
+        creature_create(&pet,family*3,5);
+        creature_gain_xp(&pet,creature_xp_for_level(20)-pet.experience,&growth);
+        assert((int)pet.species==family*3+2 && pet.level==20);
     }
     Creature c;CreatureGrowth g;
     creature_create(&c,SPECIES_CINDLET,5);
@@ -4468,20 +4579,20 @@ int main(void)
 
     strcpy(c.nickname,"SPARK");
     creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
-    assert(c.species==SPECIES_EMBERLYN && c.level==8 && c.attack==42);
+    assert(c.species==SPECIES_EMBERYN && c.level==8 && c.attack==42);
     assert(!strcmp(creature_name(&c),"SPARK"));
     assert(g.old_species==SPECIES_CINDLET && c.moves[1]==MOVE_HEAT);
-    creature_gain_xp(&c,0,&g);assert(g.move_count==0 && g.old_species==SPECIES_EMBERLYN);
+    creature_gain_xp(&c,0,&g);assert(g.move_count==0 && g.old_species==SPECIES_EMBERYN);
     creature_gain_xp(&c,-5,&g);assert(c.experience==creature_xp_for_level(8));
     creature_gain_xp(&c,INT_MAX,&g);
     assert(c.level==100 && c.experience==creature_xp_for_level(100) && !creature_xp_remaining(&c));
     creature_gain_xp(&c,INT_MAX,&g);assert(g.move_count==0);
-    creature_create(&c,SPECIES_MOSSLET,7);c.hp=0;
+    creature_create(&c,SPECIES_MOSSPRIG,7);c.hp=0;
     creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
-    assert(c.species==SPECIES_MOSSHORN && c.hp==0); /* Stats cannot revive a fainted creature. */
-    creature_create(&c,SPECIES_FLINTLING,1);
+    assert(c.species==SPECIES_THORNEL && c.hp==0); /* Stats cannot revive a fainted creature. */
+    creature_create(&c,SPECIES_GRUBBL,1);
     creature_gain_xp(&c,creature_xp_for_level(12),&g);
-    assert(c.species==SPECIES_FLINTAUR && c.level==12 && g.move_count<=MOVE_COUNT);
+    assert(c.species==SPECIES_CRAGBEET && c.level==12 && g.move_count<=MOVE_COUNT);
 
     Battle b;
     creature_create(&c,SPECIES_CINDLET,5);c.experience=creature_xp_for_level(6)-1;
@@ -4498,13 +4609,13 @@ int main(void)
     assert(b.ally.moves[1]==MOVE_CINDER);
 
     creature_create(&c,SPECIES_CINDLET,7);c.experience=creature_xp_for_level(8)-1;
-    victory(&b,&c);assert(b.ally.species==SPECIES_EMBERLYN);
-    close_growth(&b);assert(b.ally.species==SPECIES_EMBERLYN);
+    victory(&b,&c);assert(b.ally.species==SPECIES_EMBERYN);
+    close_growth(&b);assert(b.ally.species==SPECIES_EMBERYN);
     creature_create(&c,SPECIES_CINDLET,5);
-    battle_begin(&b,&c,SPECIES_MOSSLET,3,2);confirm(&b);
+    battle_begin(&b,&c,SPECIES_MOSSPRIG,3,2);confirm(&b);
     b.cursor=4;b.escape_attempts=2;confirm(&b);confirm(&b);
     assert(b.phase==BATTLE_DONE && b.ally.experience==c.experience);
-    puts("PASS: 12 species, 100 levels, XP boundaries/cap, evolution, stats, nicknames, move choices, single rewards");
+    puts("PASS: 30 forms, all 10 three-stage evolution lines, 100 levels, XP boundaries/cap, stats, nicknames, move choices, single rewards");
     return 0;
 }
 ````
@@ -4603,20 +4714,28 @@ typedef struct {
 
 ````text
 #include "save_data.h"
-
+static SavePayload slot;
+static SaveStatus status=SAVE_STATUS_IDLE;
+static int loading,has_slot;
 int save_data_begin_save(const SavePayload *payload)
 {
-    (void)payload;
-    return -1;
+    if(!payload || status==SAVE_STATUS_BUSY) return -1;
+    slot=*payload;loading=0;has_slot=1;status=SAVE_STATUS_BUSY;return 0;
 }
-
-int save_data_begin_load(void) { return -1; }
-void save_data_update(void) { }
-SaveStatus save_data_status(void) { return SAVE_STATUS_IDLE; }
+int save_data_begin_load(void)
+{
+    if(status==SAVE_STATUS_BUSY) return -1;
+    loading=1;status=SAVE_STATUS_BUSY;return 0;
+}
+void save_data_update(void)
+{
+    if(status==SAVE_STATUS_BUSY) status=has_slot?SAVE_STATUS_SUCCEEDED:SAVE_STATUS_FAILED;
+}
+SaveStatus save_data_status(void) { return status; }
 int save_data_take_loaded(SavePayload *payload)
 {
-    (void)payload;
-    return 0;
+    if(!payload || status!=SAVE_STATUS_SUCCEEDED || !loading) return 0;
+    *payload=slot;loading=0;return 1;
 }
 ````
 
@@ -4847,15 +4966,15 @@ static void party_checks(void)
 
 static void capture_checks(void)
 {
-    assert(capture_rarity(SPECIES_MOSSLET)==0 && capture_rarity(SPECIES_FLINTLING)==0);
-    assert(capture_rarity(SPECIES_CINDLET)==1 && capture_rarity(SPECIES_TWIGLINT)==1);
-    assert(capture_rarity(SPECIES_DUSKWISP)==1);
-    const int rare[]={SPECIES_EMBERLYN,SPECIES_MOSSHORN,SPECIES_FLINTAUR,SPECIES_GLOWMOTH,SPECIES_ECHOCRAG};
+    assert(capture_rarity(SPECIES_MOSSPRIG)==0 && capture_rarity(SPECIES_GRUBBL)==0);
+    assert(capture_rarity(SPECIES_CINDLET)==0 && capture_rarity(SPECIES_GALETALON)==1);
+    assert(capture_rarity(SPECIES_SPECTRAY)==1);
+    const int rare[]={SPECIES_PYROVERN,SPECIES_ELDERTHORN,SPECIES_TITANOCERA,SPECIES_LUNARAE,SPECIES_SKYRAPTOR};
     for(unsigned int i=0;i<sizeof(rare)/sizeof(rare[0]);++i) assert(capture_rarity((SpeciesId)rare[i])==2);
-    Creature c;creature_create(&c,SPECIES_MOSSLET,5);
+    Creature c;creature_create(&c,SPECIES_MOSSPRIG,5);
     assert(capture_chance(&c,1)==35);
-    c.species=SPECIES_TWIGLINT;assert(capture_chance(&c,1)==23);
-    c.species=SPECIES_ECHOCRAG;assert(capture_chance(&c,1)==11);
+    c.species=SPECIES_GALETALON;assert(capture_chance(&c,1)==23);
+    c.species=SPECIES_TITANOCERA;assert(capture_chance(&c,1)==11);
     for(int id=0;id<SPECIES_COUNT;++id) {
         creature_create(&c,id,10);
         int last=0;
@@ -4873,7 +4992,7 @@ static void capture_checks(void)
         }
         assert(capture_chance(&c,5)==0 && !capture_attempt(&c,5,0));
     }
-    creature_create(&c,SPECIES_MOSSLET,5);c.hp=1;
+    creature_create(&c,SPECIES_MOSSPRIG,5);c.hp=1;
     assert(capture_chance(&c,INT_MAX)==95);
     assert(capture_chance(&c,INT_MIN)==capture_chance(&c,1));
     assert(!capture_attempt(&c,5,100) && !capture_attempt(&c,5,UINT_MAX));
@@ -5035,7 +5154,7 @@ for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
-             'sunfinch', 'reedskip', 'battle-impact', 'saved-dialogue'):
+             'zappip', 'bubfin', 'battle-impact', 'saved-dialogue') + tuple(f'pet-{i:03d}' for i in range(1,31)):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)
     assert magic == b'P6' and maximum == b'255'
@@ -5056,8 +5175,9 @@ for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move
 set -eu
 # Run from the psp directory. Host checks use PSP API stubs, not an emulator.
 mkdir -p previews
+python3 tools/check_pet_assets.py
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
-    tests/save_data_test.c src/save_data.c -o previews/save-data-test
+    tests/save_data_test.c src/save_data.c src/save_codec.c src/creature.c src/attacks.c -o previews/save-data-test
 previews/save-data-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/overworld_test.c src/map.c src/player.c src/camera.c -lm -o previews/overworld-test
@@ -5066,7 +5186,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iin
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
     src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
-    src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c \
+    src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
@@ -5137,11 +5257,82 @@ static void complete(int result, int see_finished)
     tick(PSP_UTILITY_DIALOG_NONE);
 }
 
+static void put32(unsigned char *bytes,int offset,int value)
+{
+    int32_t word=value;
+    memcpy(bytes+offset,&word,sizeof(word));
+}
+static void migration_checks(void)
+{
+    /* Build the old layout by byte offsets, independently of the decoder's
+       legacy structs and today's larger collection. */
+    unsigned char bytes[1960]={0},original[1960];
+    const int replacements[]={0,1,6,7,27,29,12,13,15,14,24,21};
+    const int hp[]={24,35,25,39,20,22,27,43,20,33,26,25};
+    put32(bytes,0,SAVE_DATA_MAGIC);put32(bytes,4,1);
+    put32(bytes,8,4);put32(bytes,12,2);put32(bytes,16,10);
+    put32(bytes,24,123);put32(bytes,28,3);
+    put32(bytes,1936,4);put32(bytes,1940,2);put32(bytes,1944,24);
+    put32(bytes,1948,2);put32(bytes,1952,1);put32(bytes,1956,321);
+    for(int slot=0;slot<28;++slot) {
+        int offset=32+slot*68,id=slot%12;
+        put32(bytes,offset,id);put32(bytes,offset+4,7);
+        put32(bytes,offset+8,creature_xp_for_level(7)+20);
+        put32(bytes,offset+12,slot==0?0:hp[id]+35-3);
+        memcpy(bytes+offset+16,"FRIEND",7);
+        for(int move=0;move<4;++move) {
+            put32(bytes,offset+36+move*4,move);
+            put32(bytes,offset+52+move*4,attack_get(move)->uses-1);
+        }
+    }
+    memcpy(original,bytes,sizeof(bytes));
+    SavePayload loaded;
+    assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!memcmp(bytes,original,sizeof(bytes)));
+    assert(loaded.version==2 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.map_id==4 && loaded.tile_x==2 && loaded.tile_y==10 && loaded.embermarks==321);
+    assert(loaded.encounter_random==123 && loaded.encounter_safe_steps==3 && loaded.item_quantities[0]==2);
+    for(int slot=0;slot<28;++slot) {
+        SaveCreature *pet=slot<4?&loaded.party.members[slot]:&loaded.party.collection[slot-4];
+        assert(pet->species==replacements[slot%12] && pet->level==7);
+        assert(pet->hp==(slot==0?0:species_get(pet->species)->base_hp+35-3));
+        assert(!strcmp(pet->nickname,"FRIEND") && pet->experience==creature_xp_for_level(7)+20);
+        for(int move=0;move<4;++move) assert(pet->moves[move]==move && pet->uses[move]==attack_get(move)->uses-1);
+    }
+    for(int i=24;i<COLLECTION_MAX;++i) assert(loaded.party.collection[i].nickname[0]==0);
+    assert(save_data_begin_load()==0);
+    memcpy(active->dataBuf,bytes,sizeof(bytes));active->dataSize=sizeof(bytes);
+    complete(0,1);
+    assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
+    assert(loaded.version==2 && loaded.party.stored==24);
+    for(int level=20;level<=100;level+=80) {
+        memcpy(bytes,original,sizeof(bytes));
+        /* Old Emberlyn at a high level becomes the eligible final form. */
+        put32(bytes,104,level);put32(bytes,108,creature_xp_for_level(level));
+        put32(bytes,112,35+5*level-3);
+        assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+        assert(loaded.party.members[1].species==SPECIES_PYROVERN);
+        assert(loaded.party.members[1].hp==50+5*level-3);
+    }
+    memcpy(bytes,original,sizeof(bytes));
+    SavePayload unchanged=loaded;
+    put32(bytes,32,12);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+    memcpy(bytes,original,sizeof(bytes));put32(bytes,1944,25);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    memcpy(bytes,original,sizeof(bytes));put32(bytes,4,99);
+    assert(!save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(!save_data_decode(original,sizeof(original)-1,&loaded));
+    assert(!save_data_decode(original,4,&loaded));
+    assert(save_data_decode(&unchanged,sizeof(unchanged),&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+}
+
 int main(void)
 {
-    /* Phase 8 format/IDs remain unchanged; Phase 9 only appends content IDs. */
-    assert(sizeof(SavePayload)==1960 && SAVE_DATA_VERSION==1);
-    assert(SPECIES_CINDLET==0 && SPECIES_ECHOCRAG==9);
+    assert(sizeof(SavePayload)==2504 && SAVE_DATA_VERSION==2);
+    assert(SPECIES_CINDLET==0 && SPECIES_LUNARAE==29);
     SavePayload saved={.magic=SAVE_DATA_MAGIC, .version=SAVE_DATA_VERSION,
                        .map_id=1, .tile_x=7, .embermarks=123};
     SavePayload loaded;
@@ -5208,9 +5399,10 @@ int main(void)
     assert(shutdowns==2);
     tick(PSP_UTILITY_DIALOG_NONE);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED);
+    migration_checks();
     init_result=-1;
     assert(save_data_begin_load()<0 && save_data_status()==SAVE_STATUS_FAILED);
-    puts("PASS: savedata completion with/without FINISHED, errors, cancellation, load validation, busy guard");
+    puts("PASS: savedata lifecycle, v2 roundtrip, full v1 migration, old ID remapping, preserved progress, corrupt save rejection");
     return 0;
 }
 ````
@@ -5223,9 +5415,29 @@ int main(void)
 #include <string.h>
 #include "game.h"
 #include "graphics.h"
+#include "pet_draw.h"
+#include "text.h"
 
 static unsigned char pixels[272][480][3];
 static unsigned int rectangles;
+static unsigned int textures;
+void graphics_texture(int x,int y,int w,int h,const uint16_t *texture,int flip)
+{
+    ++textures;
+    assert(w>0 && h>0 && texture);
+    for(int py=0;py<h;++py) for(int px=0;px<w;++px) {
+        int tx=px*96/w,ty=py*96/h;
+        if(flip) tx=95-tx;
+        uint16_t value=texture[ty*128+tx];
+        int alpha=(value>>12)*17;
+        if(x+px<0 || x+px>=480 || y+py<0 || y+py>=272) continue;
+        for(int channel=0;channel<3;++channel) {
+            int source=((value>>(channel*4))&15)*17;
+            unsigned char *dest=&pixels[y+py][x+px][channel];
+            *dest=(unsigned char)((source*alpha+*dest*(255-alpha)+127)/255);
+        }
+    }
+}
 void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 {
     ++rectangles;
@@ -5239,9 +5451,10 @@ void graphics_rectangle(int x,int y,int w,int h,unsigned int color)
 }
 static void render(const Game *g,const char *path)
 {
-    memset(pixels,0,sizeof(pixels)); rectangles=0;
+    memset(pixels,0,sizeof(pixels)); rectangles=0;textures=0;
     game_draw(g);
     assert(rectangles < 6000); /* Conservative <576 KiB GU command estimate. */
+    assert(textures<=7); /* At most six list portraits and one detail portrait. */
     if (path) {
         FILE *f=fopen(path,"wb"); assert(f);
         fprintf(f,"P6\n480 272\n255\n");
@@ -5265,12 +5478,8 @@ static void update(Game *g,Input input,int frames)
 }
 static void fits(const char *text)
 {
-    int width=0,lines=1;
-    for(;*text;++text) {
-        if (*text=='\n') { assert(width<=37);width=0;++lines; }
-        else ++width;
-    }
-    assert(width<=37 && lines<=3);
+    int lines=text_wrap(0,0,444,0,text,0xffffffff,1);
+    assert(lines==0 || (lines-1)*9+7<=53);
 }
 int main(void)
 {
@@ -5375,7 +5584,7 @@ int main(void)
         int count=0;
         encounter_init(&e,123);
         for(int i=0;i<1000;++i) if(encounter_step(&e,area,&result)) {
-            assert(result.level>=(area==1?2:3) && result.level<=(area==1?6:7));
+            assert(result.level>=(area==1?2:3) && result.level<=18);
             ++count;
             for(int j=0;j<4;++j) assert(!encounter_step(&e,area,&result));
         }
@@ -5408,7 +5617,7 @@ int main(void)
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
     assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_ECHOCRAG,7,99);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_TITANOCERA,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},3);
@@ -5419,7 +5628,7 @@ int main(void)
     /* Real game integration: victory -> learning choice -> persistent partner. */
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,5);
     g.party.members[g.party.lead].experience=creature_xp_for_level(6)-1;
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;
     update(&g,(Input){0,0,1,0,0,0},4);
     assert(g.battle.ally.level==6);
@@ -5434,34 +5643,34 @@ int main(void)
 
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,7);
     g.party.members[g.party.lead].experience=creature_xp_for_level(8)-1;
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);g.in_battle=1;
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},6);
-    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EVOLUTION"));
+    assert(g.battle.ally.species==SPECIES_EMBERYN && strstr(g.battle.message,"EVOLUTION"));
     render(&g,"previews/evolution.ppm");
     for(int i=0;i<25 && g.in_battle;++i) {
         if(g.battle.phase==BATTLE_LEARN) update(&g,(Input){0,0,0,1,0,0},1);
         else update(&g,(Input){0,0,1,0,0,0},1);
     }
-    assert(!g.in_battle && g.party.members[g.party.lead].species==SPECIES_EMBERLYN);
+    assert(!g.in_battle && g.party.members[g.party.lead].species==SPECIES_EMBERYN);
     saved_xp=g.party.members[g.party.lead].experience;
     g.player.tile_x=g.player.target_x=5;g.player.tile_y=g.player.target_y=10;
     g.player.x=160;g.player.y=320;g.player.moving=0;
     update(&g,(Input){0,-1,0,0,0,0},10);
-    assert(g.map_id==MAP_LODGE && g.party.members[g.party.lead].species==SPECIES_EMBERLYN && g.party.members[g.party.lead].experience==saved_xp);
+    assert(g.map_id==MAP_LODGE && g.party.members[g.party.lead].species==SPECIES_EMBERYN && g.party.members[g.party.lead].experience==saved_xp);
     update(&g,(Input){0,0,0,0,1,0},1);
     assert(g.dialogue.active);fits(g.dialogue.pages[0]);fits(g.dialogue.pages[1]);
     render(&g,"previews/partner.ppm");
-    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSLET,3,42);
-    assert(g.battle.ally.species==SPECIES_EMBERLYN && strstr(g.battle.message,"EMBERLYN IS READY"));
+    battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);
+    assert(g.battle.ally.species==SPECIES_EMBERYN && strstr(g.battle.message,"EMBERYN IS READY"));
     /* Capture into a full party flows through battle into collection management. */
     place(&g,MAP_CLEARING,5,11);
     Creature extra;
     for(int i=0;i<3;++i) {
-        creature_create(&extra,SPECIES_MOSSLET+i,4+i);
+        creature_create(&extra,SPECIES_MOSSPRIG+i,4+i);
         assert(party_add(&g.party,&extra)==1);
     }
-    battle_begin_party(&g.battle,&g.party,SPECIES_MOSSLET,3,1);g.in_battle=1;
+    battle_begin_party(&g.battle,&g.party,SPECIES_MOSSPRIG,3,1);g.in_battle=1;
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=1;update(&g,(Input){.confirm=1},1);
     assert(g.battle.phase==BATTLE_CAPTURE);
@@ -5472,7 +5681,7 @@ int main(void)
     render(&g,"previews/captured.ppm");
     update(&g,(Input){.confirm=1},1);
     assert(!g.in_battle && g.party.count==4 && g.party.stored==1);
-    assert(g.party.collection[0].species==SPECIES_MOSSLET && g.party.collection[0].level==3);
+    assert(g.party.collection[0].species==SPECIES_MOSSPRIG && g.party.collection[0].level==3);
     assert(g.party.collection[0].hp==g.party.collection[0].max_hp);
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
@@ -5488,14 +5697,14 @@ int main(void)
     assert(g.roster.mode==PARTY_MENU_SWAP);
     render(&g,"previews/collection-swap.ppm");
     update(&g,(Input){.confirm=1},1);
-    assert(g.party.members[0].species==SPECIES_MOSSLET && g.party.collection[0].species==SPECIES_CINDLET);
+    assert(g.party.members[0].species==SPECIES_MOSSPRIG && g.party.collection[0].species==SPECIES_CINDLET);
     update(&g,(Input){.horizontal=-1},1);
     update(&g,(Input){.vertical=1},1);
     update(&g,(Input){.confirm=1},2);
     assert(g.party.lead==1);
     update(&g,(Input){.menu=1},1);
     assert(!g.roster_open);
-    battle_begin_party(&g.battle,&g.party,SPECIES_FLINTLING,5,2);g.in_battle=1;
+    battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
@@ -5512,7 +5721,7 @@ int main(void)
     assert(g.party.count==1 && !g.party.stored);
     update(&g,(Input){.cancel=1},1);update(&g,(Input){.horizontal=1},1);
     render(&g,"previews/collection-empty.ppm");
-    creature_create(&extra,SPECIES_FLINTLING,5);party_add(&g.party,&extra);
+    creature_create(&extra,SPECIES_GRUBBL,5);party_add(&g.party,&extra);
     assert(party_deposit(&g.party,1));
     update(&g,(Input){.confirm=1},1);
     assert(g.party.count==2 && g.party.stored==0);
@@ -5568,28 +5777,164 @@ int main(void)
     assert(g.player.tile_x==px);
     update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
     assert(!g.menu_open);
-    int species_seen[12]={0};
-    encounter_init(&e,456);
-    for(int i=0;i<20000;++i) if(encounter_step(&e,3,&result)) {
-        assert(result.level>=5 && result.level<=8);
-        assert(result.species==SPECIES_REEDSKIP || result.species==SPECIES_GLOWMOTH || result.species==SPECIES_SUNFINCH);
-        ++species_seen[result.species];
+    int species_seen[SPECIES_COUNT]={0};
+    for(int area=1;area<=3;++area) {
+        encounter_init(&e,456);
+        for(int i=0;i<200000;++i) if(encounter_step(&e,area,&result)) {
+            int family=result.species/3,stage=result.species%3;
+            assert(result.species>=0 && result.species<SPECIES_COUNT);
+            if(area==1) assert(family==2 || family==7 || family==8 || family==9);
+            if(area==2) assert(family==0 || family==4 || family==5);
+            if(area==3) assert(family==1 || family==3 || family==6);
+            int minimum=stage==2?16:stage==1?8:area==1?2:area==2?3:5;
+            assert(result.level>=minimum && result.level<=minimum+2);
+            ++species_seen[result.species];
+        }
     }
-    assert(species_seen[SPECIES_REEDSKIP]>0 && species_seen[SPECIES_SUNFINCH]>0);
-    battle_begin_party(&g.battle,&g.party,SPECIES_SUNFINCH,7,42);g.in_battle=1;
-    render(&g,"previews/sunfinch.ppm");
-    battle_begin_party(&g.battle,&g.party,SPECIES_REEDSKIP,6,42);
-    render(&g,"previews/reedskip.ppm");
+    for(int i=0;i<SPECIES_COUNT;++i) assert(species_seen[i]>0);
+    battle_begin_party(&g.battle,&g.party,SPECIES_ZAPPIP,7,42);g.in_battle=1;
+    render(&g,"previews/zappip.ppm");
+    battle_begin_party(&g.battle,&g.party,SPECIES_BUBFIN,6,42);
+    render(&g,"previews/bubfin.ppm");
     g.battle.enemy.hp-=10;g.battle.hit_time=.2f;g.battle.hit_side=1;
     battle_animate(&g.battle,.05f,1);
     assert(g.battle.enemy_hp_shown>g.battle.enemy.hp && g.battle.enemy_hp_shown<g.battle.enemy.max_hp);
     render(&g,"previews/battle-impact.ppm");
     battle_animate(&g.battle,.05f,0);
     assert(g.battle.hit_time==0 && g.battle.enemy_hp_shown==g.battle.enemy.hp);
+    for(int id=0;id<SPECIES_COUNT;++id) {
+        char path[80];
+        battle_begin_party(&g.battle,&g.party,id,id%3==2?16:id%3==1?8:3,42);
+        snprintf(path,sizeof(path),"previews/pet-%03d.ppm",id+1);
+        render(&g,path);
+        assert(textures==2);
+        int opaque=0,transparent=0;
+        for(int p=0;p<128*128;++p) {
+            if(pet_pixels[id][p]>>12) ++opaque;else ++transparent;
+        }
+        assert(opaque>100 && transparent>128*32);
+    }
     g.in_battle=0;
     dialogue_open(&g.dialogue,"SESSION SAVED","YOUR PROGRESS IS SAFE ON THE MEMORY STICK.","KEEP MOVING.");
     render(&g,"previews/saved-dialogue.ppm");
+    /* Round-trip all 30 forms and the expanded full collection through the
+       real game snapshot/application paths using an in-memory utility. */
+    place(&g,MAP_MARSH,2,10);
+    for(int i=1;i<PARTY_MAX+COLLECTION_MAX;++i) {
+        Creature pet;creature_create(&pet,i%SPECIES_COUNT,20+i);
+        pet.hp-=i%5;pet.experience+=3;
+        assert(party_add(&g.party,&pet));
+    }
+    assert(g.party.count==4 && g.party.stored==32);
+    g.party.lead=2;g.inventory.embermarks=4242;
+    Party snapshot=g.party;
+    update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
+    assert(save_data_status()==SAVE_STATUS_BUSY);
+    update(&g,(Input){0},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
+    party_init(&g.party);g.inventory.embermarks=0;
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
+    update(&g,(Input){0},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION LOADED"));
+    assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
+    assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
+    for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
+        const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
+        const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
+        assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
+        assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
+    }
     puts("PASS: world systems, progression, capture retention, party menu, inventory/shop/healing, storage swaps/scrolling, battle lead, drawing budget");
     return 0;
 }
+````
+
+## tools/build_pet_assets.py
+
+````text
+"""Compile the user's PNGs into embedded PSP textures. Requires Pillow.
+
+Run from any directory with Python 3. Originals are never modified.
+"""
+from pathlib import Path
+import hashlib
+import json
+import struct
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parents[1]
+FILES = sorted((ROOT / 'assets/pets').glob('*.png'))
+assert len(FILES) == 30, 'Expected exactly 30 numbered pet PNGs'
+output = ROOT / 'assets/generated'
+output.mkdir(exist_ok=True)
+preview = ROOT / 'previews'
+preview.mkdir(exist_ok=True)
+sheet = Image.new('RGB', (600, 10 * 126), '#15212b')
+draw = ImageDraw.Draw(sheet)
+packed = bytearray()
+manifest = []
+for index, path in enumerate(FILES):
+    number, name, extension = path.name.split('.')
+    assert int(number) == index + 1 and extension == 'png'
+    source = Image.open(path).convert('RGBA')
+    bounds = source.getchannel('A').getbbox()
+    assert bounds, f'Empty image: {path}'
+    pet = source.crop(bounds)
+    size = (76, 84, 92)[index % 3]
+    pet.thumbnail((size, size), Image.Resampling.LANCZOS)
+    texture = Image.new('RGBA', (128, 128))
+    texture.paste(pet, ((96 - pet.width) // 2, 94 - pet.height))
+    # GU_PSM_4444: low nibble R, then G, B, A. Quantize after resizing.
+    raw = texture.tobytes()
+    rgba = zip(raw[0::4], raw[1::4], raw[2::4], raw[3::4])
+    values = [(r >> 4) | ((g >> 4) << 4) | ((b >> 4) << 8) | ((a >> 4) << 12)
+              for r, g, b, a in rgba]
+    texture_bytes = struct.pack('<16384H', *values)
+    packed.extend(texture_bytes)
+    # Preview the actual quantized data against a game-like background.
+    quantized = Image.new('RGBA', (128, 128))
+    quantized.putdata([((v & 15) * 17, ((v >> 4) & 15) * 17,
+                        ((v >> 8) & 15) * 17, (v >> 12) * 17) for v in values])
+    x, y = (index % 3) * 200, (index // 3) * 126
+    sheet.paste(quantized, (x + 52, y), quantized)
+    draw.text((x + 22, y + 104), f'{number} {name.upper()}', fill='#f1d59e')
+    manifest.append({'id': index, 'number': number, 'name': name,
+                     'source': path.relative_to(ROOT).as_posix(),
+                     'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                     'texture_sha256': hashlib.sha256(texture_bytes).hexdigest()})
+(output / 'pets.rgba4444').write_bytes(packed)
+(output / 'pets.json').write_text(json.dumps(manifest, indent=2) + '\n')
+sheet.save(preview / 'pet-roster.png')
+print(f'Compiled {len(FILES)} pets: {len(packed):,} bytes, RGBA4444, 128x128 each.')
+````
+
+## tools/check_pet_assets.py
+
+````text
+"""Check embedded sprites match their numbered source PNGs and species IDs."""
+import hashlib
+import json
+import re
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+manifest = json.loads((root / 'assets/generated/pets.json').read_text())
+binary = (root / 'assets/generated/pets.rgba4444').read_bytes()
+ids = re.findall(r'\bSPECIES_([A-Z]+)\b', (root / 'include/creature.h').read_text())
+ids = ids[:ids.index('COUNT')]
+assert len(manifest) == len(ids) == 30
+assert len(binary) == 30 * 128 * 128 * 2
+files = sorted((root / 'assets/pets').glob('*.png'))
+assert len(files) == 30
+for i, entry in enumerate(manifest):
+    assert entry['id'] == i and entry['number'] == f'{i+1:03d}'
+    assert entry['name'].upper() == ids[i]
+    path = root / entry['source']
+    assert path.resolve() == files[i].resolve()
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == entry['sha256'], \
+        f'{path.name} changed: run tools/build_pet_assets.py first'
+    texture = binary[i*32768:(i+1)*32768]
+    assert hashlib.sha256(texture).hexdigest() == entry['texture_sha256']
+print('PASS: all 30 numbered PNGs, roster IDs, and compiled texture checksums match')
 ````

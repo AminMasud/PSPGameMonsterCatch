@@ -2,8 +2,9 @@
 set -eu
 # Run from the psp directory. Host checks use PSP API stubs, not an emulator.
 mkdir -p previews
+python3 tools/check_pet_assets.py
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
-    tests/save_data_test.c src/save_data.c -o previews/save-data-test
+    tests/save_data_test.c src/save_data.c src/save_codec.c src/creature.c src/attacks.c -o previews/save-data-test
 previews/save-data-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/overworld_test.c src/map.c src/player.c src/camera.c -lm -o previews/overworld-test
@@ -12,7 +13,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iin
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
     src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
-    src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c \
+    src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \

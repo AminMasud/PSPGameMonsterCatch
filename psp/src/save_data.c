@@ -79,7 +79,7 @@ static void savedata_prepare(int mode)
         service.params.newData=&service.new_data;
         snprintf(service.params.sfoParam.title,sizeof(service.params.sfoParam.title),"EMBERWAKE");
         snprintf(service.params.sfoParam.savedataTitle,sizeof(service.params.sfoParam.savedataTitle),"%s",SAVE_NAME);
-        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PHASE 8 SESSION");
+        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PET ROSTER - 30 FORMS");
         service.params.sfoParam.parentalLevel=1;
     }
 }
@@ -130,11 +130,8 @@ void save_data_update(void)
     } else if (state==PSP_UTILITY_DIALOG_NONE && service.shutdown_requested) {
         /* FINISHED is a shutdown state, not the save result. Evaluate the
            final result even when polling observes QUIT followed by NONE. */
-        if (service.params.base.result==0 && service.loading &&
-            service.params.dataSize==sizeof(service.payload)) {
-            service.loaded=service.payload;
-            service.loaded_valid=service.loaded.magic==SAVE_DATA_MAGIC &&
-                service.loaded.version==SAVE_DATA_VERSION;
+        if (service.params.base.result==0 && service.loading) {
+            service.loaded_valid=save_data_decode(&service.payload,service.params.dataSize,&service.loaded);
         }
         service.status=service.params.base.result!=0 ||
             (service.loading && !service.loaded_valid) ?
