@@ -142,6 +142,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
+    g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
     return 1;
 }
 static void save_status_update(Game *g)
@@ -185,6 +186,17 @@ void game_init(Game *g)
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
 }
+int game_offer_important_battle(Game *g,const char *opponent,
+                                SpeciesId species,int level,uint32_t seed)
+{
+    if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
+       g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
+       g->shop_open || g->dialogue.active || save_data_status()==SAVE_STATUS_BUSY) return 0;
+    g->pending_battle=(PendingBattle){species,level,seed};
+    ready_prompt_open(&g->ready_prompt,opponent);
+    g->transition=0;
+    return 1;
+}
 static void game_step(Game *g, const Input *input, float seconds)
 {
     save_data_update();
@@ -204,6 +216,17 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->encounter.safe_steps=4;
             g->transition=0.22f;
         }
+        return;
+    }
+    if(g->ready_prompt.active) {
+        ReadyPromptResult choice=ready_prompt_update(&g->ready_prompt,input);
+        if(choice==READY_ACCEPTED) {
+            PendingBattle request=g->pending_battle;
+            g->pending_battle=(PendingBattle){0};
+            battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                                               request.species,request.level,request.seed);
+            g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+        } else if(choice==READY_DECLINED) g->pending_battle=(PendingBattle){0};
         return;
     }
     if(g->shop_open) { shop_update(g,input);return; }
@@ -297,7 +320,8 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds<0) seconds=0;
     if (seconds>0.05f) seconds=0.05f;
     int busy=save_data_status()==SAVE_STATUS_BUSY;
-    int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active || g->in_battle;
+    int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+              g->ready_prompt.active || g->in_battle;
     int direction=input->vertical?input->vertical:input->horizontal;
     if (!busy && modal && direction && direction!=g->previous_ui_direction) audio_play(SOUND_CURSOR);
     if (!busy && (input->confirm || input->cancel || (input->menu&INPUT_MENU_OPEN))) audio_play(SOUND_CONFIRM);
@@ -341,6 +365,7 @@ static void draw_scene(const Game *g)
         graphics_rectangle(10,25,3,24,GU_RGBA(242,198,117,255));
         text_draw(22,34,map_name(g->map_id),GU_RGBA(239,218,173,255),1);
     }
+    if(g->ready_prompt.active) { ready_prompt_draw(&g->ready_prompt);return; }
     if (g->shop_open) {
         graphics_rectangle(38,37,404,205,GU_RGBA(184,150,96,255));
         graphics_rectangle(40,39,400,201,GU_RGBA(21,30,36,255));

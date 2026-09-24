@@ -170,6 +170,35 @@ int main(void)
     place(&g,MAP_CLEARING,10,13);
     update(&g,(Input){0},200);
     assert(g.npcs.people[1].actor.tile_x==9); /* Patrol cannot enter player. */
+
+    /* Important battles use a reusable ready prompt; declining preserves the world. */
+    assert(!game_offer_important_battle(&g,"INVALID",SPECIES_COUNT,6,1234));
+    assert(!game_offer_important_battle(&g,"INVALID",SPECIES_MOSSPRIG,0,1234));
+    int ready_x=g.player.tile_x,ready_y=g.player.tile_y;
+    npc_x=g.npcs.people[1].actor.x;
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_MOSSPRIG,6,1234));
+    assert(g.ready_prompt.active && g.ready_prompt.cursor==0 && !g.in_battle);
+    assert(g.pending_battle.species==SPECIES_MOSSPRIG && g.pending_battle.level==6);
+    assert(!game_offer_important_battle(&g,"SECOND CHALLENGE",SPECIES_ZAPPIP,7,2));
+    render(&g,"previews/ready-prompt.ppm");
+    update(&g,(Input){.horizontal=1},40);
+    assert(g.player.tile_x==ready_x && g.player.tile_y==ready_y);
+    assert(g.npcs.people[1].actor.x==npc_x);
+    update(&g,(Input){.vertical=1},10);
+    assert(g.ready_prompt.cursor==1); /* A held direction moves only once. */
+    render(&g,"previews/ready-prompt-no.ppm");
+    update(&g,(Input){0},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.ready_prompt.active && !g.in_battle && g.pending_battle.level==0);
+    assert(g.player.tile_x==ready_x && g.player.tile_y==ready_y);
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_ZAPPIP,7,99));
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.ready_prompt.active && !g.in_battle);
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_MOSSPRIG,6,1234));
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.ready_prompt.active && g.in_battle);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6);
+
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
     assert(!g.dialogue.active && !g.in_battle); /* Only completed steps roll. */
@@ -189,7 +218,7 @@ int main(void)
     place(&g,MAP_FOREST,8,12);
     for(int i=0;i<2000 && !g.in_battle;++i)
         update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0,0,0},1);
-    assert(g.in_battle);
+    assert(g.in_battle && !g.ready_prompt.active); /* Wild encounters skip the ready prompt. */
     fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
     float before_x=g.player.x,before_y=g.player.y;
@@ -465,6 +494,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: world systems, reusable ready prompt, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }

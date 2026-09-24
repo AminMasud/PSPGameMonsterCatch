@@ -1,4 +1,4 @@
-# Complete Phase 12 source contents
+# Complete Phase 13 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -630,6 +630,12 @@ int encounter_step(Encounter *e, int area, EncounterResult *result);
 #include "inventory.h"
 #include "save_data.h"
 #include "player_menu.h"
+#include "ready_prompt.h"
+typedef struct {
+    SpeciesId species;
+    int level;
+    uint32_t seed;
+} PendingBattle;
 typedef struct {
     const Map *map;
     Player player;
@@ -650,10 +656,15 @@ typedef struct {
     int tavi_shop_pending;
     char shop_message[112];
     SaveStatus save_seen_status;
+    ReadyPrompt ready_prompt;
+    PendingBattle pending_battle;
     Battle battle;
     int in_battle;
 } Game;
 void game_init(Game *game);
+/* Reusable entry point for future trainer, NPC, and boss battles. */
+int game_offer_important_battle(Game *game,const char *opponent,
+                                SpeciesId species,int level,uint32_t seed);
 void game_update(Game *game, const Input *input, float seconds);
 void game_draw(const Game *game);
 #endif
@@ -906,6 +917,28 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
 #endif
 ````
 
+## include/ready_prompt.h
+
+````text
+#ifndef EMBERWAKE_READY_PROMPT_H
+#define EMBERWAKE_READY_PROMPT_H
+
+#include "input.h"
+
+typedef enum { READY_WAITING, READY_ACCEPTED, READY_DECLINED } ReadyPromptResult;
+
+typedef struct {
+    int active, cursor, previous_direction;
+    char opponent[40];
+} ReadyPrompt;
+
+void ready_prompt_open(ReadyPrompt *prompt,const char *opponent);
+ReadyPromptResult ready_prompt_update(ReadyPrompt *prompt,const Input *input);
+void ready_prompt_draw(const ReadyPrompt *prompt);
+
+#endif
+````
+
 ## include/save_data.h
 
 ````text
@@ -998,7 +1031,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1011,7 +1044,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 12
+PSP_EBOOT_TITLE = Emberwake - Phase 13
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1044,25 +1077,27 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 12 Battle Swap Navigation
+# Emberwake — Phase 13 Pre-Battle Ready Prompt
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, and a full-screen battle party selector with automatic return after a
-swap. The PNG number minus one is the internal species ID. All 30 forms have
-stats, descriptions, attacks, capture support, and their own supplied artwork.
+action, a full-screen battle party selector with automatic return after a swap,
+and a reusable confirmation screen for important NPC and boss battles. The PNG
+number minus one is the internal species ID. All 30 forms have stats,
+descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE12.PBP**, titled **Emberwake - Phase 12**. Copy it to:
+Use **EBOOT-PHASE13.PBP**, titled **Emberwake - Phase 13**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP, EBOOT-PETS.PBP,
-and numbered phase builds are retained locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
+EBOOT-PHASE12.PBP, EBOOT-PETS.PBP, and numbered phase builds are retained
+locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1123,6 +1158,14 @@ levels 8–10 and final forms 16–18. Rare evolved encounters can be much stron
 than a new team; RUN is guaranteed on the third attempt.
 
 ## Battles and progression
+
+Important NPC and boss encounters can open a reusable **ARE YOU READY?** screen.
+YES starts the exact pending encounter; NO or Circle closes the prompt and leaves
+the player at the same overworld position. The prompt pauses movement and NPC
+patrols while it is open. Ordinary random wild encounters continue directly to
+battle without showing this confirmation. Trainer parties and NPC challenge
+data begin in the next roadmap phase, so the current exploration NPCs retain
+their existing dialogue, shop, and healing behavior.
 
 At the start of each round, the enemy chooses one action and turn order is locked
 from the creatures' speeds. A faster enemy attacks immediately, before the game
@@ -1302,12 +1345,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP
+    make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1325,25 +1368,29 @@ first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
 checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
 voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
-enemy response, enemy-first swaps, and fast/slow forced replacements. The full
-suite also covers movement, all portals, collisions, capture, inventory, menus,
-all 30 forms at levels 1–100, all ten two-step evolution chains, wild availability
-of every form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
-savedata lifecycle, text bounds, drawing budget, and PCM audio.
+enemy response, enemy-first swaps, and fast/slow forced replacements. Phase 13
+checks YES, selected NO, Circle cancellation, frozen overworld actors, request
+validation, and direct wild-battle entry. The full suite also covers movement,
+all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
+all ten two-step evolution chains, wild availability of every form, 32-slot
+storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
+text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include spotlight-idle.png, spotlight-ally.png, spotlight-enemy.png, pet-001.png
-through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png from
-the asset compiler. They are not hardware screenshots.
+include ready-prompt.png, ready-prompt-no.png, spotlight-idle.png,
+spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
+party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
+They are not hardware screenshots.
 
 PSP test route:
-1. Choose SWAP and verify the full-screen BATTLE PARTY view opens.
-2. Select the active Veyling and a fainted Veyling; both must remain rejected.
-3. Select a ready reserve and verify the party screen closes immediately.
-4. In a player-first round, verify the enemy acts once before the next menu.
-5. In an enemy-first round, verify swapping does not grant a second enemy action.
-6. Force a replacement after a knockout; Circle must not cancel it, and a valid
-   reserve must enter a fresh round with the correct speed order.
+1. Trigger an important battle and verify ARE YOU READY? opens over the current
+   map with YES selected.
+2. Hold Down and verify the cursor moves to NO once; press X and confirm the
+   player returns to the same map tile without entering battle.
+3. Open the prompt again and press Circle; confirm it behaves like NO.
+4. Open it once more, leave YES selected, and press X; confirm battle begins.
+5. Walk in encounter terrain and verify an ordinary wild battle starts without
+   showing the ready prompt.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -2492,6 +2539,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
+    g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
     return 1;
 }
 static void save_status_update(Game *g)
@@ -2535,6 +2583,17 @@ void game_init(Game *g)
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
 }
+int game_offer_important_battle(Game *g,const char *opponent,
+                                SpeciesId species,int level,uint32_t seed)
+{
+    if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
+       g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
+       g->shop_open || g->dialogue.active || save_data_status()==SAVE_STATUS_BUSY) return 0;
+    g->pending_battle=(PendingBattle){species,level,seed};
+    ready_prompt_open(&g->ready_prompt,opponent);
+    g->transition=0;
+    return 1;
+}
 static void game_step(Game *g, const Input *input, float seconds)
 {
     save_data_update();
@@ -2554,6 +2613,17 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->encounter.safe_steps=4;
             g->transition=0.22f;
         }
+        return;
+    }
+    if(g->ready_prompt.active) {
+        ReadyPromptResult choice=ready_prompt_update(&g->ready_prompt,input);
+        if(choice==READY_ACCEPTED) {
+            PendingBattle request=g->pending_battle;
+            g->pending_battle=(PendingBattle){0};
+            battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                                               request.species,request.level,request.seed);
+            g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+        } else if(choice==READY_DECLINED) g->pending_battle=(PendingBattle){0};
         return;
     }
     if(g->shop_open) { shop_update(g,input);return; }
@@ -2647,7 +2717,8 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds<0) seconds=0;
     if (seconds>0.05f) seconds=0.05f;
     int busy=save_data_status()==SAVE_STATUS_BUSY;
-    int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active || g->in_battle;
+    int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+              g->ready_prompt.active || g->in_battle;
     int direction=input->vertical?input->vertical:input->horizontal;
     if (!busy && modal && direction && direction!=g->previous_ui_direction) audio_play(SOUND_CURSOR);
     if (!busy && (input->confirm || input->cancel || (input->menu&INPUT_MENU_OPEN))) audio_play(SOUND_CONFIRM);
@@ -2691,6 +2762,7 @@ static void draw_scene(const Game *g)
         graphics_rectangle(10,25,3,24,GU_RGBA(242,198,117,255));
         text_draw(22,34,map_name(g->map_id),GU_RGBA(239,218,173,255),1);
     }
+    if(g->ready_prompt.active) { ready_prompt_draw(&g->ready_prompt);return; }
     if (g->shop_open) {
         graphics_rectangle(38,37,404,205,GU_RGBA(184,150,96,255));
         graphics_rectangle(40,39,400,201,GU_RGBA(21,30,36,255));
@@ -3743,6 +3815,59 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
             p->moving = 0;
         }
     }
+}
+````
+
+## src/ready_prompt.c
+
+````text
+#include <stdio.h>
+#include <pspgu.h>
+#include "ready_prompt.h"
+#include "graphics.h"
+#include "text.h"
+
+#define C(r,g,b) GU_RGBA(r,g,b,255)
+
+void ready_prompt_open(ReadyPrompt *prompt,const char *opponent)
+{
+    *prompt=(ReadyPrompt){0};
+    prompt->active=1;
+    snprintf(prompt->opponent,sizeof(prompt->opponent),"%s",opponent && opponent[0]?opponent:"IMPORTANT BATTLE");
+}
+
+ReadyPromptResult ready_prompt_update(ReadyPrompt *prompt,const Input *input)
+{
+    if(!prompt->active) return READY_WAITING;
+    int direction=input->vertical;
+    if(direction && direction!=prompt->previous_direction)
+        prompt->cursor=1-prompt->cursor;
+    prompt->previous_direction=direction;
+    if(input->cancel) {
+        prompt->active=0;
+        return READY_DECLINED;
+    }
+    if(!input->confirm) return READY_WAITING;
+    prompt->active=0;
+    return prompt->cursor==0?READY_ACCEPTED:READY_DECLINED;
+}
+
+void ready_prompt_draw(const ReadyPrompt *prompt)
+{
+    if(!prompt->active) return;
+    graphics_rectangle(72,38,336,196,C(179,145,91));
+    graphics_rectangle(75,41,330,190,C(18,27,34));
+    text_draw(143,61,"ARE YOU READY?",C(245,217,166),2);
+    text_draw(159,91,prompt->opponent,C(165,195,186),1);
+    for(int i=0;i<2;++i) {
+        int y=119+i*39;
+        if(i==prompt->cursor) {
+            graphics_rectangle(132,y,216,31,C(65,83,78));
+            graphics_rectangle(132,y,4,31,C(242,177,92));
+        }
+        text_draw(220,y+11,i==0?"YES":"NO",i==prompt->cursor?C(255,220,162):C(174,190,186),1);
+    }
+    text_draw(133,211,"UP/DOWN SELECT   X CONFIRM   O NO",C(158,187,179),1);
 }
 ````
 
@@ -5520,7 +5645,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
+for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
@@ -5558,6 +5683,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iin
     src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
+    src/ready_prompt.c \
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
@@ -5956,6 +6082,35 @@ int main(void)
     place(&g,MAP_CLEARING,10,13);
     update(&g,(Input){0},200);
     assert(g.npcs.people[1].actor.tile_x==9); /* Patrol cannot enter player. */
+
+    /* Important battles use a reusable ready prompt; declining preserves the world. */
+    assert(!game_offer_important_battle(&g,"INVALID",SPECIES_COUNT,6,1234));
+    assert(!game_offer_important_battle(&g,"INVALID",SPECIES_MOSSPRIG,0,1234));
+    int ready_x=g.player.tile_x,ready_y=g.player.tile_y;
+    npc_x=g.npcs.people[1].actor.x;
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_MOSSPRIG,6,1234));
+    assert(g.ready_prompt.active && g.ready_prompt.cursor==0 && !g.in_battle);
+    assert(g.pending_battle.species==SPECIES_MOSSPRIG && g.pending_battle.level==6);
+    assert(!game_offer_important_battle(&g,"SECOND CHALLENGE",SPECIES_ZAPPIP,7,2));
+    render(&g,"previews/ready-prompt.ppm");
+    update(&g,(Input){.horizontal=1},40);
+    assert(g.player.tile_x==ready_x && g.player.tile_y==ready_y);
+    assert(g.npcs.people[1].actor.x==npc_x);
+    update(&g,(Input){.vertical=1},10);
+    assert(g.ready_prompt.cursor==1); /* A held direction moves only once. */
+    render(&g,"previews/ready-prompt-no.ppm");
+    update(&g,(Input){0},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.ready_prompt.active && !g.in_battle && g.pending_battle.level==0);
+    assert(g.player.tile_x==ready_x && g.player.tile_y==ready_y);
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_ZAPPIP,7,99));
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.ready_prompt.active && !g.in_battle);
+    assert(game_offer_important_battle(&g,"MIRA'S CHALLENGE",SPECIES_MOSSPRIG,6,1234));
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.ready_prompt.active && g.in_battle);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6);
+
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
     assert(!g.dialogue.active && !g.in_battle); /* Only completed steps roll. */
@@ -5975,7 +6130,7 @@ int main(void)
     place(&g,MAP_FOREST,8,12);
     for(int i=0;i<2000 && !g.in_battle;++i)
         update(&g,(Input){g.player.tile_x>=15?-1:1,0,0,0,0,0},1);
-    assert(g.in_battle);
+    assert(g.in_battle && !g.ready_prompt.active); /* Wild encounters skip the ready prompt. */
     fits(g.battle.message);
     render(&g,"previews/encounter.ppm");
     float before_x=g.player.x,before_y=g.player.y;
@@ -6251,7 +6406,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: world systems, reusable ready prompt, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }
 ````

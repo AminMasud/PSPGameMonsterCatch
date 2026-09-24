@@ -14,7 +14,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
+for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',

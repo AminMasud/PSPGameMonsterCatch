@@ -14,6 +14,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iin
     src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
+    src/ready_prompt.c \
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \

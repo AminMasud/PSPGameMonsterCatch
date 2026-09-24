@@ -1,22 +1,24 @@
-# Emberwake — Phase 12 Battle Swap Navigation
+# Emberwake — Phase 13 Pre-Battle Ready Prompt
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, and a full-screen battle party selector with automatic return after a
-swap. The PNG number minus one is the internal species ID. All 30 forms have
-stats, descriptions, attacks, capture support, and their own supplied artwork.
+action, a full-screen battle party selector with automatic return after a swap,
+and a reusable confirmation screen for important NPC and boss battles. The PNG
+number minus one is the internal species ID. All 30 forms have stats,
+descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE12.PBP**, titled **Emberwake - Phase 12**. Copy it to:
+Use **EBOOT-PHASE13.PBP**, titled **Emberwake - Phase 13**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP, EBOOT-PETS.PBP,
-and numbered phase builds are retained locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
+EBOOT-PHASE12.PBP, EBOOT-PETS.PBP, and numbered phase builds are retained
+locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -77,6 +79,14 @@ levels 8–10 and final forms 16–18. Rare evolved encounters can be much stron
 than a new team; RUN is guaranteed on the third attempt.
 
 ## Battles and progression
+
+Important NPC and boss encounters can open a reusable **ARE YOU READY?** screen.
+YES starts the exact pending encounter; NO or Circle closes the prompt and leaves
+the player at the same overworld position. The prompt pauses movement and NPC
+patrols while it is open. Ordinary random wild encounters continue directly to
+battle without showing this confirmation. Trainer parties and NPC challenge
+data begin in the next roadmap phase, so the current exploration NPCs retain
+their existing dialogue, shop, and healing behavior.
 
 At the start of each round, the enemy chooses one action and turn order is locked
 from the creatures' speeds. A faster enemy attacks immediately, before the game
@@ -256,12 +266,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP
+    make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -279,25 +289,29 @@ first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
 checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
 voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
-enemy response, enemy-first swaps, and fast/slow forced replacements. The full
-suite also covers movement, all portals, collisions, capture, inventory, menus,
-all 30 forms at levels 1–100, all ten two-step evolution chains, wild availability
-of every form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
-savedata lifecycle, text bounds, drawing budget, and PCM audio.
+enemy response, enemy-first swaps, and fast/slow forced replacements. Phase 13
+checks YES, selected NO, Circle cancellation, frozen overworld actors, request
+validation, and direct wild-battle entry. The full suite also covers movement,
+all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
+all ten two-step evolution chains, wild availability of every form, 32-slot
+storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
+text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include spotlight-idle.png, spotlight-ally.png, spotlight-enemy.png, pet-001.png
-through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png from
-the asset compiler. They are not hardware screenshots.
+include ready-prompt.png, ready-prompt-no.png, spotlight-idle.png,
+spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
+party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
+They are not hardware screenshots.
 
 PSP test route:
-1. Choose SWAP and verify the full-screen BATTLE PARTY view opens.
-2. Select the active Veyling and a fainted Veyling; both must remain rejected.
-3. Select a ready reserve and verify the party screen closes immediately.
-4. In a player-first round, verify the enemy acts once before the next menu.
-5. In an enemy-first round, verify swapping does not grant a second enemy action.
-6. Force a replacement after a knockout; Circle must not cancel it, and a valid
-   reserve must enter a fresh round with the correct speed order.
+1. Trigger an important battle and verify ARE YOU READY? opens over the current
+   map with YES selected.
+2. Hold Down and verify the cursor moves to NO once; press X and confirm the
+   player returns to the same map tile without entering battle.
+3. Open the prompt again and press Circle; confirm it behaves like NO.
+4. Open it once more, leave YES selected, and press X; confirm battle begins.
+5. Walk in encounter terrain and verify an ordinary wild battle starts without
+   showing the ready prompt.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
