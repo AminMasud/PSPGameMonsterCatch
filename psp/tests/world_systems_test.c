@@ -77,6 +77,21 @@ static void fits(const char *text)
     int lines=text_wrap(0,0,444,0,text,0xffffffff,1);
     assert(lines==0 || (lines-1)*9+7<=53);
 }
+static const NpcBattleData framework_challenger={
+    .id=3,.name="ARCHIVIST",
+    .before={"SHOW ME HOW YOUR TEAM MOVES.","WE WILL USE TWO VEYLINGS."},
+    .victory={"YOUR TEAM WORKED AS ONE.","TAKE THESE EMBERMARKS."},
+    .defeat={"REST YOUR TEAM AND RETURN.",0},
+    .party={{SPECIES_MOSSPRIG,4},{SPECIES_ZAPPIP,5}},.party_count=2,
+    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,.progression_flag=1u<<6
+};
+static const NpcBattleData framework_defeat={
+    .id=4,.name="WARDEN",
+    .before={"THIS IS A DEFEAT-FLOW TEST.",0},
+    .victory={"YOU PREVAILED.",0},.defeat={"RETURN WHEN YOU ARE READY.",0},
+    .party={{SPECIES_GRUBBL,5}},.party_count=1,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,.progression_flag=1u<<7
+};
 int main(void)
 {
     int portals=0;
@@ -198,6 +213,52 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(!g.ready_prompt.active && g.in_battle);
     assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6);
+
+    /* Phase 14 framework: intro -> ready prompt -> NPC party -> persistent outcome. */
+    place(&g,MAP_CLEARING,10,13);
+    assert(npc_battle_data_valid(&framework_challenger));
+    fits(framework_challenger.before.first);fits(framework_challenger.before.second);
+    fits(framework_challenger.victory.first);fits(framework_challenger.victory.second);
+    int marks_before=g.inventory.embermarks;
+    assert(game_offer_npc_battle(&g,&framework_challenger,77));
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE);
+    assert(game_offer_npc_battle(&g,&framework_challenger,77));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.dialogue.page==1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.dialogue.active && g.ready_prompt.active &&
+           g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.npc_battle.flow==NPC_BATTLE_FLOW_ACTIVE);
+    assert(g.battle.npc_battle && g.battle.enemy_count==2 &&
+           g.battle.ai_profile==NPC_AI_STANDARD);
+    g.transition=0;
+    render(&g,"previews/npc-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,framework_challenger.id));
+    assert((g.npc_battle_progress.progression&framework_challenger.progression_flag)!=0);
+    assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_challenger.name));
+    update(&g,(Input){.cancel=1},1);
+    assert(game_offer_npc_battle(&g,&framework_challenger,99));
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
+    assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+
+    assert(game_offer_npc_battle(&g,&framework_defeat,88));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.ai_profile==NPC_AI_BOSS);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_LOSS;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5 && g.player.tile_y==11);
+    assert(!npc_battle_is_defeated(&g.npc_battle_progress,framework_defeat.id));
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURN WHEN"));
+    update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
@@ -476,24 +537,29 @@ int main(void)
     }
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
+    g.npc_battle_progress.defeated=(1u<<3)|(1u<<11);
+    g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
     Party snapshot=g.party;
+    NpcBattleProgress npc_snapshot=g.npc_battle_progress;
     update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
     assert(save_data_status()==SAVE_STATUS_BUSY);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
-    party_init(&g.party);g.inventory.embermarks=0;
+    party_init(&g.party);g.inventory.embermarks=0;g.npc_battle_progress=(NpcBattleProgress){0};
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION LOADED"));
     assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
+    assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
+           g.npc_battle_progress.progression==npc_snapshot.progression);
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, reusable ready prompt, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: world systems, ready prompt, NPC battle flow/persistence, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }

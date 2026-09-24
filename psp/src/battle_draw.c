@@ -33,7 +33,12 @@ void battle_draw(const Battle *b)
     graphics_rectangle(0,0,480,272,C(48,65,74));
     graphics_rectangle(0,88,480,88,C(65,81,77));
     graphics_rectangle(0,0,480,15,C(19,28,36));
-    text_draw(10,4,"WILD VEYLING ENCOUNTER",C(241,204,145),1);
+    char heading[80];
+    if(b->npc_battle)
+        snprintf(heading,sizeof(heading),"%s  VEYLING %d/%d",b->opponent_name,
+                 b->enemy_active+1,b->enemy_count);
+    else snprintf(heading,sizeof(heading),"WILD VEYLING ENCOUNTER");
+    text_draw(10,4,heading,C(241,204,145),1);
     static const int bob[]={0,-1,-2,-1,0,1,2,1};
     int frame=(int)(b->animation*6)%8;
     int shake=b->hit_time>0?((int)(b->hit_time*40)%2?3:-3):0;

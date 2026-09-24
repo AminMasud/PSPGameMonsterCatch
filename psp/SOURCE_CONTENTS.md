@@ -1,4 +1,4 @@
-# Complete Phase 13 source contents
+# Complete Phase 14 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -459,6 +459,7 @@ void audio_settings(int music,int effects);
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
+#include "npc_battle.h"
 #define BATTLE_MOVES 4
 typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
@@ -472,9 +473,12 @@ typedef enum {
 } BattleTurnState;
 typedef struct {
     Battler ally, enemy;
+    Battler enemy_party[NPC_BATTLE_PARTY_MAX];
     Party party;
     Inventory inventory;
     int active, switch_cursor, forced_switch, capture_charges;
+    int enemy_count, enemy_active, npc_battle, ai_profile, next_enemy_pending;
+    char opponent_name[40];
     BattlePhase phase;
     BattleResult result;
     BattleAfter after;
@@ -496,6 +500,9 @@ void battler_restore(Battler *b);
 void battle_begin(Battle *b,const Battler *ally,SpeciesId species,int level,uint32_t seed);
 void battle_begin_party(Battle *b,const Party *party,SpeciesId species,int level,uint32_t seed);
 void battle_begin_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,SpeciesId species,int level,uint32_t seed);
+int battle_begin_npc_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,
+                                          const char *opponent,const NpcBattleMember *members,
+                                          int count,NpcAiProfile ai_profile,uint32_t seed);
 void battle_update(Battle *b,const Input *input);
 int battle_damage(const Battler *attacker,const Battler *defender,const Attack *attack,int variation);
 void battle_draw(const Battle *b);
@@ -631,11 +638,23 @@ int encounter_step(Encounter *e, int area, EncounterResult *result);
 #include "save_data.h"
 #include "player_menu.h"
 #include "ready_prompt.h"
+#include "npc_battle.h"
 typedef struct {
     SpeciesId species;
     int level;
     uint32_t seed;
 } PendingBattle;
+typedef enum {
+    NPC_BATTLE_FLOW_NONE,
+    NPC_BATTLE_FLOW_INTRO,
+    NPC_BATTLE_FLOW_READY,
+    NPC_BATTLE_FLOW_ACTIVE
+} NpcBattleFlow;
+typedef struct {
+    const NpcBattleData *data;
+    uint32_t seed;
+    NpcBattleFlow flow;
+} PendingNpcBattle;
 typedef struct {
     const Map *map;
     Player player;
@@ -658,6 +677,8 @@ typedef struct {
     SaveStatus save_seen_status;
     ReadyPrompt ready_prompt;
     PendingBattle pending_battle;
+    NpcBattleProgress npc_battle_progress;
+    PendingNpcBattle npc_battle;
     Battle battle;
     int in_battle;
 } Game;
@@ -665,6 +686,7 @@ void game_init(Game *game);
 /* Reusable entry point for future trainer, NPC, and boss battles. */
 int game_offer_important_battle(Game *game,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed);
+int game_offer_npc_battle(Game *game,const NpcBattleData *data,uint32_t seed);
 void game_update(Game *game, const Input *input, float seconds);
 void game_draw(const Game *game);
 #endif
@@ -772,6 +794,60 @@ const Map *map_get(int id);
 const char *map_name(int id);
 const Portal *map_portal(int id, int x, int y);
 int map_encounter_area(int id, int x, int y);
+#endif
+````
+
+## include/npc_battle.h
+
+````text
+#ifndef EMBERWAKE_NPC_BATTLE_H
+#define EMBERWAKE_NPC_BATTLE_H
+
+#include <stdint.h>
+#include "creature.h"
+
+#define NPC_BATTLE_MAX 32
+#define NPC_BATTLE_PARTY_MAX 4
+
+typedef enum {
+    NPC_AI_EASY,
+    NPC_AI_STANDARD,
+    NPC_AI_BOSS,
+    NPC_AI_PROFILE_COUNT
+} NpcAiProfile;
+
+typedef struct {
+    SpeciesId species;
+    int level;
+} NpcBattleMember;
+
+typedef struct {
+    const char *first;
+    const char *second;
+} NpcBattleDialogue;
+
+typedef struct {
+    int id;
+    const char *name;
+    NpcBattleDialogue before;
+    NpcBattleDialogue victory;
+    NpcBattleDialogue defeat;
+    NpcBattleMember party[NPC_BATTLE_PARTY_MAX];
+    int party_count;
+    NpcAiProfile ai_profile;
+    int reward_embermarks;
+    uint32_t progression_flag;
+} NpcBattleData;
+
+typedef struct {
+    uint32_t defeated;
+    uint32_t progression;
+} NpcBattleProgress;
+
+int npc_battle_data_valid(const NpcBattleData *data);
+int npc_battle_is_defeated(const NpcBattleProgress *progress,int npc_id);
+int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *data);
+
 #endif
 ````
 
@@ -950,9 +1026,10 @@ void ready_prompt_draw(const ReadyPrompt *prompt);
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
+#include "npc_battle.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
-#define SAVE_DATA_VERSION 2u
+#define SAVE_DATA_VERSION 3u
 
 typedef struct {
     int species;
@@ -984,6 +1061,8 @@ typedef struct {
     SaveParty party;
     int item_quantities[ITEM_COUNT];
     int embermarks;
+    uint32_t npc_defeated;
+    uint32_t progression_flags;
 } SavePayload;
 
 typedef enum {
@@ -998,7 +1077,7 @@ int save_data_begin_load(void);
 void save_data_update(void);
 SaveStatus save_data_status(void);
 int save_data_take_loaded(SavePayload *payload);
-/* Decode v2 or migrate the fixed v1 layout without changing source bytes. */
+/* Decode v3 or migrate the fixed v1/v2 layouts without changing source bytes. */
 int save_data_decode(const void *bytes,size_t size,SavePayload *payload);
 
 #endif
@@ -1031,7 +1110,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1044,7 +1123,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 13
+PSP_EBOOT_TITLE = Emberwake - Phase 14
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1077,27 +1156,28 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 13 Pre-Battle Ready Prompt
+# Emberwake — Phase 14 NPC Battle Framework
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, a full-screen battle party selector with automatic return after a swap,
-and a reusable confirmation screen for important NPC and boss battles. The PNG
-number minus one is the internal species ID. All 30 forms have stats,
-descriptions, attacks, capture support, and their own supplied artwork.
+action, a full-screen battle party selector, the reusable ready prompt, and a
+data-driven framework for NPC challengers with parties, dialogue, rewards, and
+persistent victory state. The PNG number minus one is the internal species ID.
+All 30 forms have stats, descriptions, attacks, capture support, and their own
+supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE13.PBP**, titled **Emberwake - Phase 13**. Copy it to:
+Use **EBOOT-PHASE14.PBP**, titled **Emberwake - Phase 14**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP, EBOOT-PETS.PBP, and numbered phase builds are retained
-locally for comparison.
+EBOOT-PHASE12.PBP, EBOOT-PHASE13.PBP, EBOOT-PETS.PBP, and numbered phase builds
+are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1164,8 +1244,28 @@ YES starts the exact pending encounter; NO or Circle closes the prompt and leave
 the player at the same overworld position. The prompt pauses movement and NPC
 patrols while it is open. Ordinary random wild encounters continue directly to
 battle without showing this confirmation. Trainer parties and NPC challenge
-data begin in the next roadmap phase, so the current exploration NPCs retain
-their existing dialogue, shop, and healing behavior.
+data are now supported by the reusable NPC battle framework. The current
+exploration NPCs retain their existing dialogue, shop, and healing behavior;
+the East Forest challenger is deliberately reserved for Phase 16.
+
+Each NPC battle definition has a stable ID, name, up to four Veylings with
+species and levels, one or two pages of dialogue before battle and after
+victory, optional dialogue after defeat, an AI profile, an Embermark reward,
+and an optional progression bit. The flow is intro dialogue → ready prompt →
+party battle → outcome dialogue. Circle can leave the intro and NO can leave the
+ready prompt without beginning a battle.
+
+NPC parties send out their next healthy configured Veyling after the current
+one is defeated. The active player Veyling earns XP for each opponent. Capture
+and run commands are rejected without spending a turn. A victory is recorded
+only after the whole NPC party is defeated; the reward and progression flag are
+granted once. Future interactions use the post-victory dialogue instead of
+starting another battle. A loss does not mark the NPC defeated and can show its
+optional defeat dialogue after the normal return to Hearth Clearing.
+
+AI profile metadata is carried into each NPC battle for Phase 15's expandable
+decision policies. Until that phase, opponents retain the existing valid random
+attack selection used by wild encounters.
 
 At the start of each round, the enemy chooses one action and turn order is locked
 from the creatures' speeds. A faster enemy attacks immediately, before the game
@@ -1260,13 +1360,15 @@ roster's HP and attack uses.
 
 ## Existing saves
 
-New saves use **version 2**, a 2504-byte payload, retaining the existing PSP slot
+New saves use **version 3**, a 2512-byte payload, retaining the existing PSP slot
 EMBRWAKE0000 / DATA.BIN. It records map/tile/facing, encounter RNG and safe steps,
 party, lead, storage, levels, XP, nicknames, HP, moves/uses, inventory, and money.
-NPC patrol positions, open menus, dialogue, and battles are not saved.
+It also records up to 32 defeated NPC IDs and progression flags. NPC patrol
+positions, open menus, dialogue, and battles are not saved.
 
-Version-1 saves from Phases 8/9 load through an explicit migration of the frozen
-1960-byte layout. Old creatures are converted as follows:
+Version-2 saves from Phases 10–13 load through a frozen 2504-byte layout with
+empty NPC progress. Version-1 saves from Phases 8/9 also migrate from their
+frozen 1960-byte layout. Old version-1 creatures are converted as follows:
 
 | Old creature | New creature |
 | --- | --- |
@@ -1288,7 +1390,7 @@ positions, lead, and location. HP preserves damage taken against the replacement
 new maximum; fainted creatures remain fainted. Converted partners already at an
 evolution threshold advance to their eligible form, including level-100 saves.
 Loading does not rewrite the file.
-Saving afterward writes version 2, which earlier game builds cannot load. Unknown
+Saving afterward writes version 3, which earlier game builds cannot load. Unknown
 versions, truncated files, and invalid old species IDs are rejected.
 
 The savedata service waits for shutdown completion and checks the final utility
@@ -1345,12 +1447,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP
+    make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1362,7 +1464,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All eleven C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -1370,27 +1472,32 @@ checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
 voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
 enemy response, enemy-first swaps, and fast/slow forced replacements. Phase 13
 checks YES, selected NO, Circle cancellation, frozen overworld actors, request
-validation, and direct wild-battle entry. The full suite also covers movement,
-all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
-all ten two-step evolution chains, wild availability of every form, 32-slot
-storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
-text bounds, drawing budget, and PCM audio.
+validation, and direct wild-battle entry. Phase 14 checks battle-data validation,
+multi-Veyling opponents, AI profile transport, locked capture/run commands,
+intro/ready/outcome flow, one-time rewards, optional defeat dialogue, defeated
+state, progression flags, and version-3 persistence with v1/v2 migration. The
+full suite also covers movement, all portals, collisions, capture, inventory,
+menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
+availability of every form, 32-slot storage, savedata lifecycle, text bounds,
+drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, spotlight-idle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
 
 PSP test route:
-1. Trigger an important battle and verify ARE YOU READY? opens over the current
-   map with YES selected.
-2. Hold Down and verify the cursor moves to NO once; press X and confirm the
-   player returns to the same map tile without entering battle.
-3. Open the prompt again and press Circle; confirm it behaves like NO.
-4. Open it once more, leave YES selected, and press X; confirm battle begins.
-5. Walk in encounter terrain and verify an ordinary wild battle starts without
-   showing the ready prompt.
+1. Load an existing version-2 save and verify the roster, items, money, and
+   location are preserved; saving again upgrades the slot to version 3.
+2. Talk to the current exploration NPCs and verify their existing behavior is
+   unchanged because no challenger is placed in Phase 14.
+3. Walk in encounter terrain and verify ordinary wild battle, capture, and run
+   behavior remains unchanged.
+
+The new NPC flow and multi-Veyling battle are exercised by the host integration
+suite and `npc-battle.png`. Phase 16 will provide the first in-world challenger
+for a complete device playthrough.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -1629,7 +1736,12 @@ void battle_draw(const Battle *b)
     graphics_rectangle(0,0,480,272,C(48,65,74));
     graphics_rectangle(0,88,480,88,C(65,81,77));
     graphics_rectangle(0,0,480,15,C(19,28,36));
-    text_draw(10,4,"WILD VEYLING ENCOUNTER",C(241,204,145),1);
+    char heading[80];
+    if(b->npc_battle)
+        snprintf(heading,sizeof(heading),"%s  VEYLING %d/%d",b->opponent_name,
+                 b->enemy_active+1,b->enemy_count);
+    else snprintf(heading,sizeof(heading),"WILD VEYLING ENCOUNTER");
+    text_draw(10,4,heading,C(241,204,145),1);
     static const int bob[]={0,-1,-2,-1,0,1,2,1};
     int frame=(int)(b->animation*6)%8;
     int shake=b->hit_time>0?((int)(b->hit_time*40)%2?3:-3):0;
@@ -1760,10 +1872,36 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->ally=party->members[b->active]; b->random=seed?seed:0x3291u;
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
+    b->enemy_party[0]=b->enemy;b->enemy_count=1;
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
     b->acting_side=-1;
     b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
+}
+int battle_begin_npc_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,
+                                          const char *opponent,const NpcBattleMember *members,
+                                          int count,NpcAiProfile ai_profile,uint32_t seed)
+{
+    if(!b || !party || party->count<1 || party->count>PARTY_MAX ||
+       !opponent || !opponent[0] || !members || count<1 || count>NPC_BATTLE_PARTY_MAX ||
+       ai_profile<0 || ai_profile>=NPC_AI_PROFILE_COUNT) return 0;
+    for(int i=0;i<count;++i)
+        if(members[i].species<0 || members[i].species>=SPECIES_COUNT ||
+           members[i].level<1 || members[i].level>CREATURE_MAX_LEVEL) return 0;
+    *b=(Battle){0};
+    b->party=*party;b->active=party->lead;
+    if(inventory) b->inventory=*inventory;else inventory_init(&b->inventory);
+    b->ally=party->members[b->active];b->random=seed?seed:0x3291u;
+    b->npc_battle=1;b->ai_profile=ai_profile;b->enemy_count=count;
+    snprintf(b->opponent_name,sizeof(b->opponent_name),"%s",opponent);
+    for(int i=0;i<count;++i) creature_create(&b->enemy_party[i],members[i].species,members[i].level);
+    b->enemy=b->enemy_party[0];
+    b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
+    b->acting_side=-1;
+    b->phase=BATTLE_MESSAGE;b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
+    snprintf(b->message,sizeof(b->message),"%s CHALLENGES YOU.\n%s SENDS OUT %s.",
+             b->opponent_name,b->opponent_name,creature_name(&b->enemy));
+    return 1;
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
 {
@@ -1805,6 +1943,7 @@ static void check_action_result(Battle *b)
 {
     b->turn_state=TURN_CHECK_FAINTED;
     sync_active(b);
+    if(b->npc_battle) b->enemy_party[b->enemy_active]=b->enemy;
     int enemy_fainted=b->enemy.hp<=0,ally_fainted=b->ally.hp<=0;
     b->forced_switch=ally_fainted && !enemy_fainted && reserve_available(b);
     b->turn_state=TURN_CHECK_RESULT;
@@ -1902,6 +2041,19 @@ static int navigation(Battle *b,const Input *input)
     b->previous_direction=direction;
     return edge?direction:0;
 }
+static void send_next_enemy(Battle *b)
+{
+    sync_active(b);
+    ++b->enemy_active;
+    b->enemy=b->enemy_party[b->enemy_active];
+    b->enemy_hp_shown=(float)b->enemy.hp;b->ally_hp_shown=(float)b->ally.hp;
+    b->result=BATTLE_ONGOING;b->reward_given=0;b->experience_reward=0;
+    b->next_enemy_pending=0;b->acting_side=-1;
+    snprintf(b->message,sizeof(b->message),"%s SENDS OUT %s.\n%d VEYLING%s REMAIN.",
+             b->opponent_name,creature_name(&b->enemy),b->enemy_count-b->enemy_active,
+             b->enemy_count-b->enemy_active==1?"":"S");
+    b->phase=BATTLE_MESSAGE;b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
+}
 static void growth_next(Battle *b)
 {
     if(b->growth_stage==0) {
@@ -1936,6 +2088,7 @@ static void growth_next(Battle *b)
         b->learn_cursor=4; /* Default to KEEP CURRENT MOVES; no silent replacement. */
         b->phase=BATTLE_LEARN;return;
     }
+    if(b->next_enemy_pending) { send_next_enemy(b);return; }
     message(b,"TEAM RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
 }
 void battle_update(Battle *b,const Input *input)
@@ -1943,6 +2096,7 @@ void battle_update(Battle *b,const Input *input)
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
     if(b->phase==BATTLE_CAPTURE) {
+        if(b->npc_battle) { message(b,"AN NPC'S VEYLING CANNOT BE CAPTURED.",AFTER_MENU);return; }
         if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(!input->confirm) return;
         if(!party_has_space(&b->party)) {
@@ -2032,12 +2186,14 @@ void battle_update(Battle *b,const Input *input)
         if(b->result==BATTLE_WIN) {
             b->acting_side=-1;
             if(!b->reward_given) {
+                b->growth=(CreatureGrowth){0};b->growth_stage=0;b->growth_move=0;
                 int old_xp=b->ally.experience;
                 b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
                 creature_gain_xp(&b->ally,b->experience_reward,&b->growth);
                 b->experience_reward=b->ally.experience-old_xp;
                 b->reward_given=1;
             }
+            b->next_enemy_pending=b->npc_battle && b->enemy_active+1<b->enemy_count;
             snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL %d\n%d XP TO NEXT LEVEL",b->experience_reward,
                      creature_name(&b->ally),b->ally.level,creature_xp_remaining(&b->ally));
             if(b->ally.level==100)
@@ -2068,12 +2224,18 @@ void battle_update(Battle *b,const Input *input)
     switch(b->cursor) {
     case 0: b->phase=BATTLE_ATTACKS; break;
     case 1:
-        b->phase=BATTLE_CAPTURE;break;
+        if(b->npc_battle) message(b,"AN NPC'S VEYLING CANNOT BE CAPTURED.",AFTER_MENU);
+        else b->phase=BATTLE_CAPTURE;
+        break;
     case 2:
         sync_active(b);b->switch_cursor=b->active;b->switch_message[0]=0;b->phase=BATTLE_SWITCH;break;
     case 3:
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:
+        if(b->npc_battle) {
+            message(b,"YOU CANNOT RUN FROM AN NPC BATTLE.",AFTER_MENU);
+            break;
+        }
         ++b->escape_attempts;
         complete_player_action(b);
         if(b->escape_attempts>=3 || random_next(b)%100<70) {
@@ -2397,6 +2559,7 @@ int encounter_step(Encounter *e, int area, EncounterResult *result)
 ````text
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <pspgu.h>
 #include "game.h"
 #include "world_draw.h"
@@ -2486,6 +2649,8 @@ static void save_snapshot(const Game *g, SavePayload *saved)
     for (int i=0;i<g->party.stored;++i) save_creature(&saved->party.collection[i],&g->party.collection[i]);
     for (int i=0;i<ITEM_COUNT;++i) saved->item_quantities[i]=g->inventory.quantities[i];
     saved->embermarks=g->inventory.embermarks;
+    saved->npc_defeated=g->npc_battle_progress.defeated;
+    saved->progression_flags=g->npc_battle_progress.progression;
 }
 static int valid_saved_creature(const SaveCreature *saved)
 {
@@ -2536,10 +2701,13 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
+    g->npc_battle_progress.defeated=saved->npc_defeated;
+    g->npc_battle_progress.progression=saved->progression_flags;
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
+    g->npc_battle=(PendingNpcBattle){0};
     return 1;
 }
 static void save_status_update(Game *g)
@@ -2588,9 +2756,25 @@ int game_offer_important_battle(Game *g,const char *opponent,
 {
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
        g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
-       g->shop_open || g->dialogue.active || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     g->pending_battle=(PendingBattle){species,level,seed};
     ready_prompt_open(&g->ready_prompt,opponent);
+    g->transition=0;
+    return 1;
+}
+int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
+{
+    if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
+       g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+       g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+    if(npc_battle_is_defeated(&g->npc_battle_progress,data->id)) {
+        dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
+        return 1;
+    }
+    g->npc_battle=(PendingNpcBattle){data,seed,NPC_BATTLE_FLOW_INTRO};
+    g->pending_battle=(PendingBattle){0};
+    dialogue_open(&g->dialogue,data->name,data->before.first,data->before.second);
     g->transition=0;
     return 1;
 }
@@ -2602,6 +2786,9 @@ static void game_step(Game *g, const Input *input, float seconds)
     if(g->in_battle) {
         battle_update(&g->battle,input);
         if(g->battle.phase==BATTLE_DONE) {
+            const NpcBattleData *npc_data=g->npc_battle.flow==NPC_BATTLE_FLOW_ACTIVE?
+                g->npc_battle.data:0;
+            BattleResult result=g->battle.result;
             g->in_battle=0;
             g->party=g->battle.party; /* Includes captures and every switched creature. */
             g->inventory=g->battle.inventory;
@@ -2609,21 +2796,47 @@ static void game_step(Game *g, const Input *input, float seconds)
                encounter and progression testing stays repeatable. The lodge
                dais gives the player an explicit refill while exploring. */
             party_restore(&g->party);
-            if(g->battle.result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
+            if(result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
             g->encounter.safe_steps=4;
             g->transition=0.22f;
+            if(npc_data) {
+                if(result==BATTLE_WIN) {
+                    if(npc_battle_mark_defeated(&g->npc_battle_progress,npc_data)) {
+                        int reward=npc_data->reward_embermarks;
+                        g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
+                            INT_MAX:g->inventory.embermarks+reward;
+                    }
+                    dialogue_open(&g->dialogue,npc_data->name,
+                                  npc_data->victory.first,npc_data->victory.second);
+                } else if(result==BATTLE_LOSS && npc_data->defeat.first) {
+                    dialogue_open(&g->dialogue,npc_data->name,
+                                  npc_data->defeat.first,npc_data->defeat.second);
+                }
+                g->npc_battle=(PendingNpcBattle){0};
+            }
         }
         return;
     }
     if(g->ready_prompt.active) {
         ReadyPromptResult choice=ready_prompt_update(&g->ready_prompt,input);
         if(choice==READY_ACCEPTED) {
-            PendingBattle request=g->pending_battle;
-            g->pending_battle=(PendingBattle){0};
-            battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
-                                               request.species,request.level,request.seed);
-            g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
-        } else if(choice==READY_DECLINED) g->pending_battle=(PendingBattle){0};
+            if(g->npc_battle.flow==NPC_BATTLE_FLOW_READY && g->npc_battle.data) {
+                const NpcBattleData *data=g->npc_battle.data;
+                if(battle_begin_npc_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                    data->name,data->party,data->party_count,data->ai_profile,g->npc_battle.seed)) {
+                    g->npc_battle.flow=NPC_BATTLE_FLOW_ACTIVE;
+                    g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+                } else g->npc_battle=(PendingNpcBattle){0};
+            } else {
+                PendingBattle request=g->pending_battle;
+                g->pending_battle=(PendingBattle){0};
+                battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                                                   request.species,request.level,request.seed);
+                g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+            }
+        } else if(choice==READY_DECLINED) {
+            g->pending_battle=(PendingBattle){0};g->npc_battle=(PendingNpcBattle){0};
+        }
         return;
     }
     if(g->shop_open) { shop_update(g,input);return; }
@@ -2642,11 +2855,17 @@ static void game_step(Game *g, const Input *input, float seconds)
         return;
     }
     if (g->dialogue.active) {
-        if (input->cancel) { g->dialogue.active = 0;g->tavi_shop_pending=0; }
+        if (input->cancel) {
+            g->dialogue.active=0;g->tavi_shop_pending=0;
+            if(g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) g->npc_battle=(PendingNpcBattle){0};
+        }
         else if (input->confirm) {
             int last_page=g->dialogue.page+1>=g->dialogue.count;
             dialogue_advance(&g->dialogue);
-            if (last_page && g->tavi_shop_pending) {
+            if(last_page && g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) {
+                g->npc_battle.flow=NPC_BATTLE_FLOW_READY;
+                ready_prompt_open(&g->ready_prompt,g->npc_battle.data->name);
+            } else if (last_page && g->tavi_shop_pending) {
                 g->tavi_shop_pending=0;g->shop_open=1;g->shop_cursor=0;
                 g->shop_previous_direction=0;
                 shop_feedback(g,"WELCOME. EMBERMARKS BUY SIMPLE SUPPLIES.");
@@ -3190,6 +3409,45 @@ int map_walkable(const Map *map, int x, int y)
     char tile = map_tile(map, x, y);
     return tile == '.' || tile == '=' || tile == ',' || tile == 'D' ||
            tile == '>' || tile == '<' || tile == 'g' || tile == 'r' || tile == 'c' || tile == '_' || tile == 'H';
+}
+````
+
+## src/npc_battle.c
+
+````text
+#include "npc_battle.h"
+
+static int dialogue_valid(NpcBattleDialogue dialogue,int optional)
+{
+    if(!dialogue.first || !dialogue.first[0]) return optional && !dialogue.second;
+    return !dialogue.second || dialogue.second[0];
+}
+
+int npc_battle_data_valid(const NpcBattleData *data)
+{
+    if(!data || data->id<0 || data->id>=NPC_BATTLE_MAX || !data->name || !data->name[0] ||
+       !dialogue_valid(data->before,0) || !dialogue_valid(data->victory,0) ||
+       !dialogue_valid(data->defeat,1) || data->party_count<1 ||
+       data->party_count>NPC_BATTLE_PARTY_MAX || data->ai_profile<0 ||
+       data->ai_profile>=NPC_AI_PROFILE_COUNT || data->reward_embermarks<0) return 0;
+    for(int i=0;i<data->party_count;++i)
+        if(data->party[i].species<0 || data->party[i].species>=SPECIES_COUNT ||
+           data->party[i].level<1 || data->party[i].level>CREATURE_MAX_LEVEL) return 0;
+    return 1;
+}
+
+int npc_battle_is_defeated(const NpcBattleProgress *progress,int npc_id)
+{
+    return progress && npc_id>=0 && npc_id<NPC_BATTLE_MAX &&
+           (progress->defeated&(1u<<(unsigned int)npc_id))!=0;
+}
+
+int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *data)
+{
+    if(!progress || !npc_battle_data_valid(data) || npc_battle_is_defeated(progress,data->id)) return 0;
+    progress->defeated|=1u<<(unsigned int)data->id;
+    progress->progression|=data->progression_flag;
+    return 1;
 }
 ````
 
@@ -3890,8 +4148,18 @@ typedef struct {
     LegacyParty party;
     int item_quantities[2],embermarks;
 } LegacyPayload;
+/* Frozen Phase 10-13 layout. */
+typedef struct {
+    uint32_t magic,version;
+    int map_id,tile_x,tile_y,facing;
+    uint32_t encounter_random;
+    int encounter_safe_steps;
+    SaveParty party;
+    int item_quantities[ITEM_COUNT],embermarks;
+} Phase2Payload;
 typedef char legacy_size_must_remain_1960[(sizeof(LegacyPayload)==1960)?1:-1];
-typedef char current_size_must_remain_2504[(sizeof(SavePayload)==2504)?1:-1];
+typedef char phase2_size_must_remain_2504[(sizeof(Phase2Payload)==2504)?1:-1];
+typedef char current_size_must_remain_2512[(sizeof(SavePayload)==2512)?1:-1];
 
 static int migrate_creature(SaveCreature *out,const SaveCreature *old)
 {
@@ -3937,6 +4205,19 @@ int save_data_decode(const void *bytes,size_t size,SavePayload *payload)
         if(size!=sizeof(*payload)) return 0;
         memcpy(payload,bytes,size);
         return 1; /* game.c validates current gameplay values before applying. */
+    }
+    if(header[1]==2) {
+        Phase2Payload old;
+        SavePayload next={0};
+        if(size!=sizeof(old)) return 0;
+        memcpy(&old,bytes,sizeof(old));
+        next.magic=old.magic;next.version=SAVE_DATA_VERSION;
+        next.map_id=old.map_id;next.tile_x=old.tile_x;next.tile_y=old.tile_y;next.facing=old.facing;
+        next.encounter_random=old.encounter_random;next.encounter_safe_steps=old.encounter_safe_steps;
+        next.party=old.party;next.embermarks=old.embermarks;
+        for(int i=0;i<ITEM_COUNT;++i) next.item_quantities[i]=old.item_quantities[i];
+        *payload=next;
+        return 1;
     }
     if(header[1]!=1 || size!=sizeof(LegacyPayload)) return 0;
     LegacyPayload old;
@@ -5263,6 +5544,119 @@ int main(void)
 }
 ````
 
+## tests/npc_battle_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "battle.h"
+#include "npc_battle.h"
+
+static const NpcBattleData challenger={
+    .id=7,
+    .name="TEST CHALLENGER",
+    .before={"LET US TEST OUR TEAMS.","TWO VEYLINGS ARE READY."},
+    .victory={"YOU EARNED THIS VICTORY.",0},
+    .defeat={"REST, THEN TRY AGAIN.",0},
+    .party={{SPECIES_MOSSPRIG,3},{SPECIES_ZAPPIP,4}},
+    .party_count=2,
+    .ai_profile=NPC_AI_STANDARD,
+    .reward_embermarks=125,
+    .progression_flag=1u<<9
+};
+
+static void confirm(Battle *battle)
+{
+    battle_update(battle,&(Input){.confirm=1});
+}
+
+static void attack(Battle *battle)
+{
+    assert(battle->phase==BATTLE_MENU);
+    battle->cursor=0;confirm(battle);
+    assert(battle->phase==BATTLE_ATTACKS);
+    battle->move_cursor=0;confirm(battle);
+    assert(battle->phase==BATTLE_MESSAGE && battle->result==BATTLE_WIN);
+}
+
+static void data_and_progress(void)
+{
+    assert(npc_battle_data_valid(&challenger));
+    NpcBattleData bad=challenger;
+    bad.id=NPC_BATTLE_MAX;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.party_count=0;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.party[1].level=0;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.ai_profile=NPC_AI_PROFILE_COUNT;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.reward_embermarks=-1;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.before.first=0;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.defeat.first=0;bad.defeat.second=0;assert(npc_battle_data_valid(&bad));
+
+    NpcBattleProgress progress={0};
+    assert(!npc_battle_is_defeated(&progress,challenger.id));
+    assert(npc_battle_mark_defeated(&progress,&challenger));
+    assert(npc_battle_is_defeated(&progress,challenger.id));
+    assert(progress.progression==challenger.progression_flag);
+    assert(!npc_battle_mark_defeated(&progress,&challenger));
+}
+
+static void party_battle(void)
+{
+    Party party={0};party.count=1;
+    creature_create(&party.members[0],SPECIES_CINDLET,100);
+    party.members[0].speed=999;
+    Inventory inventory;inventory_init(&inventory);
+    Battle battle;
+    assert(!battle_begin_npc_party_with_inventory(&battle,&party,&inventory,
+           challenger.name,challenger.party,0,challenger.ai_profile,42));
+    assert(battle_begin_npc_party_with_inventory(&battle,&party,&inventory,
+           challenger.name,challenger.party,challenger.party_count,challenger.ai_profile,42));
+    assert(battle.npc_battle && battle.enemy_count==2 && battle.enemy_active==0);
+    assert(battle.ai_profile==NPC_AI_STANDARD && !strcmp(battle.opponent_name,challenger.name));
+    assert(battle.enemy.species==SPECIES_MOSSPRIG && battle.capture_charges==0);
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MENU);
+
+    unsigned int turn=battle.turn_number;
+    uint32_t random=battle.random;
+    battle.cursor=1;confirm(&battle);
+    assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT BE CAPTURED"));
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+    battle.cursor=4;confirm(&battle);
+    assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT RUN"));
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+
+    battle.enemy.hp=1;
+    attack(&battle);
+    confirm(&battle);
+    assert(battle.next_enemy_pending && battle.reward_given);
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MESSAGE && battle.after==AFTER_BEGIN_TURN);
+    assert(battle.result==BATTLE_ONGOING && battle.enemy_active==1);
+    assert(battle.enemy.species==SPECIES_ZAPPIP && strstr(battle.message,"SENDS OUT"));
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MENU);
+    battle.enemy.hp=1;
+    attack(&battle);
+    confirm(&battle);
+    assert(!battle.next_enemy_pending && battle.reward_given);
+    confirm(&battle);
+    assert(battle.phase==BATTLE_MESSAGE && battle.after==AFTER_DONE);
+    confirm(&battle);
+    assert(battle.phase==BATTLE_DONE && battle.result==BATTLE_WIN);
+}
+
+int main(void)
+{
+    data_and_progress();
+    party_battle();
+    puts("PASS: reusable NPC battle data, parties, AI profiles, locked capture/run, progression and defeat state");
+    return 0;
+}
+````
+
 ## tests/overworld_test.c
 
 ````text
@@ -5645,7 +6039,7 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
+for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
@@ -5680,7 +6074,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -5701,6 +6095,10 @@ previews/party-capture-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_party_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-party-test
 previews/battle-party-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/npc_battle_test.c src/npc_battle.c src/battle.c src/attacks.c src/creature.c \
+    src/party.c src/capture.c src/inventory.c -o previews/npc-battle-test
+previews/npc-battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/inventory_test.c src/inventory.c src/creature.c src/attacks.c -o previews/inventory-test
 previews/inventory-test
@@ -5789,7 +6187,8 @@ static void migration_checks(void)
     SavePayload loaded;
     assert(save_data_decode(bytes,sizeof(bytes),&loaded));
     assert(!memcmp(bytes,original,sizeof(bytes)));
-    assert(loaded.version==2 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.version==3 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.npc_defeated==0 && loaded.progression_flags==0);
     assert(loaded.map_id==4 && loaded.tile_x==2 && loaded.tile_y==10 && loaded.embermarks==321);
     assert(loaded.encounter_random==123 && loaded.encounter_safe_steps==3 && loaded.item_quantities[0]==2);
     for(int slot=0;slot<28;++slot) {
@@ -5804,7 +6203,7 @@ static void migration_checks(void)
     memcpy(active->dataBuf,bytes,sizeof(bytes));active->dataSize=sizeof(bytes);
     complete(0,1);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
-    assert(loaded.version==2 && loaded.party.stored==24);
+    assert(loaded.version==3 && loaded.party.stored==24);
     for(int level=20;level<=100;level+=80) {
         memcpy(bytes,original,sizeof(bytes));
         /* Old Emberlyn at a high level becomes the eligible final form. */
@@ -5828,13 +6227,29 @@ static void migration_checks(void)
     assert(save_data_decode(&unchanged,sizeof(unchanged),&loaded));
     assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
 }
+static void phase2_migration_checks(void)
+{
+    SavePayload source={.magic=SAVE_DATA_MAGIC,.version=2,.map_id=4,.tile_x=8,
+                        .tile_y=9,.encounter_random=77,.embermarks=654};
+    unsigned char bytes[2504];
+    memcpy(bytes,&source,sizeof(bytes));
+    SavePayload loaded;
+    assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(loaded.version==SAVE_DATA_VERSION && loaded.map_id==4 && loaded.tile_x==8 &&
+           loaded.tile_y==9 && loaded.encounter_random==77 && loaded.embermarks==654);
+    assert(loaded.npc_defeated==0 && loaded.progression_flags==0);
+    SavePayload unchanged=loaded;
+    assert(!save_data_decode(bytes,sizeof(bytes)-1,&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+}
 
 int main(void)
 {
-    assert(sizeof(SavePayload)==2504 && SAVE_DATA_VERSION==2);
+    assert(sizeof(SavePayload)==2512 && SAVE_DATA_VERSION==3);
     assert(SPECIES_CINDLET==0 && SPECIES_LUNARAE==29);
     SavePayload saved={.magic=SAVE_DATA_MAGIC, .version=SAVE_DATA_VERSION,
-                       .map_id=1, .tile_x=7, .embermarks=123};
+                       .map_id=1, .tile_x=7, .embermarks=123,
+                       .npc_defeated=(1u<<3)|(1u<<17),.progression_flags=1u<<9};
     SavePayload loaded;
     assert(save_data_status()==SAVE_STATUS_IDLE);
     assert(save_data_begin_save(NULL)<0);
@@ -5900,9 +6315,10 @@ int main(void)
     tick(PSP_UTILITY_DIALOG_NONE);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED);
     migration_checks();
+    phase2_migration_checks();
     init_result=-1;
     assert(save_data_begin_load()<0 && save_data_status()==SAVE_STATUS_FAILED);
-    puts("PASS: savedata lifecycle, v2 roundtrip, full v1 migration, old ID remapping, preserved progress, corrupt save rejection");
+    puts("PASS: savedata lifecycle, v3 roundtrip, v1/v2 migration, old ID remapping, NPC progress, corrupt save rejection");
     return 0;
 }
 ````
@@ -5989,6 +6405,21 @@ static void fits(const char *text)
     int lines=text_wrap(0,0,444,0,text,0xffffffff,1);
     assert(lines==0 || (lines-1)*9+7<=53);
 }
+static const NpcBattleData framework_challenger={
+    .id=3,.name="ARCHIVIST",
+    .before={"SHOW ME HOW YOUR TEAM MOVES.","WE WILL USE TWO VEYLINGS."},
+    .victory={"YOUR TEAM WORKED AS ONE.","TAKE THESE EMBERMARKS."},
+    .defeat={"REST YOUR TEAM AND RETURN.",0},
+    .party={{SPECIES_MOSSPRIG,4},{SPECIES_ZAPPIP,5}},.party_count=2,
+    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,.progression_flag=1u<<6
+};
+static const NpcBattleData framework_defeat={
+    .id=4,.name="WARDEN",
+    .before={"THIS IS A DEFEAT-FLOW TEST.",0},
+    .victory={"YOU PREVAILED.",0},.defeat={"RETURN WHEN YOU ARE READY.",0},
+    .party={{SPECIES_GRUBBL,5}},.party_count=1,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,.progression_flag=1u<<7
+};
 int main(void)
 {
     int portals=0;
@@ -6110,6 +6541,52 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(!g.ready_prompt.active && g.in_battle);
     assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6);
+
+    /* Phase 14 framework: intro -> ready prompt -> NPC party -> persistent outcome. */
+    place(&g,MAP_CLEARING,10,13);
+    assert(npc_battle_data_valid(&framework_challenger));
+    fits(framework_challenger.before.first);fits(framework_challenger.before.second);
+    fits(framework_challenger.victory.first);fits(framework_challenger.victory.second);
+    int marks_before=g.inventory.embermarks;
+    assert(game_offer_npc_battle(&g,&framework_challenger,77));
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.cancel=1},1);
+    assert(!g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE);
+    assert(game_offer_npc_battle(&g,&framework_challenger,77));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.dialogue.page==1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.dialogue.active && g.ready_prompt.active &&
+           g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.npc_battle.flow==NPC_BATTLE_FLOW_ACTIVE);
+    assert(g.battle.npc_battle && g.battle.enemy_count==2 &&
+           g.battle.ai_profile==NPC_AI_STANDARD);
+    g.transition=0;
+    render(&g,"previews/npc-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,framework_challenger.id));
+    assert((g.npc_battle_progress.progression&framework_challenger.progression_flag)!=0);
+    assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_challenger.name));
+    update(&g,(Input){.cancel=1},1);
+    assert(game_offer_npc_battle(&g,&framework_challenger,99));
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
+    assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+
+    assert(game_offer_npc_battle(&g,&framework_defeat,88));
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.ai_profile==NPC_AI_BOSS);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_LOSS;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5 && g.player.tile_y==11);
+    assert(!npc_battle_is_defeated(&g.npc_battle_progress,framework_defeat.id));
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"RETURN WHEN"));
+    update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
     update(&g,(Input){0},1000);
@@ -6388,25 +6865,30 @@ int main(void)
     }
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
+    g.npc_battle_progress.defeated=(1u<<3)|(1u<<11);
+    g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
     Party snapshot=g.party;
+    NpcBattleProgress npc_snapshot=g.npc_battle_progress;
     update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
     assert(save_data_status()==SAVE_STATUS_BUSY);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
-    party_init(&g.party);g.inventory.embermarks=0;
+    party_init(&g.party);g.inventory.embermarks=0;g.npc_battle_progress=(NpcBattleProgress){0};
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION LOADED"));
     assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
+    assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
+           g.npc_battle_progress.progression==npc_snapshot.progression);
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, reusable ready prompt, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: world systems, ready prompt, NPC battle flow/persistence, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }
 ````

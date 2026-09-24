@@ -6,6 +6,7 @@
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
+#include "npc_battle.h"
 #define BATTLE_MOVES 4
 typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
@@ -19,9 +20,12 @@ typedef enum {
 } BattleTurnState;
 typedef struct {
     Battler ally, enemy;
+    Battler enemy_party[NPC_BATTLE_PARTY_MAX];
     Party party;
     Inventory inventory;
     int active, switch_cursor, forced_switch, capture_charges;
+    int enemy_count, enemy_active, npc_battle, ai_profile, next_enemy_pending;
+    char opponent_name[40];
     BattlePhase phase;
     BattleResult result;
     BattleAfter after;
@@ -43,6 +47,9 @@ void battler_restore(Battler *b);
 void battle_begin(Battle *b,const Battler *ally,SpeciesId species,int level,uint32_t seed);
 void battle_begin_party(Battle *b,const Party *party,SpeciesId species,int level,uint32_t seed);
 void battle_begin_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,SpeciesId species,int level,uint32_t seed);
+int battle_begin_npc_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,
+                                          const char *opponent,const NpcBattleMember *members,
+                                          int count,NpcAiProfile ai_profile,uint32_t seed);
 void battle_update(Battle *b,const Input *input);
 int battle_damage(const Battler *attacker,const Battler *defender,const Attack *attack,int variation);
 void battle_draw(const Battle *b);

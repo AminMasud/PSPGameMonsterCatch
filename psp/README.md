@@ -1,24 +1,25 @@
-# Emberwake — Phase 13 Pre-Battle Ready Prompt
+# Emberwake — Phase 14 NPC Battle Framework
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, a full-screen battle party selector with automatic return after a swap,
-and a reusable confirmation screen for important NPC and boss battles. The PNG
-number minus one is the internal species ID. All 30 forms have stats,
-descriptions, attacks, capture support, and their own supplied artwork.
+action, a full-screen battle party selector, the reusable ready prompt, and a
+data-driven framework for NPC challengers with parties, dialogue, rewards, and
+persistent victory state. The PNG number minus one is the internal species ID.
+All 30 forms have stats, descriptions, attacks, capture support, and their own
+supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE13.PBP**, titled **Emberwake - Phase 13**. Copy it to:
+Use **EBOOT-PHASE14.PBP**, titled **Emberwake - Phase 14**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP, EBOOT-PETS.PBP, and numbered phase builds are retained
-locally for comparison.
+EBOOT-PHASE12.PBP, EBOOT-PHASE13.PBP, EBOOT-PETS.PBP, and numbered phase builds
+are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -85,8 +86,28 @@ YES starts the exact pending encounter; NO or Circle closes the prompt and leave
 the player at the same overworld position. The prompt pauses movement and NPC
 patrols while it is open. Ordinary random wild encounters continue directly to
 battle without showing this confirmation. Trainer parties and NPC challenge
-data begin in the next roadmap phase, so the current exploration NPCs retain
-their existing dialogue, shop, and healing behavior.
+data are now supported by the reusable NPC battle framework. The current
+exploration NPCs retain their existing dialogue, shop, and healing behavior;
+the East Forest challenger is deliberately reserved for Phase 16.
+
+Each NPC battle definition has a stable ID, name, up to four Veylings with
+species and levels, one or two pages of dialogue before battle and after
+victory, optional dialogue after defeat, an AI profile, an Embermark reward,
+and an optional progression bit. The flow is intro dialogue → ready prompt →
+party battle → outcome dialogue. Circle can leave the intro and NO can leave the
+ready prompt without beginning a battle.
+
+NPC parties send out their next healthy configured Veyling after the current
+one is defeated. The active player Veyling earns XP for each opponent. Capture
+and run commands are rejected without spending a turn. A victory is recorded
+only after the whole NPC party is defeated; the reward and progression flag are
+granted once. Future interactions use the post-victory dialogue instead of
+starting another battle. A loss does not mark the NPC defeated and can show its
+optional defeat dialogue after the normal return to Hearth Clearing.
+
+AI profile metadata is carried into each NPC battle for Phase 15's expandable
+decision policies. Until that phase, opponents retain the existing valid random
+attack selection used by wild encounters.
 
 At the start of each round, the enemy chooses one action and turn order is locked
 from the creatures' speeds. A faster enemy attacks immediately, before the game
@@ -181,13 +202,15 @@ roster's HP and attack uses.
 
 ## Existing saves
 
-New saves use **version 2**, a 2504-byte payload, retaining the existing PSP slot
+New saves use **version 3**, a 2512-byte payload, retaining the existing PSP slot
 EMBRWAKE0000 / DATA.BIN. It records map/tile/facing, encounter RNG and safe steps,
 party, lead, storage, levels, XP, nicknames, HP, moves/uses, inventory, and money.
-NPC patrol positions, open menus, dialogue, and battles are not saved.
+It also records up to 32 defeated NPC IDs and progression flags. NPC patrol
+positions, open menus, dialogue, and battles are not saved.
 
-Version-1 saves from Phases 8/9 load through an explicit migration of the frozen
-1960-byte layout. Old creatures are converted as follows:
+Version-2 saves from Phases 10–13 load through a frozen 2504-byte layout with
+empty NPC progress. Version-1 saves from Phases 8/9 also migrate from their
+frozen 1960-byte layout. Old version-1 creatures are converted as follows:
 
 | Old creature | New creature |
 | --- | --- |
@@ -209,7 +232,7 @@ positions, lead, and location. HP preserves damage taken against the replacement
 new maximum; fainted creatures remain fainted. Converted partners already at an
 evolution threshold advance to their eligible form, including level-100 saves.
 Loading does not rewrite the file.
-Saving afterward writes version 2, which earlier game builds cannot load. Unknown
+Saving afterward writes version 3, which earlier game builds cannot load. Unknown
 versions, truncated files, and invalid old species IDs are rejected.
 
 The savedata service waits for shutdown completion and checks the final utility
@@ -266,12 +289,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE13.PBP EXTRA_TARGETS=EBOOT-PHASE13.PBP
+    make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -283,7 +306,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All eleven C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -291,27 +314,32 @@ checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
 voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
 enemy response, enemy-first swaps, and fast/slow forced replacements. Phase 13
 checks YES, selected NO, Circle cancellation, frozen overworld actors, request
-validation, and direct wild-battle entry. The full suite also covers movement,
-all portals, collisions, capture, inventory, menus, all 30 forms at levels 1–100,
-all ten two-step evolution chains, wild availability of every form, 32-slot
-storage, v1 migration, v2 game save/load with 36 creatures, savedata lifecycle,
-text bounds, drawing budget, and PCM audio.
+validation, and direct wild-battle entry. Phase 14 checks battle-data validation,
+multi-Veyling opponents, AI profile transport, locked capture/run commands,
+intro/ready/outcome flow, one-time rewards, optional defeat dialogue, defeated
+state, progression flags, and version-3 persistence with v1/v2 migration. The
+full suite also covers movement, all portals, collisions, capture, inventory,
+menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
+availability of every form, 32-slot storage, savedata lifecycle, text bounds,
+drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, spotlight-idle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
 
 PSP test route:
-1. Trigger an important battle and verify ARE YOU READY? opens over the current
-   map with YES selected.
-2. Hold Down and verify the cursor moves to NO once; press X and confirm the
-   player returns to the same map tile without entering battle.
-3. Open the prompt again and press Circle; confirm it behaves like NO.
-4. Open it once more, leave YES selected, and press X; confirm battle begins.
-5. Walk in encounter terrain and verify an ordinary wild battle starts without
-   showing the ready prompt.
+1. Load an existing version-2 save and verify the roster, items, money, and
+   location are preserved; saving again upgrades the slot to version 3.
+2. Talk to the current exploration NPCs and verify their existing behavior is
+   unchanged because no challenger is placed in Phase 14.
+3. Walk in encounter terrain and verify ordinary wild battle, capture, and run
+   behavior remains unchanged.
+
+The new NPC flow and multi-Veyling battle are exercised by the host integration
+suite and `npc-battle.png`. Phase 16 will provide the first in-world challenger
+for a complete device playthrough.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.

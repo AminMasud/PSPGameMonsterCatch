@@ -6,9 +6,10 @@
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
+#include "npc_battle.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
-#define SAVE_DATA_VERSION 2u
+#define SAVE_DATA_VERSION 3u
 
 typedef struct {
     int species;
@@ -40,6 +41,8 @@ typedef struct {
     SaveParty party;
     int item_quantities[ITEM_COUNT];
     int embermarks;
+    uint32_t npc_defeated;
+    uint32_t progression_flags;
 } SavePayload;
 
 typedef enum {
@@ -54,7 +57,7 @@ int save_data_begin_load(void);
 void save_data_update(void);
 SaveStatus save_data_status(void);
 int save_data_take_loaded(SavePayload *payload);
-/* Decode v2 or migrate the fixed v1 layout without changing source bytes. */
+/* Decode v3 or migrate the fixed v1/v2 layouts without changing source bytes. */
 int save_data_decode(const void *bytes,size_t size,SavePayload *payload);
 
 #endif

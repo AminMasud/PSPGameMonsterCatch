@@ -73,7 +73,8 @@ static void migration_checks(void)
     SavePayload loaded;
     assert(save_data_decode(bytes,sizeof(bytes),&loaded));
     assert(!memcmp(bytes,original,sizeof(bytes)));
-    assert(loaded.version==2 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.version==3 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.npc_defeated==0 && loaded.progression_flags==0);
     assert(loaded.map_id==4 && loaded.tile_x==2 && loaded.tile_y==10 && loaded.embermarks==321);
     assert(loaded.encounter_random==123 && loaded.encounter_safe_steps==3 && loaded.item_quantities[0]==2);
     for(int slot=0;slot<28;++slot) {
@@ -88,7 +89,7 @@ static void migration_checks(void)
     memcpy(active->dataBuf,bytes,sizeof(bytes));active->dataSize=sizeof(bytes);
     complete(0,1);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
-    assert(loaded.version==2 && loaded.party.stored==24);
+    assert(loaded.version==3 && loaded.party.stored==24);
     for(int level=20;level<=100;level+=80) {
         memcpy(bytes,original,sizeof(bytes));
         /* Old Emberlyn at a high level becomes the eligible final form. */
@@ -112,13 +113,29 @@ static void migration_checks(void)
     assert(save_data_decode(&unchanged,sizeof(unchanged),&loaded));
     assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
 }
+static void phase2_migration_checks(void)
+{
+    SavePayload source={.magic=SAVE_DATA_MAGIC,.version=2,.map_id=4,.tile_x=8,
+                        .tile_y=9,.encounter_random=77,.embermarks=654};
+    unsigned char bytes[2504];
+    memcpy(bytes,&source,sizeof(bytes));
+    SavePayload loaded;
+    assert(save_data_decode(bytes,sizeof(bytes),&loaded));
+    assert(loaded.version==SAVE_DATA_VERSION && loaded.map_id==4 && loaded.tile_x==8 &&
+           loaded.tile_y==9 && loaded.encounter_random==77 && loaded.embermarks==654);
+    assert(loaded.npc_defeated==0 && loaded.progression_flags==0);
+    SavePayload unchanged=loaded;
+    assert(!save_data_decode(bytes,sizeof(bytes)-1,&loaded));
+    assert(!memcmp(&loaded,&unchanged,sizeof(loaded)));
+}
 
 int main(void)
 {
-    assert(sizeof(SavePayload)==2504 && SAVE_DATA_VERSION==2);
+    assert(sizeof(SavePayload)==2512 && SAVE_DATA_VERSION==3);
     assert(SPECIES_CINDLET==0 && SPECIES_LUNARAE==29);
     SavePayload saved={.magic=SAVE_DATA_MAGIC, .version=SAVE_DATA_VERSION,
-                       .map_id=1, .tile_x=7, .embermarks=123};
+                       .map_id=1, .tile_x=7, .embermarks=123,
+                       .npc_defeated=(1u<<3)|(1u<<17),.progression_flags=1u<<9};
     SavePayload loaded;
     assert(save_data_status()==SAVE_STATUS_IDLE);
     assert(save_data_begin_save(NULL)<0);
@@ -184,8 +201,9 @@ int main(void)
     tick(PSP_UTILITY_DIALOG_NONE);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED);
     migration_checks();
+    phase2_migration_checks();
     init_result=-1;
     assert(save_data_begin_load()<0 && save_data_status()==SAVE_STATUS_FAILED);
-    puts("PASS: savedata lifecycle, v2 roundtrip, full v1 migration, old ID remapping, preserved progress, corrupt save rejection");
+    puts("PASS: savedata lifecycle, v3 roundtrip, v1/v2 migration, old ID remapping, NPC progress, corrupt save rejection");
     return 0;
 }

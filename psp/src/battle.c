@@ -28,10 +28,36 @@ void battle_begin_party_with_inventory(Battle *b,const Party *party,const Invent
     b->ally=party->members[b->active]; b->random=seed?seed:0x3291u;
     b->capture_charges=3;
     creature_create(&b->enemy,species,level);
+    b->enemy_party[0]=b->enemy;b->enemy_count=1;
     b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
     b->acting_side=-1;
     b->phase=BATTLE_MESSAGE; b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
     snprintf(b->message,sizeof(b->message),"A WILD %s APPEARS.\n%s IS READY.",creature_name(&b->enemy),creature_name(&b->ally));
+}
+int battle_begin_npc_party_with_inventory(Battle *b,const Party *party,const Inventory *inventory,
+                                          const char *opponent,const NpcBattleMember *members,
+                                          int count,NpcAiProfile ai_profile,uint32_t seed)
+{
+    if(!b || !party || party->count<1 || party->count>PARTY_MAX ||
+       !opponent || !opponent[0] || !members || count<1 || count>NPC_BATTLE_PARTY_MAX ||
+       ai_profile<0 || ai_profile>=NPC_AI_PROFILE_COUNT) return 0;
+    for(int i=0;i<count;++i)
+        if(members[i].species<0 || members[i].species>=SPECIES_COUNT ||
+           members[i].level<1 || members[i].level>CREATURE_MAX_LEVEL) return 0;
+    *b=(Battle){0};
+    b->party=*party;b->active=party->lead;
+    if(inventory) b->inventory=*inventory;else inventory_init(&b->inventory);
+    b->ally=party->members[b->active];b->random=seed?seed:0x3291u;
+    b->npc_battle=1;b->ai_profile=ai_profile;b->enemy_count=count;
+    snprintf(b->opponent_name,sizeof(b->opponent_name),"%s",opponent);
+    for(int i=0;i<count;++i) creature_create(&b->enemy_party[i],members[i].species,members[i].level);
+    b->enemy=b->enemy_party[0];
+    b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
+    b->acting_side=-1;
+    b->phase=BATTLE_MESSAGE;b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
+    snprintf(b->message,sizeof(b->message),"%s CHALLENGES YOU.\n%s SENDS OUT %s.",
+             b->opponent_name,b->opponent_name,creature_name(&b->enemy));
+    return 1;
 }
 int battle_damage(const Battler *a,const Battler *d,const Attack *move,int variation)
 {
@@ -73,6 +99,7 @@ static void check_action_result(Battle *b)
 {
     b->turn_state=TURN_CHECK_FAINTED;
     sync_active(b);
+    if(b->npc_battle) b->enemy_party[b->enemy_active]=b->enemy;
     int enemy_fainted=b->enemy.hp<=0,ally_fainted=b->ally.hp<=0;
     b->forced_switch=ally_fainted && !enemy_fainted && reserve_available(b);
     b->turn_state=TURN_CHECK_RESULT;
@@ -170,6 +197,19 @@ static int navigation(Battle *b,const Input *input)
     b->previous_direction=direction;
     return edge?direction:0;
 }
+static void send_next_enemy(Battle *b)
+{
+    sync_active(b);
+    ++b->enemy_active;
+    b->enemy=b->enemy_party[b->enemy_active];
+    b->enemy_hp_shown=(float)b->enemy.hp;b->ally_hp_shown=(float)b->ally.hp;
+    b->result=BATTLE_ONGOING;b->reward_given=0;b->experience_reward=0;
+    b->next_enemy_pending=0;b->acting_side=-1;
+    snprintf(b->message,sizeof(b->message),"%s SENDS OUT %s.\n%d VEYLING%s REMAIN.",
+             b->opponent_name,creature_name(&b->enemy),b->enemy_count-b->enemy_active,
+             b->enemy_count-b->enemy_active==1?"":"S");
+    b->phase=BATTLE_MESSAGE;b->after=AFTER_BEGIN_TURN;b->turn_state=TURN_BEGIN;
+}
 static void growth_next(Battle *b)
 {
     if(b->growth_stage==0) {
@@ -204,6 +244,7 @@ static void growth_next(Battle *b)
         b->learn_cursor=4; /* Default to KEEP CURRENT MOVES; no silent replacement. */
         b->phase=BATTLE_LEARN;return;
     }
+    if(b->next_enemy_pending) { send_next_enemy(b);return; }
     message(b,"TEAM RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
 }
 void battle_update(Battle *b,const Input *input)
@@ -211,6 +252,7 @@ void battle_update(Battle *b,const Input *input)
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
     if(b->phase==BATTLE_CAPTURE) {
+        if(b->npc_battle) { message(b,"AN NPC'S VEYLING CANNOT BE CAPTURED.",AFTER_MENU);return; }
         if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
         if(!input->confirm) return;
         if(!party_has_space(&b->party)) {
@@ -300,12 +342,14 @@ void battle_update(Battle *b,const Input *input)
         if(b->result==BATTLE_WIN) {
             b->acting_side=-1;
             if(!b->reward_given) {
+                b->growth=(CreatureGrowth){0};b->growth_stage=0;b->growth_move=0;
                 int old_xp=b->ally.experience;
                 b->experience_reward=b->ally.level>=100?0:species_get(b->enemy.species)->experience_yield*b->enemy.level;
                 creature_gain_xp(&b->ally,b->experience_reward,&b->growth);
                 b->experience_reward=b->ally.experience-old_xp;
                 b->reward_given=1;
             }
+            b->next_enemy_pending=b->npc_battle && b->enemy_active+1<b->enemy_count;
             snprintf(b->message,sizeof(b->message),"VICTORY. %d XP EARNED.\n%s - LEVEL %d\n%d XP TO NEXT LEVEL",b->experience_reward,
                      creature_name(&b->ally),b->ally.level,creature_xp_remaining(&b->ally));
             if(b->ally.level==100)
@@ -336,12 +380,18 @@ void battle_update(Battle *b,const Input *input)
     switch(b->cursor) {
     case 0: b->phase=BATTLE_ATTACKS; break;
     case 1:
-        b->phase=BATTLE_CAPTURE;break;
+        if(b->npc_battle) message(b,"AN NPC'S VEYLING CANNOT BE CAPTURED.",AFTER_MENU);
+        else b->phase=BATTLE_CAPTURE;
+        break;
     case 2:
         sync_active(b);b->switch_cursor=b->active;b->switch_message[0]=0;b->phase=BATTLE_SWITCH;break;
     case 3:
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:
+        if(b->npc_battle) {
+            message(b,"YOU CANNOT RUN FROM AN NPC BATTLE.",AFTER_MENU);
+            break;
+        }
         ++b->escape_attempts;
         complete_player_action(b);
         if(b->escape_attempts>=3 || random_next(b)%100<70) {

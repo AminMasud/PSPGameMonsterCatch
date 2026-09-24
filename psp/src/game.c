@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <pspgu.h>
 #include "game.h"
 #include "world_draw.h"
@@ -89,6 +90,8 @@ static void save_snapshot(const Game *g, SavePayload *saved)
     for (int i=0;i<g->party.stored;++i) save_creature(&saved->party.collection[i],&g->party.collection[i]);
     for (int i=0;i<ITEM_COUNT;++i) saved->item_quantities[i]=g->inventory.quantities[i];
     saved->embermarks=g->inventory.embermarks;
+    saved->npc_defeated=g->npc_battle_progress.defeated;
+    saved->progression_flags=g->npc_battle_progress.progression;
 }
 static int valid_saved_creature(const SaveCreature *saved)
 {
@@ -139,10 +142,13 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
+    g->npc_battle_progress.defeated=saved->npc_defeated;
+    g->npc_battle_progress.progression=saved->progression_flags;
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
+    g->npc_battle=(PendingNpcBattle){0};
     return 1;
 }
 static void save_status_update(Game *g)
@@ -191,9 +197,25 @@ int game_offer_important_battle(Game *g,const char *opponent,
 {
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
        g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
-       g->shop_open || g->dialogue.active || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     g->pending_battle=(PendingBattle){species,level,seed};
     ready_prompt_open(&g->ready_prompt,opponent);
+    g->transition=0;
+    return 1;
+}
+int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
+{
+    if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
+       g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+       g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+    if(npc_battle_is_defeated(&g->npc_battle_progress,data->id)) {
+        dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
+        return 1;
+    }
+    g->npc_battle=(PendingNpcBattle){data,seed,NPC_BATTLE_FLOW_INTRO};
+    g->pending_battle=(PendingBattle){0};
+    dialogue_open(&g->dialogue,data->name,data->before.first,data->before.second);
     g->transition=0;
     return 1;
 }
@@ -205,6 +227,9 @@ static void game_step(Game *g, const Input *input, float seconds)
     if(g->in_battle) {
         battle_update(&g->battle,input);
         if(g->battle.phase==BATTLE_DONE) {
+            const NpcBattleData *npc_data=g->npc_battle.flow==NPC_BATTLE_FLOW_ACTIVE?
+                g->npc_battle.data:0;
+            BattleResult result=g->battle.result;
             g->in_battle=0;
             g->party=g->battle.party; /* Includes captures and every switched creature. */
             g->inventory=g->battle.inventory;
@@ -212,21 +237,47 @@ static void game_step(Game *g, const Input *input, float seconds)
                encounter and progression testing stays repeatable. The lodge
                dais gives the player an explicit refill while exploring. */
             party_restore(&g->party);
-            if(g->battle.result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
+            if(result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
             g->encounter.safe_steps=4;
             g->transition=0.22f;
+            if(npc_data) {
+                if(result==BATTLE_WIN) {
+                    if(npc_battle_mark_defeated(&g->npc_battle_progress,npc_data)) {
+                        int reward=npc_data->reward_embermarks;
+                        g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
+                            INT_MAX:g->inventory.embermarks+reward;
+                    }
+                    dialogue_open(&g->dialogue,npc_data->name,
+                                  npc_data->victory.first,npc_data->victory.second);
+                } else if(result==BATTLE_LOSS && npc_data->defeat.first) {
+                    dialogue_open(&g->dialogue,npc_data->name,
+                                  npc_data->defeat.first,npc_data->defeat.second);
+                }
+                g->npc_battle=(PendingNpcBattle){0};
+            }
         }
         return;
     }
     if(g->ready_prompt.active) {
         ReadyPromptResult choice=ready_prompt_update(&g->ready_prompt,input);
         if(choice==READY_ACCEPTED) {
-            PendingBattle request=g->pending_battle;
-            g->pending_battle=(PendingBattle){0};
-            battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
-                                               request.species,request.level,request.seed);
-            g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
-        } else if(choice==READY_DECLINED) g->pending_battle=(PendingBattle){0};
+            if(g->npc_battle.flow==NPC_BATTLE_FLOW_READY && g->npc_battle.data) {
+                const NpcBattleData *data=g->npc_battle.data;
+                if(battle_begin_npc_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                    data->name,data->party,data->party_count,data->ai_profile,g->npc_battle.seed)) {
+                    g->npc_battle.flow=NPC_BATTLE_FLOW_ACTIVE;
+                    g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+                } else g->npc_battle=(PendingNpcBattle){0};
+            } else {
+                PendingBattle request=g->pending_battle;
+                g->pending_battle=(PendingBattle){0};
+                battle_begin_party_with_inventory(&g->battle,&g->party,&g->inventory,
+                                                   request.species,request.level,request.seed);
+                g->in_battle=1;g->transition=0.3f;audio_play(SOUND_BOND);
+            }
+        } else if(choice==READY_DECLINED) {
+            g->pending_battle=(PendingBattle){0};g->npc_battle=(PendingNpcBattle){0};
+        }
         return;
     }
     if(g->shop_open) { shop_update(g,input);return; }
@@ -245,11 +296,17 @@ static void game_step(Game *g, const Input *input, float seconds)
         return;
     }
     if (g->dialogue.active) {
-        if (input->cancel) { g->dialogue.active = 0;g->tavi_shop_pending=0; }
+        if (input->cancel) {
+            g->dialogue.active=0;g->tavi_shop_pending=0;
+            if(g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) g->npc_battle=(PendingNpcBattle){0};
+        }
         else if (input->confirm) {
             int last_page=g->dialogue.page+1>=g->dialogue.count;
             dialogue_advance(&g->dialogue);
-            if (last_page && g->tavi_shop_pending) {
+            if(last_page && g->npc_battle.flow==NPC_BATTLE_FLOW_INTRO) {
+                g->npc_battle.flow=NPC_BATTLE_FLOW_READY;
+                ready_prompt_open(&g->ready_prompt,g->npc_battle.data->name);
+            } else if (last_page && g->tavi_shop_pending) {
                 g->tavi_shop_pending=0;g->shop_open=1;g->shop_cursor=0;
                 g->shop_previous_direction=0;
                 shop_feedback(g,"WELCOME. EMBERMARKS BUY SIMPLE SUPPLIES.");
