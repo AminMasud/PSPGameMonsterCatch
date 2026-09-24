@@ -6,8 +6,11 @@ static const NpcBattleData east_challenger = {
     .victory={"YOU ARE READY FOR THE EAST WOODS.","THE PATH IS OPEN. TRAVEL SAFELY."},
     .defeat={"REST AT THE LODGE, THEN TRY AGAIN.",0},
     .party={{SPECIES_MOSSPRIG,3}},.party_count=1,
-    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,.progression_flag=0
+    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,
+    .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
+
+static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
 {
@@ -58,6 +61,16 @@ void npc_apply_progress(Npcs *n, uint32_t defeated)
         p->actor.moving=0;
         p->actor.facing=FACE_DOWN;
         p->patrol_start=p->patrol_end=p->defeated_x;
+    }
+}
+void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression)
+{
+    int count=(int)(sizeof(battle_registry)/sizeof(battle_registry[0]));
+    for(int i=0;i<count;++i) {
+        const NpcBattleData *battle=battle_registry[i];
+        if((defeated&(1u<<(unsigned int)battle->id)) &&
+           battle->progression_flag!=PROGRESSION_NONE)
+            progression_set(progression,battle->progression_flag);
     }
 }
 int npc_blocks(void *context, int x, int y)

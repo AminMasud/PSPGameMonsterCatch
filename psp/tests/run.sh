@@ -11,7 +11,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/progression.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -33,9 +33,12 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_party_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-party-test
 previews/battle-party-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/npc_battle_test.c src/npc_battle.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
+    tests/npc_battle_test.c src/npc_battle.c src/progression.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
     src/party.c src/capture.c src/inventory.c -o previews/npc-battle-test
 previews/npc-battle-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/progression_test.c src/progression.c -o previews/progression-test
+previews/progression-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/npc_ai_test.c src/npc_ai.c -o previews/npc-ai-test
 previews/npc-ai-test

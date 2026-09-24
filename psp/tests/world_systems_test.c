@@ -83,14 +83,16 @@ static const NpcBattleData framework_challenger={
     .victory={"YOUR TEAM WORKED AS ONE.","TAKE THESE EMBERMARKS."},
     .defeat={"REST YOUR TEAM AND RETURN.",0},
     .party={{SPECIES_MOSSPRIG,4},{SPECIES_ZAPPIP,5}},.party_count=2,
-    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,.progression_flag=1u<<6
+    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,
+    .progression_flag=PROGRESSION_CAVE_UNLOCKED
 };
 static const NpcBattleData framework_defeat={
     .id=4,.name="WARDEN",
     .before={"THIS IS A DEFEAT-FLOW TEST.",0},
     .victory={"YOU PREVAILED.",0},.defeat={"RETURN WHEN YOU ARE READY.",0},
     .party={{SPECIES_GRUBBL,5}},.party_count=1,
-    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,.progression_flag=1u<<7
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,
+    .progression_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED
 };
 int main(void)
 {
@@ -166,6 +168,7 @@ int main(void)
     update(&g,(Input){0},1);
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
            NPC_BATTLE_EAST_CHALLENGER));
+    assert(progression_has(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
     assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
     assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
     g.transition=0;
@@ -275,7 +278,7 @@ int main(void)
     g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
     update(&g,(Input){0},1);
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,framework_challenger.id));
-    assert((g.npc_battle_progress.progression&framework_challenger.progression_flag)!=0);
+    assert(progression_has(&g.progression,framework_challenger.progression_flag));
     assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_challenger.name));
     update(&g,(Input){.cancel=1},1);
@@ -574,14 +577,17 @@ int main(void)
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
     g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
-    g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
+    progression_set(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    progression_set(&g.progression,PROGRESSION_CAVE_UNLOCKED);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
+    ProgressionState progression_snapshot=g.progression;
     update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
     assert(save_data_status()==SAVE_STATUS_BUSY);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
     party_init(&g.party);g.inventory.embermarks=0;g.npc_battle_progress=(NpcBattleProgress){0};
+    progression_init(&g.progression);
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
     update(&g,(Input){0},1);
@@ -589,10 +595,13 @@ int main(void)
     assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
-           g.npc_battle_progress.progression==npc_snapshot.progression);
+           progression_save_bits(&g.progression)==progression_save_bits(&progression_snapshot));
     Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
     npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
     assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
+    ProgressionState phase16_save;progression_init(&phase16_save);
+    npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
+    assert(progression_has(&phase16_save,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];

@@ -50,6 +50,7 @@ typedef struct {
     ReadyPrompt ready_prompt;
     PendingBattle pending_battle;
     NpcBattleProgress npc_battle_progress;
+    ProgressionState progression;
     PendingNpcBattle npc_battle;
     Battle battle;
     int in_battle;

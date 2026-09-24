@@ -1,4 +1,4 @@
-# Complete Phase 16 source contents
+# Complete Phase 17 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -678,6 +678,7 @@ typedef struct {
     ReadyPrompt ready_prompt;
     PendingBattle pending_battle;
     NpcBattleProgress npc_battle_progress;
+    ProgressionState progression;
     PendingNpcBattle npc_battle;
     Battle battle;
     int in_battle;
@@ -823,6 +824,7 @@ int npc_ai_choose_move(NpcAiProfile profile,const Creature *actor,uint32_t *rand
 
 #include <stdint.h>
 #include "creature.h"
+#include "progression.h"
 
 #define NPC_BATTLE_MAX 32
 #define NPC_BATTLE_PARTY_MAX 4
@@ -856,17 +858,17 @@ typedef struct {
     int party_count;
     NpcAiProfile ai_profile;
     int reward_embermarks;
-    uint32_t progression_flag;
+    ProgressionFlag progression_flag;
 } NpcBattleData;
 
 typedef struct {
     uint32_t defeated;
-    uint32_t progression;
 } NpcBattleProgress;
 
 int npc_battle_data_valid(const NpcBattleData *data);
 int npc_battle_is_defeated(const NpcBattleProgress *progress,int npc_id);
-int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *data);
+int npc_battle_mark_defeated(NpcBattleProgress *progress,ProgressionState *progression,
+                             const NpcBattleData *data);
 
 #endif
 ````
@@ -890,6 +892,7 @@ typedef struct {
 typedef struct { Npc people[NPC_MAX]; int count; } Npcs;
 void npc_load(Npcs *npcs, int map_id);
 void npc_apply_progress(Npcs *npcs, uint32_t defeated);
+void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression);
 int npc_blocks(void *context, int x, int y);
 void npc_update(Npcs *npcs, const Map *map, const Player *player, float seconds);
 Npc *npc_facing(Npcs *npcs, const Player *player);
@@ -1017,6 +1020,41 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
 #endif
 ````
 
+## include/progression.h
+
+````text
+#ifndef EMBERWAKE_PROGRESSION_H
+#define EMBERWAKE_PROGRESSION_H
+
+#include <stdint.h>
+
+#define PROGRESSION_FLAG_CAPACITY 32
+
+/* Values are persisted bit positions. Append new flags; never reorder them. */
+typedef enum {
+    PROGRESSION_NONE = -1,
+    PROGRESSION_FIRST_CHALLENGER_DEFEATED,
+    PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    PROGRESSION_NORTH_FOREST_BOSS_DEFEATED,
+    PROGRESSION_CAVE_UNLOCKED,
+    PROGRESSION_FLAG_COUNT
+} ProgressionFlag;
+
+typedef struct {
+    uint32_t bits;
+} ProgressionState;
+
+void progression_init(ProgressionState *state);
+int progression_flag_valid(ProgressionFlag flag);
+int progression_has(const ProgressionState *state,ProgressionFlag flag);
+int progression_set(ProgressionState *state,ProgressionFlag flag);
+int progression_clear(ProgressionState *state,ProgressionFlag flag);
+uint32_t progression_save_bits(const ProgressionState *state);
+void progression_load_bits(ProgressionState *state,uint32_t bits);
+
+#endif
+````
+
 ## include/ready_prompt.h
 
 ````text
@@ -1050,7 +1088,6 @@ void ready_prompt_draw(const ReadyPrompt *prompt);
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
-#include "npc_battle.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
 #define SAVE_DATA_VERSION 3u
@@ -1134,7 +1171,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1147,7 +1184,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 16
+PSP_EBOOT_TITLE = Emberwake - Phase 17
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1180,27 +1217,27 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 16 East Forest Entrance Challenger
+# Emberwake — Phase 17 Generic Progression Flags
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
-data-driven framework for NPC challengers, and the first in-world challenger at
-the East Forest entrance. The PNG number minus one is the internal
+data-driven framework for NPC challengers, the first in-world challenger at the
+East Forest entrance, and a reusable named progression-flag system. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE16.PBP**, titled **Emberwake - Phase 16**. Copy it to:
+Use **EBOOT-PHASE17.PBP**, titled **Emberwake - Phase 17**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE15.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE16.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1279,6 +1316,20 @@ leaving the intro closes the challenge without moving the player. Winning grants
 50 Embermarks once, shows the victory dialogue, and makes Ren step north so the
 portal is open. The defeated bit survives save/load and map changes. Later talks
 repeat the victory dialogue without forcing another battle.
+
+Progression uses one `ProgressionState` instead of separate gameplay booleans.
+The named flags currently cover the first challenger, the east and north forest
+bosses, and cave access. `progression_has`, `progression_set`, and
+`progression_clear` provide the shared query/update interface for map gates, NPC
+dialogue, and future events. Adding a flag requires one enum entry; a compile-time
+capacity check keeps the list within the 32 bits stored by the save format.
+Serialization uses `progression_save_bits` and `progression_load_bits`, retaining
+all raw bits so later flags are not discarded by an intermediate build.
+
+Ren's first victory now sets `PROGRESSION_FIRST_CHALLENGER_DEFEATED` through the
+same data-driven NPC battle definition that marks Ren defeated. Loading a Phase
+16 save also reconciles Ren's defeated ID into this named flag, so existing
+progress continues cleanly.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -1487,12 +1538,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP
+    make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1504,7 +1555,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All twelve C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All thirteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -1521,6 +1572,9 @@ attacks, profile dispatch, no mutation during selection, and PRESS ON without an
 unnecessary RNG roll. The Phase 16 integration checks the blocked east portal,
 intro and ready flow, one weak opponent, easy AI profile, one-time reward,
 step-aside behavior, repeat interaction, portal access, and saved defeat state.
+The Phase 17 suite checks every named flag, invalid queries, idempotent updates,
+clearing, raw-bit round trips, NPC-granted progression, save/load, and Phase 16
+save reconciliation.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -1540,8 +1594,8 @@ PSP test route:
    Mossprig and that capture and run remain locked during the NPC battle.
 3. Win, read both victory lines, and verify Ren steps north and the forest exit
    opens. Talk again and verify the ready prompt does not return.
-4. Save, restart or leave the map, load, and verify Ren remains defeated and
-   stays beside the open path.
+4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
+   beside the open path, and does not offer another battle.
 5. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
@@ -2696,7 +2750,7 @@ static void save_snapshot(const Game *g, SavePayload *saved)
     for (int i=0;i<ITEM_COUNT;++i) saved->item_quantities[i]=g->inventory.quantities[i];
     saved->embermarks=g->inventory.embermarks;
     saved->npc_defeated=g->npc_battle_progress.defeated;
-    saved->progression_flags=g->npc_battle_progress.progression;
+    saved->progression_flags=progression_save_bits(&g->progression);
 }
 static int valid_saved_creature(const SaveCreature *saved)
 {
@@ -2745,7 +2799,8 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     }
     inventory.embermarks=saved->embermarks;
     g->npc_battle_progress.defeated=saved->npc_defeated;
-    g->npc_battle_progress.progression=saved->progression_flags;
+    progression_load_bits(&g->progression,saved->progression_flags);
+    npc_reconcile_progression(g->npc_battle_progress.defeated,&g->progression);
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
@@ -2847,7 +2902,7 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->transition=0.22f;
             if(npc_data) {
                 if(result==BATTLE_WIN) {
-                    if(npc_battle_mark_defeated(&g->npc_battle_progress,npc_data)) {
+                    if(npc_battle_mark_defeated(&g->npc_battle_progress,&g->progression,npc_data)) {
                         int reward=npc_data->reward_embermarks;
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
@@ -3521,7 +3576,9 @@ int npc_battle_data_valid(const NpcBattleData *data)
        !dialogue_valid(data->before,0) || !dialogue_valid(data->victory,0) ||
        !dialogue_valid(data->defeat,1) || data->party_count<1 ||
        data->party_count>NPC_BATTLE_PARTY_MAX || data->ai_profile<0 ||
-       data->ai_profile>=NPC_AI_PROFILE_COUNT || data->reward_embermarks<0) return 0;
+       data->ai_profile>=NPC_AI_PROFILE_COUNT || data->reward_embermarks<0 ||
+       (data->progression_flag!=PROGRESSION_NONE &&
+        !progression_flag_valid(data->progression_flag))) return 0;
     for(int i=0;i<data->party_count;++i)
         if(data->party[i].species<0 || data->party[i].species>=SPECIES_COUNT ||
            data->party[i].level<1 || data->party[i].level>CREATURE_MAX_LEVEL) return 0;
@@ -3534,11 +3591,14 @@ int npc_battle_is_defeated(const NpcBattleProgress *progress,int npc_id)
            (progress->defeated&(1u<<(unsigned int)npc_id))!=0;
 }
 
-int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *data)
+int npc_battle_mark_defeated(NpcBattleProgress *progress,ProgressionState *progression,
+                             const NpcBattleData *data)
 {
-    if(!progress || !npc_battle_data_valid(data) || npc_battle_is_defeated(progress,data->id)) return 0;
+    if(!progress || !progression || !npc_battle_data_valid(data) ||
+       npc_battle_is_defeated(progress,data->id)) return 0;
     progress->defeated|=1u<<(unsigned int)data->id;
-    progress->progression|=data->progression_flag;
+    if(data->progression_flag!=PROGRESSION_NONE)
+        progression_set(progression,data->progression_flag);
     return 1;
 }
 ````
@@ -3554,8 +3614,11 @@ static const NpcBattleData east_challenger = {
     .victory={"YOU ARE READY FOR THE EAST WOODS.","THE PATH IS OPEN. TRAVEL SAFELY."},
     .defeat={"REST AT THE LODGE, THEN TRY AGAIN.",0},
     .party={{SPECIES_MOSSPRIG,3}},.party_count=1,
-    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,.progression_flag=0
+    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,
+    .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
+
+static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
 {
@@ -3606,6 +3669,16 @@ void npc_apply_progress(Npcs *n, uint32_t defeated)
         p->actor.moving=0;
         p->actor.facing=FACE_DOWN;
         p->patrol_start=p->patrol_end=p->defeated_x;
+    }
+}
+void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression)
+{
+    int count=(int)(sizeof(battle_registry)/sizeof(battle_registry[0]));
+    for(int i=0;i<count;++i) {
+        const NpcBattleData *battle=battle_registry[i];
+        if((defeated&(1u<<(unsigned int)battle->id)) &&
+           battle->progression_flag!=PROGRESSION_NONE)
+            progression_set(progression,battle->progression_flag);
     }
 }
 int npc_blocks(void *context, int x, int y)
@@ -4197,6 +4270,60 @@ void player_update_blocked(Player *p, const Map *map, const Input *input,
             p->moving = 0;
         }
     }
+}
+````
+
+## src/progression.c
+
+````text
+#include "progression.h"
+
+typedef char ProgressionFlagsFitInSave[(PROGRESSION_FLAG_COUNT<=PROGRESSION_FLAG_CAPACITY)?1:-1];
+
+void progression_init(ProgressionState *state)
+{
+    if(state) state->bits=0;
+}
+
+int progression_flag_valid(ProgressionFlag flag)
+{
+    return flag>=0 && flag<PROGRESSION_FLAG_COUNT;
+}
+
+int progression_has(const ProgressionState *state,ProgressionFlag flag)
+{
+    return state && progression_flag_valid(flag) &&
+           (state->bits&(1u<<(unsigned int)flag))!=0;
+}
+
+int progression_set(ProgressionState *state,ProgressionFlag flag)
+{
+    uint32_t bit;
+    if(!state || !progression_flag_valid(flag)) return 0;
+    bit=1u<<(unsigned int)flag;
+    if(state->bits&bit) return 0;
+    state->bits|=bit;
+    return 1;
+}
+
+int progression_clear(ProgressionState *state,ProgressionFlag flag)
+{
+    uint32_t bit;
+    if(!state || !progression_flag_valid(flag)) return 0;
+    bit=1u<<(unsigned int)flag;
+    if(!(state->bits&bit)) return 0;
+    state->bits&=~bit;
+    return 1;
+}
+
+uint32_t progression_save_bits(const ProgressionState *state)
+{
+    return state?state->bits:0;
+}
+
+void progression_load_bits(ProgressionState *state,uint32_t bits)
+{
+    if(state) state->bits=bits;
 }
 ````
 
@@ -5738,7 +5865,7 @@ static const NpcBattleData challenger={
     .party_count=2,
     .ai_profile=NPC_AI_STANDARD,
     .reward_embermarks=125,
-    .progression_flag=1u<<9
+    .progression_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED
 };
 
 static void confirm(Battle *battle)
@@ -5764,15 +5891,17 @@ static void data_and_progress(void)
     bad=challenger;bad.party[1].level=0;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.ai_profile=NPC_AI_PROFILE_COUNT;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.reward_embermarks=-1;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.progression_flag=PROGRESSION_FLAG_COUNT;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.before.first=0;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.defeat.first=0;bad.defeat.second=0;assert(npc_battle_data_valid(&bad));
 
     NpcBattleProgress progress={0};
+    ProgressionState progression;progression_init(&progression);
     assert(!npc_battle_is_defeated(&progress,challenger.id));
-    assert(npc_battle_mark_defeated(&progress,&challenger));
+    assert(npc_battle_mark_defeated(&progress,&progression,&challenger));
     assert(npc_battle_is_defeated(&progress,challenger.id));
-    assert(progress.progression==challenger.progression_flag);
-    assert(!npc_battle_mark_defeated(&progress,&challenger));
+    assert(progression_has(&progression,challenger.progression_flag));
+    assert(!npc_battle_mark_defeated(&progress,&progression,&challenger));
 }
 
 static void party_battle(void)
@@ -6199,6 +6328,59 @@ int main(void)
 }
 ````
 
+## tests/progression_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include "progression.h"
+
+int main(void)
+{
+    ProgressionState state;
+    progression_init(&state);
+    assert(progression_save_bits(&state)==0);
+    assert(!progression_has(&state,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+
+    ProgressionFlag flags[]={
+        PROGRESSION_FIRST_CHALLENGER_DEFEATED,
+        PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+        PROGRESSION_NORTH_FOREST_BOSS_DEFEATED,
+        PROGRESSION_CAVE_UNLOCKED
+    };
+    for(int i=0;i<PROGRESSION_FLAG_COUNT;++i) {
+        assert(flags[i]==i && progression_flag_valid(flags[i]));
+        assert(progression_set(&state,flags[i]));
+        assert(progression_has(&state,flags[i]));
+        assert(!progression_set(&state,flags[i]));
+    }
+    assert(!progression_flag_valid(PROGRESSION_NONE));
+    assert(!progression_flag_valid(PROGRESSION_FLAG_COUNT));
+    assert(!progression_set(&state,PROGRESSION_NONE));
+
+    assert(progression_clear(&state,PROGRESSION_CAVE_UNLOCKED));
+    assert(!progression_has(&state,PROGRESSION_CAVE_UNLOCKED));
+    assert(!progression_clear(&state,PROGRESSION_CAVE_UNLOCKED));
+
+    uint32_t saved=progression_save_bits(&state)|(1u<<31);
+    ProgressionState restored;progression_load_bits(&restored,saved);
+    assert(progression_save_bits(&restored)==saved);
+    assert(progression_has(&restored,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(progression_has(&restored,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    assert(progression_has(&restored,PROGRESSION_NORTH_FOREST_BOSS_DEFEATED));
+    assert(!progression_has(&restored,PROGRESSION_CAVE_UNLOCKED));
+
+    assert(!progression_has(0,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(!progression_set(0,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(!progression_clear(0,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
+    assert(progression_save_bits(0)==0);
+    progression_load_bits(0,saved);
+
+    puts("PASS: generic named progression flags, queries, updates, and raw save roundtrip");
+    return 0;
+}
+````
+
 ## tests/preview.py
 
 ````text
@@ -6255,7 +6437,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/progression.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -6277,9 +6459,12 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_party_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-party-test
 previews/battle-party-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/npc_battle_test.c src/npc_battle.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
+    tests/npc_battle_test.c src/npc_battle.c src/progression.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
     src/party.c src/capture.c src/inventory.c -o previews/npc-battle-test
 previews/npc-battle-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/progression_test.c src/progression.c -o previews/progression-test
+previews/progression-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/npc_ai_test.c src/npc_ai.c -o previews/npc-ai-test
 previews/npc-ai-test
@@ -6595,14 +6780,16 @@ static const NpcBattleData framework_challenger={
     .victory={"YOUR TEAM WORKED AS ONE.","TAKE THESE EMBERMARKS."},
     .defeat={"REST YOUR TEAM AND RETURN.",0},
     .party={{SPECIES_MOSSPRIG,4},{SPECIES_ZAPPIP,5}},.party_count=2,
-    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,.progression_flag=1u<<6
+    .ai_profile=NPC_AI_STANDARD,.reward_embermarks=75,
+    .progression_flag=PROGRESSION_CAVE_UNLOCKED
 };
 static const NpcBattleData framework_defeat={
     .id=4,.name="WARDEN",
     .before={"THIS IS A DEFEAT-FLOW TEST.",0},
     .victory={"YOU PREVAILED.",0},.defeat={"RETURN WHEN YOU ARE READY.",0},
     .party={{SPECIES_GRUBBL,5}},.party_count=1,
-    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,.progression_flag=1u<<7
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=200,
+    .progression_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED
 };
 int main(void)
 {
@@ -6678,6 +6865,7 @@ int main(void)
     update(&g,(Input){0},1);
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
            NPC_BATTLE_EAST_CHALLENGER));
+    assert(progression_has(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
     assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
     assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
     g.transition=0;
@@ -6787,7 +6975,7 @@ int main(void)
     g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
     update(&g,(Input){0},1);
     assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,framework_challenger.id));
-    assert((g.npc_battle_progress.progression&framework_challenger.progression_flag)!=0);
+    assert(progression_has(&g.progression,framework_challenger.progression_flag));
     assert(g.inventory.embermarks==marks_before+framework_challenger.reward_embermarks);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,framework_challenger.name));
     update(&g,(Input){.cancel=1},1);
@@ -7086,14 +7274,17 @@ int main(void)
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
     g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
-    g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
+    progression_set(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    progression_set(&g.progression,PROGRESSION_CAVE_UNLOCKED);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
+    ProgressionState progression_snapshot=g.progression;
     update(&g,(Input){.menu=INPUT_MENU_SAVE},1);
     assert(save_data_status()==SAVE_STATUS_BUSY);
     update(&g,(Input){0},1);
     assert(g.dialogue.active && !strcmp(g.dialogue.title,"SESSION SAVED"));
     party_init(&g.party);g.inventory.embermarks=0;g.npc_battle_progress=(NpcBattleProgress){0};
+    progression_init(&g.progression);
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.menu=INPUT_MENU_LOAD},1);
     update(&g,(Input){0},1);
@@ -7101,10 +7292,13 @@ int main(void)
     assert(g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
-           g.npc_battle_progress.progression==npc_snapshot.progression);
+           progression_save_bits(&g.progression)==progression_save_bits(&progression_snapshot));
     Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
     npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
     assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
+    ProgressionState phase16_save;progression_init(&phase16_save);
+    npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
+    assert(progression_has(&phase16_save,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];

@@ -1,24 +1,24 @@
-# Emberwake — Phase 16 East Forest Entrance Challenger
+# Emberwake — Phase 17 Generic Progression Flags
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
-data-driven framework for NPC challengers, and the first in-world challenger at
-the East Forest entrance. The PNG number minus one is the internal
+data-driven framework for NPC challengers, the first in-world challenger at the
+East Forest entrance, and a reusable named progression-flag system. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE16.PBP**, titled **Emberwake - Phase 16**. Copy it to:
+Use **EBOOT-PHASE17.PBP**, titled **Emberwake - Phase 17**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE15.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE16.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -97,6 +97,20 @@ leaving the intro closes the challenge without moving the player. Winning grants
 50 Embermarks once, shows the victory dialogue, and makes Ren step north so the
 portal is open. The defeated bit survives save/load and map changes. Later talks
 repeat the victory dialogue without forcing another battle.
+
+Progression uses one `ProgressionState` instead of separate gameplay booleans.
+The named flags currently cover the first challenger, the east and north forest
+bosses, and cave access. `progression_has`, `progression_set`, and
+`progression_clear` provide the shared query/update interface for map gates, NPC
+dialogue, and future events. Adding a flag requires one enum entry; a compile-time
+capacity check keeps the list within the 32 bits stored by the save format.
+Serialization uses `progression_save_bits` and `progression_load_bits`, retaining
+all raw bits so later flags are not discarded by an intermediate build.
+
+Ren's first victory now sets `PROGRESSION_FIRST_CHALLENGER_DEFEATED` through the
+same data-driven NPC battle definition that marks Ren defeated. Loading a Phase
+16 save also reconciles Ren's defeated ID into this named flag, so existing
+progress continues cleanly.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -305,12 +319,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP
+    make PSP_EBOOT=EBOOT-PHASE17.PBP EXTRA_TARGETS=EBOOT-PHASE17.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -322,7 +336,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All twelve C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All thirteen C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -339,6 +353,9 @@ attacks, profile dispatch, no mutation during selection, and PRESS ON without an
 unnecessary RNG roll. The Phase 16 integration checks the blocked east portal,
 intro and ready flow, one weak opponent, easy AI profile, one-time reward,
 step-aside behavior, repeat interaction, portal access, and saved defeat state.
+The Phase 17 suite checks every named flag, invalid queries, idempotent updates,
+clearing, raw-bit round trips, NPC-granted progression, save/load, and Phase 16
+save reconciliation.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -358,8 +375,8 @@ PSP test route:
    Mossprig and that capture and run remain locked during the NPC battle.
 3. Win, read both victory lines, and verify Ren steps north and the forest exit
    opens. Talk again and verify the ready prompt does not return.
-4. Save, restart or leave the map, load, and verify Ren remains defeated and
-   stays beside the open path.
+4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
+   beside the open path, and does not offer another battle.
 5. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 

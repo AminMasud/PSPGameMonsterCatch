@@ -15,7 +15,7 @@ static const NpcBattleData challenger={
     .party_count=2,
     .ai_profile=NPC_AI_STANDARD,
     .reward_embermarks=125,
-    .progression_flag=1u<<9
+    .progression_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED
 };
 
 static void confirm(Battle *battle)
@@ -41,15 +41,17 @@ static void data_and_progress(void)
     bad=challenger;bad.party[1].level=0;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.ai_profile=NPC_AI_PROFILE_COUNT;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.reward_embermarks=-1;assert(!npc_battle_data_valid(&bad));
+    bad=challenger;bad.progression_flag=PROGRESSION_FLAG_COUNT;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.before.first=0;assert(!npc_battle_data_valid(&bad));
     bad=challenger;bad.defeat.first=0;bad.defeat.second=0;assert(npc_battle_data_valid(&bad));
 
     NpcBattleProgress progress={0};
+    ProgressionState progression;progression_init(&progression);
     assert(!npc_battle_is_defeated(&progress,challenger.id));
-    assert(npc_battle_mark_defeated(&progress,&challenger));
+    assert(npc_battle_mark_defeated(&progress,&progression,&challenger));
     assert(npc_battle_is_defeated(&progress,challenger.id));
-    assert(progress.progression==challenger.progression_flag);
-    assert(!npc_battle_mark_defeated(&progress,&challenger));
+    assert(progression_has(&progression,challenger.progression_flag));
+    assert(!npc_battle_mark_defeated(&progress,&progression,&challenger));
 }
 
 static void party_battle(void)

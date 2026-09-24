@@ -6,7 +6,6 @@
 #include "creature.h"
 #include "party.h"
 #include "inventory.h"
-#include "npc_battle.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
 #define SAVE_DATA_VERSION 3u

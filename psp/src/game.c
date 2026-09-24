@@ -92,7 +92,7 @@ static void save_snapshot(const Game *g, SavePayload *saved)
     for (int i=0;i<ITEM_COUNT;++i) saved->item_quantities[i]=g->inventory.quantities[i];
     saved->embermarks=g->inventory.embermarks;
     saved->npc_defeated=g->npc_battle_progress.defeated;
-    saved->progression_flags=g->npc_battle_progress.progression;
+    saved->progression_flags=progression_save_bits(&g->progression);
 }
 static int valid_saved_creature(const SaveCreature *saved)
 {
@@ -141,7 +141,8 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     }
     inventory.embermarks=saved->embermarks;
     g->npc_battle_progress.defeated=saved->npc_defeated;
-    g->npc_battle_progress.progression=saved->progression_flags;
+    progression_load_bits(&g->progression,saved->progression_flags);
+    npc_reconcile_progression(g->npc_battle_progress.defeated,&g->progression);
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
@@ -243,7 +244,7 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->transition=0.22f;
             if(npc_data) {
                 if(result==BATTLE_WIN) {
-                    if(npc_battle_mark_defeated(&g->npc_battle_progress,npc_data)) {
+                    if(npc_battle_mark_defeated(&g->npc_battle_progress,&g->progression,npc_data)) {
                         int reward=npc_data->reward_embermarks;
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
