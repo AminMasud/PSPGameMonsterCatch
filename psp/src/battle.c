@@ -2,6 +2,7 @@
 #include <string.h>
 #include "battle.h"
 #include "capture.h"
+#include "npc_ai.h"
 
 static uint32_t random_next(Battle *b)
 {
@@ -75,14 +76,12 @@ static void message(Battle *b,const char *text,BattleAfter after)
 }
 static int valid_move(const Battler *unit,int slot)
 {
-    return slot>=0 && slot<BATTLE_MOVES && unit->moves[slot]>=0 &&
-           unit->moves[slot]<MOVE_COUNT && unit->uses[slot]>0;
+    return npc_ai_move_available(unit,slot);
 }
 static int choose_enemy(Battle *b)
 {
-    int slots[4],count=0;
-    for(int i=0;i<4;++i) if(valid_move(&b->enemy,i)) slots[count++]=i;
-    return count?slots[random_next(b)%(unsigned int)count]:-1;
+    NpcAiProfile profile=b->npc_battle?(NpcAiProfile)b->ai_profile:NPC_AI_EASY;
+    return npc_ai_choose_move(profile,&b->enemy,&b->random);
 }
 static void sync_active(Battle *b)
 {

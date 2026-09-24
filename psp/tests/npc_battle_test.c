@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "battle.h"
+#include "npc_ai.h"
 #include "npc_battle.h"
 
 static const NpcBattleData challenger={
@@ -70,14 +71,18 @@ static void party_battle(void)
 
     unsigned int turn=battle.turn_number;
     uint32_t random=battle.random;
+    int locked_choice=battle.choices[1];
+    assert(npc_ai_move_available(&battle.enemy,locked_choice));
     battle.cursor=1;confirm(&battle);
     assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT BE CAPTURED"));
     confirm(&battle);
-    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random &&
+           battle.choices[1]==locked_choice);
     battle.cursor=4;confirm(&battle);
     assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT RUN"));
     confirm(&battle);
-    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random &&
+           battle.choices[1]==locked_choice);
 
     battle.enemy.hp=1;
     attack(&battle);

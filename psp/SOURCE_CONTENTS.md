@@ -1,4 +1,4 @@
-# Complete Phase 14 source contents
+# Complete Phase 15 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -797,6 +797,24 @@ int map_encounter_area(int id, int x, int y);
 #endif
 ````
 
+## include/npc_ai.h
+
+````text
+#ifndef EMBERWAKE_NPC_AI_H
+#define EMBERWAKE_NPC_AI_H
+
+#include <stdint.h>
+#include "npc_battle.h"
+
+#define NPC_AI_PRESS_ON (-1)
+
+int npc_ai_move_available(const Creature *actor,int slot);
+/* The AI sees only its own actor and RNG state. It cannot inspect a queued player action. */
+int npc_ai_choose_move(NpcAiProfile profile,const Creature *actor,uint32_t *random);
+
+#endif
+````
+
 ## include/npc_battle.h
 
 ````text
@@ -1110,7 +1128,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1123,7 +1141,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 14
+PSP_EBOOT_TITLE = Emberwake - Phase 15
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1156,28 +1174,28 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 14 NPC Battle Framework
+# Emberwake — Phase 15 Simple NPC Battle AI
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, and a
-data-driven framework for NPC challengers with parties, dialogue, rewards, and
-persistent victory state. The PNG number minus one is the internal species ID.
-All 30 forms have stats, descriptions, attacks, capture support, and their own
-supplied artwork.
+data-driven framework for NPC challengers, and a reusable easy NPC attack policy
+that can expand for later bosses. The PNG number minus one is the internal
+species ID. All 30 forms have stats, descriptions, attacks, capture support, and
+their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE14.PBP**, titled **Emberwake - Phase 14**. Copy it to:
+Use **EBOOT-PHASE15.PBP**, titled **Emberwake - Phase 15**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP, EBOOT-PHASE13.PBP, EBOOT-PETS.PBP, and numbered phase builds
-are retained locally for comparison.
+EBOOT-PHASE12.PBP through EBOOT-PHASE14.PBP, EBOOT-PETS.PBP, and numbered phase
+builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1263,9 +1281,17 @@ granted once. Future interactions use the post-victory dialogue instead of
 starting another battle. A loss does not mark the NPC defeated and can show its
 optional defeat dialogue after the normal return to Hearth Clearing.
 
-AI profile metadata is carried into each NPC battle for Phase 15's expandable
-decision policies. Until that phase, opponents retain the existing valid random
-attack selection used by wild encounters.
+The easy NPC AI selects randomly from the acting Veyling's currently usable
+move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
+selected. If every attack is unavailable, it explicitly selects PRESS ON, the
+existing weak unlimited fallback. Selection does not spend a move; the battle
+resolver spends it only when the attack executes.
+
+The AI interface receives only its own Veyling, its configured profile, and its
+private random state. It cannot read the player's pending command. The choice is
+made once at round start and remains locked while the player navigates menus.
+Standard and boss profile entries currently inherit the safe easy policy through
+the same dispatch point, ready for later strategy functions.
 
 At the start of each round, the enemy chooses one action and turn order is locked
 from the creatures' speeds. A faster enemy attacks immediately, before the game
@@ -1447,12 +1473,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE14.PBP EXTRA_TARGETS=EBOOT-PHASE14.PBP
+    make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1464,7 +1490,7 @@ compiled assets and do not require Pillow. The user-mode PRX targets 6.60/6.61
 custom firmware. Warnings are treated as errors. Library order keeps PSP import
 stubs together, with pspaudiolib first and the utility import library last.
 
-All eleven C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
+All twelve C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
@@ -1476,10 +1502,12 @@ validation, and direct wild-battle entry. Phase 14 checks battle-data validation
 multi-Veyling opponents, AI profile transport, locked capture/run commands,
 intro/ready/outcome flow, one-time rewards, optional defeat dialogue, defeated
 state, progression flags, and version-3 persistence with v1/v2 migration. The
-full suite also covers movement, all portals, collisions, capture, inventory,
-menus, all 30 forms at levels 1–100, all ten two-step evolution chains, wild
-availability of every form, 32-slot storage, savedata lifecycle, text bounds,
-drawing budget, and PCM audio.
+Phase 15 suite checks every move-slot validity rule, selection across available
+attacks, profile dispatch, no mutation during selection, and PRESS ON without an
+unnecessary RNG roll. The full suite also covers movement, all portals,
+collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
+two-step evolution chains, wild availability of every form, 32-slot storage,
+savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, spotlight-idle.png,
@@ -1491,13 +1519,13 @@ PSP test route:
 1. Load an existing version-2 save and verify the roster, items, money, and
    location are preserved; saving again upgrades the slot to version 3.
 2. Talk to the current exploration NPCs and verify their existing behavior is
-   unchanged because no challenger is placed in Phase 14.
+   unchanged because no challenger is placed through Phase 15.
 3. Walk in encounter terrain and verify ordinary wild battle, capture, and run
    behavior remains unchanged.
 
-The new NPC flow and multi-Veyling battle are exercised by the host integration
-suite and `npc-battle.png`. Phase 16 will provide the first in-world challenger
-for a complete device playthrough.
+The NPC flow, multi-Veyling battle, and simple AI are exercised by the host
+integration suites. Phase 16 will provide the first in-world challenger for a
+complete device AI playthrough.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -1846,6 +1874,7 @@ void battle_draw(const Battle *b)
 #include <string.h>
 #include "battle.h"
 #include "capture.h"
+#include "npc_ai.h"
 
 static uint32_t random_next(Battle *b)
 {
@@ -1919,14 +1948,12 @@ static void message(Battle *b,const char *text,BattleAfter after)
 }
 static int valid_move(const Battler *unit,int slot)
 {
-    return slot>=0 && slot<BATTLE_MOVES && unit->moves[slot]>=0 &&
-           unit->moves[slot]<MOVE_COUNT && unit->uses[slot]>0;
+    return npc_ai_move_available(unit,slot);
 }
 static int choose_enemy(Battle *b)
 {
-    int slots[4],count=0;
-    for(int i=0;i<4;++i) if(valid_move(&b->enemy,i)) slots[count++]=i;
-    return count?slots[random_next(b)%(unsigned int)count]:-1;
+    NpcAiProfile profile=b->npc_battle?(NpcAiProfile)b->ai_profile:NPC_AI_EASY;
+    return npc_ai_choose_move(profile,&b->enemy,&b->random);
 }
 static void sync_active(Battle *b)
 {
@@ -3409,6 +3436,48 @@ int map_walkable(const Map *map, int x, int y)
     char tile = map_tile(map, x, y);
     return tile == '.' || tile == '=' || tile == ',' || tile == 'D' ||
            tile == '>' || tile == '<' || tile == 'g' || tile == 'r' || tile == 'c' || tile == '_' || tile == 'H';
+}
+````
+
+## src/npc_ai.c
+
+````text
+#include "npc_ai.h"
+
+typedef int (*NpcAiStrategy)(const Creature *actor,uint32_t *random);
+
+int npc_ai_move_available(const Creature *actor,int slot)
+{
+    return actor && slot>=0 && slot<CREATURE_MOVES &&
+           actor->moves[slot]>=0 && actor->moves[slot]<MOVE_COUNT && actor->uses[slot]>0;
+}
+
+static uint32_t random_next(uint32_t *random)
+{
+    uint32_t value=*random?*random:0x3291u;
+    value^=value<<13;value^=value>>17;value^=value<<5;
+    return *random=value;
+}
+
+static int choose_easy(const Creature *actor,uint32_t *random)
+{
+    int slots[CREATURE_MOVES],count=0;
+    if(!actor || !random) return NPC_AI_PRESS_ON;
+    for(int i=0;i<CREATURE_MOVES;++i)
+        if(npc_ai_move_available(actor,i)) slots[count++]=i;
+    if(!count) return NPC_AI_PRESS_ON;
+    return slots[random_next(random)%(unsigned int)count];
+}
+
+int npc_ai_choose_move(NpcAiProfile profile,const Creature *actor,uint32_t *random)
+{
+    /* Standard and boss profiles inherit the safe easy policy until their
+       own strategy functions are added. The dispatch point remains stable. */
+    static NpcAiStrategy const strategies[NPC_AI_PROFILE_COUNT]={
+        choose_easy,choose_easy,choose_easy
+    };
+    if(profile<0 || profile>=NPC_AI_PROFILE_COUNT) profile=NPC_AI_EASY;
+    return strategies[profile](actor,random);
 }
 ````
 
@@ -5544,6 +5613,56 @@ int main(void)
 }
 ````
 
+## tests/npc_ai_test.c
+
+````text
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include "npc_ai.h"
+
+int main(void)
+{
+    Creature actor={0};
+    for(int i=0;i<CREATURE_MOVES;++i) actor.moves[i]=-1;
+    actor.moves[0]=MOVE_NUDGE;actor.uses[0]=2;
+    actor.moves[1]=-1;actor.uses[1]=99;
+    actor.moves[2]=MOVE_CINDER;actor.uses[2]=1;
+    actor.moves[3]=MOVE_COUNT;actor.uses[3]=99;
+    assert(npc_ai_move_available(&actor,0));
+    assert(!npc_ai_move_available(&actor,1));
+    assert(npc_ai_move_available(&actor,2));
+    assert(!npc_ai_move_available(&actor,3));
+    assert(!npc_ai_move_available(&actor,-1) && !npc_ai_move_available(&actor,4));
+    assert(!npc_ai_move_available(0,0));
+
+    Creature unchanged=actor;
+    int seen[CREATURE_MOVES]={0};
+    for(uint32_t seed=1;seed<=100;++seed) {
+        uint32_t random=seed;
+        int choice=npc_ai_choose_move(NPC_AI_EASY,&actor,&random);
+        assert(choice==0 || choice==2);
+        assert(npc_ai_move_available(&actor,choice));
+        ++seen[choice];
+    }
+    assert(seen[0] && seen[2]);
+    assert(!memcmp(&actor,&unchanged,sizeof(actor))); /* Choosing never spends the move. */
+
+    actor.uses[0]=0;
+    for(int profile=NPC_AI_EASY;profile<NPC_AI_PROFILE_COUNT;++profile) {
+        uint32_t random=45;
+        assert(npc_ai_choose_move((NpcAiProfile)profile,&actor,&random)==2);
+    }
+    actor.uses[2]=0;
+    uint32_t random=91;
+    assert(npc_ai_choose_move(NPC_AI_EASY,&actor,&random)==NPC_AI_PRESS_ON);
+    assert(random==91); /* No selection roll is consumed when PRESS ON is required. */
+    assert(npc_ai_choose_move(NPC_AI_EASY,&actor,0)==NPC_AI_PRESS_ON);
+    puts("PASS: simple NPC AI selects only usable attacks, falls back safely, and exposes expandable profiles");
+    return 0;
+}
+````
+
 ## tests/npc_battle_test.c
 
 ````text
@@ -5551,6 +5670,7 @@ int main(void)
 #include <stdio.h>
 #include <string.h>
 #include "battle.h"
+#include "npc_ai.h"
 #include "npc_battle.h"
 
 static const NpcBattleData challenger={
@@ -5619,14 +5739,18 @@ static void party_battle(void)
 
     unsigned int turn=battle.turn_number;
     uint32_t random=battle.random;
+    int locked_choice=battle.choices[1];
+    assert(npc_ai_move_available(&battle.enemy,locked_choice));
     battle.cursor=1;confirm(&battle);
     assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT BE CAPTURED"));
     confirm(&battle);
-    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random &&
+           battle.choices[1]==locked_choice);
     battle.cursor=4;confirm(&battle);
     assert(battle.phase==BATTLE_MESSAGE && strstr(battle.message,"CANNOT RUN"));
     confirm(&battle);
-    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random);
+    assert(battle.phase==BATTLE_MENU && battle.turn_number==turn && battle.random==random &&
+           battle.choices[1]==locked_choice);
 
     battle.enemy.hp=1;
     attack(&battle);
@@ -6075,30 +6199,33 @@ previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
     src/npc.c src/npc_battle.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
-    src/attacks.c src/battle.c src/battle_draw.c src/creature.c \
+    src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/battle_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-test
+    tests/battle_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-test
 previews/battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/battle_turn_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-turn-test
+    tests/battle_turn_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-turn-test
 previews/battle-turn-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/creature_test.c src/creature.c src/battle.c src/attacks.c src/party.c src/capture.c src/inventory.c -o previews/creature-test
+    tests/creature_test.c src/creature.c src/battle.c src/npc_ai.c src/attacks.c src/party.c src/capture.c src/inventory.c -o previews/creature-test
 previews/creature-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/party_capture_test.c src/party.c src/capture.c src/creature.c src/attacks.c -o previews/party-capture-test
 previews/party-capture-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/battle_party_test.c src/battle.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-party-test
+    tests/battle_party_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-party-test
 previews/battle-party-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
-    tests/npc_battle_test.c src/npc_battle.c src/battle.c src/attacks.c src/creature.c \
+    tests/npc_battle_test.c src/npc_battle.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c \
     src/party.c src/capture.c src/inventory.c -o previews/npc-battle-test
 previews/npc-battle-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/npc_ai_test.c src/npc_ai.c -o previews/npc-ai-test
+previews/npc-ai-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/inventory_test.c src/inventory.c src/creature.c src/attacks.c -o previews/inventory-test
 previews/inventory-test
