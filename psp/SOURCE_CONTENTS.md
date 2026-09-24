@@ -1,4 +1,4 @@
-# Complete Phase 21 source contents
+# Complete Phase 22 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -526,6 +526,11 @@ void battle_animate(Battle *b,float seconds,int motion);
 
 #define BOSS_MAX 16
 
+typedef enum {
+    BOSS_EAST_FOREST_GUARDIAN,
+    BOSS_COUNT
+} BossId;
+
 typedef struct {
     int id;
     const char *name;
@@ -959,11 +964,13 @@ int npc_battle_mark_defeated(NpcBattleProgress *progress,ProgressionState *progr
 #define EMBERWAKE_NPC_H
 #include "player.h"
 #include "npc_battle.h"
+#include "boss.h"
 #define NPC_MAX 4
 typedef struct {
     Player actor;
     const char *name, *first, *second;
     const NpcBattleData *battle;
+    const BossData *boss;
     const Gate *gate;
     int open_x, open_y;
     int patrol_start, patrol_end, direction;
@@ -1264,7 +1271,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 21
+PSP_EBOOT_TITLE = Emberwake - Phase 22
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1297,7 +1304,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 21 Generic Boss Battle Framework
+# Emberwake — Phase 22 East Forest Boss
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1307,20 +1314,21 @@ action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
-Hollowstone Cave entrance, and a reusable boss battle framework with optional
-special presentation. The PNG number minus one is the internal
+Hollowstone Cave entrance, a reusable boss battle framework with optional
+special presentation, and Elder Sylva, Fernveil's first in-world Guardian.
+The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE21.PBP**, titled **Emberwake - Phase 21**. Copy it to:
+Use **EBOOT-PHASE22.PBP**, titled **Emberwake - Phase 22**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE20.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE21.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1364,7 +1372,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
+| Fernveil Woods | Sen and Elder Sylva, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
 | Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
@@ -1428,7 +1436,7 @@ Afterward, Ren uses the gate's unlocked dialogue and the destination opens.
 Varel now guards Fernveil Woods' east road into Sunthread Marsh. The road starts
 locked and his dialogue tells the player to defeat Fernveil's Veyling Guardian.
 The gate requires `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, the stable flag that
-the later East Forest boss will award. When present, Varel steps north, confirms
+Elder Sylva awards. When present, Varel steps north, confirms
 that the Guardian has yielded, and opens the road. This position and dialogue
 are reconstructed from the saved progression state after every map entry or
 load. The reverse road remains open so an older save already in Sunthread Marsh
@@ -1470,8 +1478,15 @@ through the version-3 save payload. Victory sets it idempotently, grants the
 reward only on the first transition from incomplete to complete, and reapplies
 gatekeeper state immediately. The first optional presentation, GUARDIAN, gives
 boss battles a dark violet field, gold frame, and GUARDIAN header while reusing
-the normal battle controller. Phase 21 intentionally defines the framework and
-its test Guardian only; no boss has been placed in the world yet.
+the normal battle controller.
+
+Elder Sylva stands near the east end of Fernveil Woods. Talking to Sylva opens
+two intro pages and the ready prompt, then starts a Guardian battle against a
+level-6 Mossprig and level-7 Gustlet. This two-member party and boss AI profile
+make the encounter stronger than Ren's single level-3 challenger. Victory grants
+300 Embermarks once, sets `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, moves Sylva
+off the road, and immediately moves Varel aside to open the Sunthread route.
+Later talks use Sylva's post-victory dialogue without another battle or reward.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -1666,12 +1681,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP
+    make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1717,6 +1732,11 @@ dialogue, rewards, required completion flags, presentation modes, and one-time
 completion. Its integration path covers cancel, loss and retry, the guardian
 visual treatment, victory, immediate progression updates, one-time rewards, and
 post-victory interaction without another battle.
+The Phase 22 integration reaches Elder Sylva through the real Fernveil NPC,
+checks the two-member party and level curve, runs the intro and ready flow,
+renders the Guardian battle, records victory and its one-time reward, updates
+Sylva and Varel immediately, repeats the post-victory dialogue, enters the newly
+opened Sunthread route, and rebuilds both NPC positions from saved progression.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -1724,6 +1744,8 @@ savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
+east-forest-boss.png, east-forest-boss-ready.png,
+east-forest-boss-battle.png, east-forest-boss-victory.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -1740,13 +1762,17 @@ PSP test route:
    opens. Talk again and verify the ready prompt does not return.
 4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
    beside the open path, and does not offer another battle.
-5. In Fernveil Woods, follow the main road east. Verify Varel blocks Sunthread
-   Marsh and explains that Fernveil's Veyling Guardian must be defeated. Save and
-   load there and verify the road remains locked.
-6. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
+5. In Fernveil Woods, follow the main road east to Elder Sylva. Decline once,
+   then accept. Verify the Guardian battle has a level-6 Mossprig followed by a
+   level-7 Gustlet and uses the violet and gold boss presentation.
+6. Win and verify Sylva grants 300 Embermarks, steps north, and talks about the
+   recognized bond on repeat interaction without starting another battle. Verify
+   Varel also steps aside and the Sunthread route opens. Save and load and verify
+   the defeated state, positions, open route, and reward remain unchanged.
+7. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
    and explains that the Fernveil and Northern Woods Guardians must be defeated.
    Save and load there and verify the cave remains sealed.
-7. Load an existing version-2 save and verify roster, items, money, and location
+8. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
@@ -3254,7 +3280,10 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
+            if (npc->boss) {
+                game_offer_boss_battle(g,npc->boss,
+                    g->encounter.random^(uint32_t)(npc->boss->id+1)*0x85ebca6bu);
+            } else if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
                 game_offer_npc_battle(g,npc->battle,
                     g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
             } else if (npc->gate) {
@@ -3935,6 +3964,20 @@ static const NpcBattleData east_challenger = {
     .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
 
+static const BossData east_forest_guardian = {
+    .id=BOSS_EAST_FOREST_GUARDIAN,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+    .intro={"I AM SYLVA, KEEPER OF FERNVEIL.",
+            "SHOW ME THE BOND THAT GUIDES YOUR VEYLINGS."},
+    .victory={"FERNVEIL RECOGNIZES YOUR BOND.",
+              "THE SUNTHREAD WAY NOW OPENS TO YOU."},
+    .defeat={"THE FOREST ASKS FOR PATIENCE.",
+             "RETURN WHEN YOUR TEAM IS READY."},
+    .party={{SPECIES_MOSSPRIG,6},{SPECIES_GUSTLET,7}},.party_count=2,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    .presentation=BATTLE_PRESENTATION_GUARDIAN
+};
+
 static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
@@ -3978,6 +4021,12 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].gate=hollowstone;
         n->people[n->count-1].open_x=29;
         n->people[n->count-1].open_y=6;
+        add(n,26,11,east_forest_guardian.name,east_forest_guardian.intro.first,
+            east_forest_guardian.intro.second,26);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].boss=&east_forest_guardian;
+        n->people[n->count-1].open_x=26;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {
@@ -3993,8 +4042,9 @@ void npc_apply_progress(Npcs *n,uint32_t defeated,const ProgressionState *progre
     for (int i=0;i<n->count;++i) {
         Npc *p=&n->people[i];
         int battle_cleared=p->battle && (defeated&(1u<<p->battle->id));
+        int boss_cleared=p->boss && boss_is_defeated(progression,p->boss);
         int gate_open=p->gate && !gate_is_locked(p->gate,progression);
-        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !gate_open)) continue;
+        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !boss_cleared && !gate_open)) continue;
         p->actor.tile_x=p->actor.target_x=p->open_x;
         p->actor.tile_y=p->actor.target_y=p->open_y;
         p->actor.x=(float)(p->open_x*TILE_SIZE);
@@ -6838,6 +6888,8 @@ def chunk(kind, payload):
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
+             'east-forest-boss', 'east-forest-boss-ready',
+             'east-forest-boss-battle', 'east-forest-boss-victory',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
              'forest-gatekeeper-locked', 'forest-gatekeeper-open',
              'cave-gatekeeper-locked', 'cave-gatekeeper-open',
@@ -7271,6 +7323,7 @@ int main(void)
             assert(map_walkable(m,n.people[i].actor.tile_x,n.people[i].actor.tile_y));
             fits(n.people[i].first); fits(n.people[i].second);
             if(n.people[i].battle) assert(npc_battle_data_valid(n.people[i].battle));
+            if(n.people[i].boss) assert(boss_data_valid(n.people[i].boss));
         }
         for(int y=0;y<m->height;++y) {
             assert(strlen(m->rows[y])==(size_t)m->width);
@@ -7362,7 +7415,7 @@ int main(void)
     place(&g,MAP_FOREST,29,11);
     const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
-    assert(g.npcs.count==3 && g.npcs.people[1].gate==sunthread_gate);
+    assert(g.npcs.count==4 && g.npcs.people[1].gate==sunthread_gate);
     assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
@@ -7397,7 +7450,7 @@ int main(void)
     place(&g,MAP_FOREST,28,6);
     const Gate *cave_gate=map_gate(MAP_FOREST,28,5);
     assert(cave_gate && cave_gate->required_flag==PROGRESSION_CAVE_UNLOCKED);
-    assert(g.npcs.count==3 && g.npcs.people[2].gate==cave_gate &&
+    assert(g.npcs.count==4 && g.npcs.people[2].gate==cave_gate &&
            !strcmp(g.npcs.people[2].name,"MAREN"));
     update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_y==6 && gate_is_locked(cave_gate,&g.progression));
@@ -7420,6 +7473,58 @@ int main(void)
     update(&g,(Input){.vertical=1},10);
     assert(g.map_id==MAP_FOREST && g.npcs.people[2].actor.tile_x==29 &&
            g.npcs.people[2].actor.tile_y==6);
+
+    /* Phase 22: Elder Sylva guards Fernveil's east end and opens the next road. */
+    place(&g,MAP_FOREST,25,11);
+    sunthread_gate=map_gate(MAP_FOREST,30,11);
+    assert(g.npcs.count==4 && g.npcs.people[3].boss);
+    const BossData *east_boss=g.npcs.people[3].boss;
+    assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
+           east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(east_boss->party_count==2 && east_boss->party[0].level>3 &&
+           east_boss->party[1].level>east_boss->party[0].level);
+    assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==11);
+    int boss_marks=g.inventory.embermarks;
+    g.player.facing=FACE_RIGHT;
+    g.transition=0;
+    render(&g,"previews/east-forest-boss.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"ELDER SYLVA") &&
+           g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.boss_battle.flow==NPC_BATTLE_FLOW_READY);
+    render(&g,"previews/east-forest-boss-ready.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.presentation==BATTLE_PRESENTATION_GUARDIAN &&
+           g.battle.enemy_count==2 && g.battle.ai_profile==NPC_AI_BOSS);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6 &&
+           g.battle.enemy_party[1].species==SPECIES_GUSTLET &&
+           g.battle.enemy_party[1].level==7);
+    g.transition=0;
+    render(&g,"previews/east-forest-boss-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && progression_has(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[1],"SUNTHREAD WAY"));
+    assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==10);
+    assert(g.npcs.people[1].actor.tile_x==29 && g.npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(sunthread_gate,&g.progression));
+    g.transition=0;
+    render(&g,"previews/east-forest-boss-victory.ppm");
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},1);
+    update(&g,(Input){0},10);
+    assert(g.player.tile_x==26 && g.player.tile_y==11);
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE &&
+           !g.ready_prompt.active && strstr(g.dialogue.pages[0],"RECOGNIZES YOUR BOND"));
+    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},40);
+    assert(g.map_id==MAP_MARSH); /* Sylva's flag opens Varel's intended next region. */
 
     place(&g,MAP_CLEARING,7,11);
     update(&g,(Input){0,-1,0,0,0,0},20);
@@ -7871,6 +7976,7 @@ int main(void)
     npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
     assert(restored_npcs.people[1].actor.tile_x==29 && restored_npcs.people[1].actor.tile_y==10);
     assert(restored_npcs.people[2].actor.tile_x==29 && restored_npcs.people[2].actor.tile_y==6);
+    assert(restored_npcs.people[3].actor.tile_x==26 && restored_npcs.people[3].actor.tile_y==10);
     assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
     assert(gate_can_enter(map_gate(MAP_FOREST,28,5),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
@@ -7882,7 +7988,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 21 boss flow, cave lock, gatekeepers, NPC persistence, world systems, party/inventory, drawing budget");
+    puts("PASS: Phase 22 East Forest boss, boss flow, cave lock, gatekeepers, persistence, world systems and drawing budget");
     return 0;
 }
 ````

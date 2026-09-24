@@ -1,4 +1,4 @@
-# Emberwake — Phase 21 Generic Boss Battle Framework
+# Emberwake — Phase 22 East Forest Boss
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -8,20 +8,21 @@ action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
-Hollowstone Cave entrance, and a reusable boss battle framework with optional
-special presentation. The PNG number minus one is the internal
+Hollowstone Cave entrance, a reusable boss battle framework with optional
+special presentation, and Elder Sylva, Fernveil's first in-world Guardian.
+The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE21.PBP**, titled **Emberwake - Phase 21**. Copy it to:
+Use **EBOOT-PHASE22.PBP**, titled **Emberwake - Phase 22**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE20.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE21.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -65,7 +66,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
+| Fernveil Woods | Sen and Elder Sylva, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
 | Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
@@ -129,7 +130,7 @@ Afterward, Ren uses the gate's unlocked dialogue and the destination opens.
 Varel now guards Fernveil Woods' east road into Sunthread Marsh. The road starts
 locked and his dialogue tells the player to defeat Fernveil's Veyling Guardian.
 The gate requires `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, the stable flag that
-the later East Forest boss will award. When present, Varel steps north, confirms
+Elder Sylva awards. When present, Varel steps north, confirms
 that the Guardian has yielded, and opens the road. This position and dialogue
 are reconstructed from the saved progression state after every map entry or
 load. The reverse road remains open so an older save already in Sunthread Marsh
@@ -171,8 +172,15 @@ through the version-3 save payload. Victory sets it idempotently, grants the
 reward only on the first transition from incomplete to complete, and reapplies
 gatekeeper state immediately. The first optional presentation, GUARDIAN, gives
 boss battles a dark violet field, gold frame, and GUARDIAN header while reusing
-the normal battle controller. Phase 21 intentionally defines the framework and
-its test Guardian only; no boss has been placed in the world yet.
+the normal battle controller.
+
+Elder Sylva stands near the east end of Fernveil Woods. Talking to Sylva opens
+two intro pages and the ready prompt, then starts a Guardian battle against a
+level-6 Mossprig and level-7 Gustlet. This two-member party and boss AI profile
+make the encounter stronger than Ren's single level-3 challenger. Victory grants
+300 Embermarks once, sets `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, moves Sylva
+off the road, and immediately moves Varel aside to open the Sunthread route.
+Later talks use Sylva's post-victory dialogue without another battle or reward.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -367,12 +375,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE21.PBP EXTRA_TARGETS=EBOOT-PHASE21.PBP
+    make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -418,6 +426,11 @@ dialogue, rewards, required completion flags, presentation modes, and one-time
 completion. Its integration path covers cancel, loss and retry, the guardian
 visual treatment, victory, immediate progression updates, one-time rewards, and
 post-victory interaction without another battle.
+The Phase 22 integration reaches Elder Sylva through the real Fernveil NPC,
+checks the two-member party and level curve, runs the intro and ready flow,
+renders the Guardian battle, records victory and its one-time reward, updates
+Sylva and Varel immediately, repeats the post-victory dialogue, enters the newly
+opened Sunthread route, and rebuilds both NPC positions from saved progression.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -425,6 +438,8 @@ savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
+east-forest-boss.png, east-forest-boss-ready.png,
+east-forest-boss-battle.png, east-forest-boss-victory.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -441,13 +456,17 @@ PSP test route:
    opens. Talk again and verify the ready prompt does not return.
 4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
    beside the open path, and does not offer another battle.
-5. In Fernveil Woods, follow the main road east. Verify Varel blocks Sunthread
-   Marsh and explains that Fernveil's Veyling Guardian must be defeated. Save and
-   load there and verify the road remains locked.
-6. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
+5. In Fernveil Woods, follow the main road east to Elder Sylva. Decline once,
+   then accept. Verify the Guardian battle has a level-6 Mossprig followed by a
+   level-7 Gustlet and uses the violet and gold boss presentation.
+6. Win and verify Sylva grants 300 Embermarks, steps north, and talks about the
+   recognized bond on repeat interaction without starting another battle. Verify
+   Varel also steps aside and the Sunthread route opens. Save and load and verify
+   the defeated state, positions, open route, and reward remain unchanged.
+7. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
    and explains that the Fernveil and Northern Woods Guardians must be defeated.
    Save and load there and verify the cave remains sealed.
-7. Load an existing version-2 save and verify roster, items, money, and location
+8. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,

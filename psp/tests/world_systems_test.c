@@ -129,6 +129,7 @@ int main(void)
             assert(map_walkable(m,n.people[i].actor.tile_x,n.people[i].actor.tile_y));
             fits(n.people[i].first); fits(n.people[i].second);
             if(n.people[i].battle) assert(npc_battle_data_valid(n.people[i].battle));
+            if(n.people[i].boss) assert(boss_data_valid(n.people[i].boss));
         }
         for(int y=0;y<m->height;++y) {
             assert(strlen(m->rows[y])==(size_t)m->width);
@@ -220,7 +221,7 @@ int main(void)
     place(&g,MAP_FOREST,29,11);
     const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
-    assert(g.npcs.count==3 && g.npcs.people[1].gate==sunthread_gate);
+    assert(g.npcs.count==4 && g.npcs.people[1].gate==sunthread_gate);
     assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
@@ -255,7 +256,7 @@ int main(void)
     place(&g,MAP_FOREST,28,6);
     const Gate *cave_gate=map_gate(MAP_FOREST,28,5);
     assert(cave_gate && cave_gate->required_flag==PROGRESSION_CAVE_UNLOCKED);
-    assert(g.npcs.count==3 && g.npcs.people[2].gate==cave_gate &&
+    assert(g.npcs.count==4 && g.npcs.people[2].gate==cave_gate &&
            !strcmp(g.npcs.people[2].name,"MAREN"));
     update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_y==6 && gate_is_locked(cave_gate,&g.progression));
@@ -278,6 +279,58 @@ int main(void)
     update(&g,(Input){.vertical=1},10);
     assert(g.map_id==MAP_FOREST && g.npcs.people[2].actor.tile_x==29 &&
            g.npcs.people[2].actor.tile_y==6);
+
+    /* Phase 22: Elder Sylva guards Fernveil's east end and opens the next road. */
+    place(&g,MAP_FOREST,25,11);
+    sunthread_gate=map_gate(MAP_FOREST,30,11);
+    assert(g.npcs.count==4 && g.npcs.people[3].boss);
+    const BossData *east_boss=g.npcs.people[3].boss;
+    assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
+           east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(east_boss->party_count==2 && east_boss->party[0].level>3 &&
+           east_boss->party[1].level>east_boss->party[0].level);
+    assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==11);
+    int boss_marks=g.inventory.embermarks;
+    g.player.facing=FACE_RIGHT;
+    g.transition=0;
+    render(&g,"previews/east-forest-boss.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"ELDER SYLVA") &&
+           g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.boss_battle.flow==NPC_BATTLE_FLOW_READY);
+    render(&g,"previews/east-forest-boss-ready.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.presentation==BATTLE_PRESENTATION_GUARDIAN &&
+           g.battle.enemy_count==2 && g.battle.ai_profile==NPC_AI_BOSS);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==6 &&
+           g.battle.enemy_party[1].species==SPECIES_GUSTLET &&
+           g.battle.enemy_party[1].level==7);
+    g.transition=0;
+    render(&g,"previews/east-forest-boss-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && progression_has(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[1],"SUNTHREAD WAY"));
+    assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==10);
+    assert(g.npcs.people[1].actor.tile_x==29 && g.npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(sunthread_gate,&g.progression));
+    g.transition=0;
+    render(&g,"previews/east-forest-boss-victory.ppm");
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},1);
+    update(&g,(Input){0},10);
+    assert(g.player.tile_x==26 && g.player.tile_y==11);
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE &&
+           !g.ready_prompt.active && strstr(g.dialogue.pages[0],"RECOGNIZES YOUR BOND"));
+    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},40);
+    assert(g.map_id==MAP_MARSH); /* Sylva's flag opens Varel's intended next region. */
 
     place(&g,MAP_CLEARING,7,11);
     update(&g,(Input){0,-1,0,0,0,0},20);
@@ -729,6 +782,7 @@ int main(void)
     npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
     assert(restored_npcs.people[1].actor.tile_x==29 && restored_npcs.people[1].actor.tile_y==10);
     assert(restored_npcs.people[2].actor.tile_x==29 && restored_npcs.people[2].actor.tile_y==6);
+    assert(restored_npcs.people[3].actor.tile_x==26 && restored_npcs.people[3].actor.tile_y==10);
     assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
     assert(gate_can_enter(map_gate(MAP_FOREST,28,5),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
@@ -740,6 +794,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 21 boss flow, cave lock, gatekeepers, NPC persistence, world systems, party/inventory, drawing budget");
+    puts("PASS: Phase 22 East Forest boss, boss flow, cave lock, gatekeepers, persistence, world systems and drawing budget");
     return 0;
 }

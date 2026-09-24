@@ -2,11 +2,13 @@
 #define EMBERWAKE_NPC_H
 #include "player.h"
 #include "npc_battle.h"
+#include "boss.h"
 #define NPC_MAX 4
 typedef struct {
     Player actor;
     const char *name, *first, *second;
     const NpcBattleData *battle;
+    const BossData *boss;
     const Gate *gate;
     int open_x, open_y;
     int patrol_start, patrol_end, direction;

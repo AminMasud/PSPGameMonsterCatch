@@ -10,6 +10,20 @@ static const NpcBattleData east_challenger = {
     .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
 
+static const BossData east_forest_guardian = {
+    .id=BOSS_EAST_FOREST_GUARDIAN,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+    .intro={"I AM SYLVA, KEEPER OF FERNVEIL.",
+            "SHOW ME THE BOND THAT GUIDES YOUR VEYLINGS."},
+    .victory={"FERNVEIL RECOGNIZES YOUR BOND.",
+              "THE SUNTHREAD WAY NOW OPENS TO YOU."},
+    .defeat={"THE FOREST ASKS FOR PATIENCE.",
+             "RETURN WHEN YOUR TEAM IS READY."},
+    .party={{SPECIES_MOSSPRIG,6},{SPECIES_GUSTLET,7}},.party_count=2,
+    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+    .presentation=BATTLE_PRESENTATION_GUARDIAN
+};
+
 static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
@@ -53,6 +67,12 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].gate=hollowstone;
         n->people[n->count-1].open_x=29;
         n->people[n->count-1].open_y=6;
+        add(n,26,11,east_forest_guardian.name,east_forest_guardian.intro.first,
+            east_forest_guardian.intro.second,26);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].boss=&east_forest_guardian;
+        n->people[n->count-1].open_x=26;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {
@@ -68,8 +88,9 @@ void npc_apply_progress(Npcs *n,uint32_t defeated,const ProgressionState *progre
     for (int i=0;i<n->count;++i) {
         Npc *p=&n->people[i];
         int battle_cleared=p->battle && (defeated&(1u<<p->battle->id));
+        int boss_cleared=p->boss && boss_is_defeated(progression,p->boss);
         int gate_open=p->gate && !gate_is_locked(p->gate,progression);
-        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !gate_open)) continue;
+        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !boss_cleared && !gate_open)) continue;
         p->actor.tile_x=p->actor.target_x=p->open_x;
         p->actor.tile_y=p->actor.target_y=p->open_y;
         p->actor.x=(float)(p->open_x*TILE_SIZE);

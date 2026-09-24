@@ -5,6 +5,11 @@
 
 #define BOSS_MAX 16
 
+typedef enum {
+    BOSS_EAST_FOREST_GUARDIAN,
+    BOSS_COUNT
+} BossId;
+
 typedef struct {
     int id;
     const char *name;

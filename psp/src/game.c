@@ -405,7 +405,10 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
+            if (npc->boss) {
+                game_offer_boss_battle(g,npc->boss,
+                    g->encounter.random^(uint32_t)(npc->boss->id+1)*0x85ebca6bu);
+            } else if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
                 game_offer_npc_battle(g,npc->battle,
                     g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
             } else if (npc->gate) {
