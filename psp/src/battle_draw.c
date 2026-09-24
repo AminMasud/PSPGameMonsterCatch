@@ -5,6 +5,7 @@
 #include "graphics.h"
 #include "text.h"
 #include "pet_draw.h"
+#include "party_menu.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
 
 static void status(const Battler *unit,int x,int y,int width,float shown_hp)
@@ -25,6 +26,10 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 }
 void battle_draw(const Battle *b)
 {
+    if(b->phase==BATTLE_SWITCH) {
+        party_menu_draw_battle(&b->party,b->active,b->switch_cursor,b->forced_switch,b->switch_message);
+        return;
+    }
     graphics_rectangle(0,0,480,272,C(48,65,74));
     graphics_rectangle(0,88,480,88,C(65,81,77));
     graphics_rectangle(0,0,480,15,C(19,28,36));
@@ -48,18 +53,7 @@ void battle_draw(const Battle *b)
     status(&b->ally,253,109,210,b->ally_hp_shown);
     graphics_rectangle(6,176,468,90,C(177,144,94));
     graphics_rectangle(8,178,464,86,C(21,30,38));
-    if(b->phase==BATTLE_SWITCH) {
-        text_draw(18,188,b->forced_switch?"CHOOSE A READY VEYLING.":"SWITCH YOUR ACTIVE VEYLING.",C(244,198,118),1);
-        for(int i=0;i<b->party.count;++i) {
-            const Creature *member=i==b->active?&b->ally:&b->party.members[i];
-            char line[80];
-            if(i==b->switch_cursor) graphics_rectangle(14,200+i*13,450,12,C(79,92,86));
-            snprintf(line,sizeof(line),"%s  LV %d  HP %d/%d  %s",creature_name(member),member->level,member->hp,member->max_hp,
-                     i==b->active?"ACTIVE":member->hp<=0?"NEEDS REST":"READY");
-            text_draw(20,203+i*13,line,C(236,236,218),1);
-        }
-        text_draw(18,255,b->forced_switch?"X SEND OUT - A REPLACEMENT IS REQUIRED":"X SWITCH   O BACK - SWITCHING USES A TURN",C(167,194,180),1);
-    } else if(b->phase==BATTLE_CAPTURE) {
+    if(b->phase==BATTLE_CAPTURE) {
         char line[80];
         text_draw(18,188,"RESONANCE LOOM",C(244,198,118),2);
         snprintf(line,sizeof(line),"CHARGES %d/3   BOND CHANCE %d/100",b->capture_charges,capture_chance(&b->enemy,1));
@@ -105,7 +99,7 @@ void battle_draw(const Battle *b)
         char growth[64];
         snprintf(growth,sizeof(growth),"%s - NEXT LEVEL IN %d XP",creature_name(&b->ally),creature_xp_remaining(&b->ally));
         text_wrap(18,230,274,19,growth,C(233,173,115),1);
-        const char *const options[]={"FIGHT","CAPTURE","CREATURES","ITEMS","RUN"};
+        const char *const options[]={"FIGHT","CAPTURE","SWAP","ITEMS","RUN"};
         for(int i=0;i<5;++i) {
             if(i==b->cursor) graphics_rectangle(302,182+i*15,158,14,C(79,92,86));
             text_draw(310,186+i*15,options[i],i==b->cursor?C(255,213,147):C(187,193,193),1);

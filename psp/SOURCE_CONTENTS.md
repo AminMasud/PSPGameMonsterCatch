@@ -1,4 +1,4 @@
-# Complete Phase 11 source contents
+# Complete Phase 12 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -463,7 +463,7 @@ void audio_settings(int music,int effects);
 typedef Creature Battler;
 typedef enum { BATTLE_MESSAGE, BATTLE_MENU, BATTLE_ATTACKS, BATTLE_LEARN, BATTLE_SWITCH, BATTLE_CAPTURE, BATTLE_ITEMS, BATTLE_DONE } BattlePhase;
 typedef enum { BATTLE_ONGOING, BATTLE_WIN, BATTLE_LOSS, BATTLE_ESCAPED, BATTLE_CAUGHT } BattleResult;
-typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_SWITCH, AFTER_DONE, AFTER_BEGIN_TURN } BattleAfter;
+typedef enum { AFTER_MENU, AFTER_TURN, AFTER_GROWTH, AFTER_DONE, AFTER_BEGIN_TURN } BattleAfter;
 /* Turn progression is separate from UI pages and message acknowledgements. */
 typedef enum {
     TURN_BEGIN, TURN_SELECT_ENEMY, TURN_WAIT_PLAYER,
@@ -488,6 +488,7 @@ typedef struct {
     int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;
     float animation, hit_time, ally_hp_shown, enemy_hp_shown;
     int hit_side, acting_side; /* 0 ally, 1 enemy, -1 outside action messages. */
+    char switch_message[80];
     char message[160];
 } Battle;
 void battler_starter(Battler *b);
@@ -808,6 +809,8 @@ void party_menu_open(PartyMenu *menu);
 /* Returns one while open, zero when Circle/Triangle closes the menu. */
 int party_menu_update(PartyMenu *menu, Party *party, const Input *input);
 void party_menu_draw(const PartyMenu *menu, const Party *party);
+void party_menu_draw_battle(const Party *party,int active,int cursor,int forced,
+                            const char *message);
 
 #endif
 ````
@@ -1008,7 +1011,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 11
+PSP_EBOOT_TITLE = Emberwake - Phase 12
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1041,24 +1044,25 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 11 Active-Turn Battle Spotlight
+# Emberwake — Phase 12 Battle Swap Navigation
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
-player command selection, and a clear spotlight on the Veyling performing each
-action. The PNG number minus one is the internal species ID. All 30 forms have
+player command selection, a clear spotlight on the Veyling performing each
+action, and a full-screen battle party selector with automatic return after a
+swap. The PNG number minus one is the internal species ID. All 30 forms have
 stats, descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE11.PBP**, titled **Emberwake - Phase 11**. Copy it to:
+Use **EBOOT-PHASE12.PBP**, titled **Emberwake - Phase 12**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PETS.PBP, and numbered phase
-builds are retained locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP, EBOOT-PETS.PBP,
+and numbered phase builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -1191,11 +1195,17 @@ withdrawals, and swapping when the party is full. The final party member cannot
 be deposited. There is no release/delete action. Transfers preserve all state.
 Circle returns to the Field Kit; Triangle closes it completely.
 
-In battle, voluntary switching consumes the player's action. The enemy performs
-its scheduled action only if it has not already acted. Replacing a knocked-out
-ally is free and mandatory while a healthy reserve remains; the replacement
-starts a fresh round and never inherits the knocked-out ally's queued attack.
-The entire party must be defeated before the battle is lost.
+SWAP opens a full-screen BATTLE PARTY view with each partner's artwork, HP,
+level, readiness, and selected-creature details. The current active Veyling and
+fainted Veylings cannot be selected. Circle cancels a voluntary swap without
+spending the action. A valid selection closes the party screen immediately.
+
+Voluntary switching consumes the player's action, so the enemy performs its
+scheduled action only if it has not already acted before the normal command menu
+returns. Replacing a knocked-out ally is free, mandatory, and cannot be canceled
+while a healthy reserve remains. The replacement starts a fresh speed-ordered
+round and never inherits the knocked-out ally's queued attack. The entire party
+must be defeated before the battle is lost.
 
 ITEMS heals the active battler in combat or the lead partner from the Field Kit.
 Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
@@ -1292,12 +1302,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP
+    make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1313,10 +1323,12 @@ All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
-checks the normal, ally-action, and enemy-action tint states. The full suite also
-covers movement, all portals, collisions, capture, inventory, menus, all 30 forms
-at levels 1–100, all ten two-step evolution chains, wild availability of every
-form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
+checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
+voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
+enemy response, enemy-first swaps, and fast/slow forced replacements. The full
+suite also covers movement, all portals, collisions, capture, inventory, menus,
+all 30 forms at levels 1–100, all ten two-step evolution chains, wild availability
+of every form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
@@ -1325,12 +1337,13 @@ through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png fro
 the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Choose an attack and verify the ally stays bright while the enemy dims.
-2. Advance once and verify the brightness focus moves to the enemy.
-3. Verify both sprites return to normal brightness at the command menu.
-4. Repeat with an enemy faster than the ally; its spotlight must appear first.
-5. Check misses, knockouts, items, captures, RUN, and swaps for the correct actor.
-6. Disable animation and verify the static highlight remains clear and readable.
+1. Choose SWAP and verify the full-screen BATTLE PARTY view opens.
+2. Select the active Veyling and a fainted Veyling; both must remain rejected.
+3. Select a ready reserve and verify the party screen closes immediately.
+4. In a player-first round, verify the enemy acts once before the next menu.
+5. In an enemy-first round, verify swapping does not grant a second enemy action.
+6. Force a replacement after a knockout; Circle must not cancel it, and a valid
+   reserve must enter a fresh round with the correct speed order.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -1541,6 +1554,7 @@ void audio_settings(int music,int effects)
 #include "graphics.h"
 #include "text.h"
 #include "pet_draw.h"
+#include "party_menu.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
 
 static void status(const Battler *unit,int x,int y,int width,float shown_hp)
@@ -1561,6 +1575,10 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 }
 void battle_draw(const Battle *b)
 {
+    if(b->phase==BATTLE_SWITCH) {
+        party_menu_draw_battle(&b->party,b->active,b->switch_cursor,b->forced_switch,b->switch_message);
+        return;
+    }
     graphics_rectangle(0,0,480,272,C(48,65,74));
     graphics_rectangle(0,88,480,88,C(65,81,77));
     graphics_rectangle(0,0,480,15,C(19,28,36));
@@ -1584,18 +1602,7 @@ void battle_draw(const Battle *b)
     status(&b->ally,253,109,210,b->ally_hp_shown);
     graphics_rectangle(6,176,468,90,C(177,144,94));
     graphics_rectangle(8,178,464,86,C(21,30,38));
-    if(b->phase==BATTLE_SWITCH) {
-        text_draw(18,188,b->forced_switch?"CHOOSE A READY VEYLING.":"SWITCH YOUR ACTIVE VEYLING.",C(244,198,118),1);
-        for(int i=0;i<b->party.count;++i) {
-            const Creature *member=i==b->active?&b->ally:&b->party.members[i];
-            char line[80];
-            if(i==b->switch_cursor) graphics_rectangle(14,200+i*13,450,12,C(79,92,86));
-            snprintf(line,sizeof(line),"%s  LV %d  HP %d/%d  %s",creature_name(member),member->level,member->hp,member->max_hp,
-                     i==b->active?"ACTIVE":member->hp<=0?"NEEDS REST":"READY");
-            text_draw(20,203+i*13,line,C(236,236,218),1);
-        }
-        text_draw(18,255,b->forced_switch?"X SEND OUT - A REPLACEMENT IS REQUIRED":"X SWITCH   O BACK - SWITCHING USES A TURN",C(167,194,180),1);
-    } else if(b->phase==BATTLE_CAPTURE) {
+    if(b->phase==BATTLE_CAPTURE) {
         char line[80];
         text_draw(18,188,"RESONANCE LOOM",C(244,198,118),2);
         snprintf(line,sizeof(line),"CHARGES %d/3   BOND CHANCE %d/100",b->capture_charges,capture_chance(&b->enemy,1));
@@ -1641,7 +1648,7 @@ void battle_draw(const Battle *b)
         char growth[64];
         snprintf(growth,sizeof(growth),"%s - NEXT LEVEL IN %d XP",creature_name(&b->ally),creature_xp_remaining(&b->ally));
         text_wrap(18,230,274,19,growth,C(233,173,115),1);
-        const char *const options[]={"FIGHT","CAPTURE","CREATURES","ITEMS","RUN"};
+        const char *const options[]={"FIGHT","CAPTURE","SWAP","ITEMS","RUN"};
         for(int i=0;i<5;++i) {
             if(i==b->cursor) graphics_rectangle(302,182+i*15,158,14,C(79,92,86));
             text_draw(310,186+i*15,options[i],i==b->cursor?C(255,213,147):C(187,193,193),1);
@@ -1913,19 +1920,25 @@ void battle_update(Battle *b,const Input *input)
         return;
     }
     if(b->phase==BATTLE_SWITCH) {
-        if(input->cancel && !b->forced_switch) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
-        if(nav) b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
+        if(input->cancel && !b->forced_switch) {
+            b->acting_side=-1;b->switch_message[0]=0;b->phase=BATTLE_MENU;return;
+        }
+        if(nav) {
+            b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
+            b->switch_message[0]=0;
+        }
         if(!input->confirm) return;
         int selected=b->switch_cursor;
         if(selected==b->active || b->party.members[selected].hp<=0) {
-            message(b,selected==b->active?"THAT VEYLING IS ALREADY ACTIVE.":"THAT VEYLING NEEDS A REST.",AFTER_SWITCH);return;
+            snprintf(b->switch_message,sizeof(b->switch_message),"%s",
+                     selected==b->active?"THAT VEYLING IS ALREADY ACTIVE.":"THAT VEYLING NEEDS A REST.");
+            return;
         }
         sync_active(b);b->active=selected;b->ally=b->party.members[selected];
         int forced=b->forced_switch;b->forced_switch=0;
-        b->move_cursor=0;
-        snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
-        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
-        if(!forced) complete_player_action(b);else b->acting_side=0;
+        b->move_cursor=0;b->switch_message[0]=0;b->acting_side=-1;
+        if(forced) begin_turn(b);
+        else { complete_player_action(b);advance_turn(b); }
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
@@ -1965,8 +1978,9 @@ void battle_update(Battle *b,const Input *input)
         if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
         if(b->after==AFTER_MENU) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
         if(b->after==AFTER_GROWTH) { b->acting_side=-1;growth_next(b);return; }
-        if(b->after==AFTER_SWITCH || b->forced_switch) {
-            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
+        if(b->forced_switch) {
+            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;
+            b->switch_cursor=b->active;b->switch_message[0]=0;return;
         }
         if(b->result==BATTLE_WIN) {
             b->acting_side=-1;
@@ -2009,7 +2023,7 @@ void battle_update(Battle *b,const Input *input)
     case 1:
         b->phase=BATTLE_CAPTURE;break;
     case 2:
-        sync_active(b);b->switch_cursor=b->active;b->phase=BATTLE_SWITCH;break;
+        sync_active(b);b->switch_cursor=b->active;b->switch_message[0]=0;b->phase=BATTLE_SWITCH;break;
     case 3:
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:
@@ -3338,6 +3352,44 @@ static void details_draw(const Creature *creature)
     }
 }
 
+void party_menu_draw_battle(const Party *party,int active,int cursor,int forced,
+                            const char *message)
+{
+    char line[80];
+    if(party->count<=0) return;
+    if(cursor<0 || cursor>=party->count) cursor=0;
+    graphics_rectangle(0,0,480,272,C(17,26,33));
+    text_draw(14,12,"BATTLE PARTY",C(241,221,184),2);
+    text_draw(254,18,forced?"CHOOSE A READY REPLACEMENT":"CHOOSE WHO WILL TAKE THE FIELD",C(165,188,181),1);
+    graphics_rectangle(12,52,216,157,C(25,35,45));
+    graphics_rectangle(238,52,230,157,C(25,35,45));
+    for(int i=0;i<party->count;++i) {
+        const Creature *member=&party->members[i];
+        int y=57+i*37;
+        if(i==cursor) graphics_rectangle(16,y,208,34,C(59,78,76));
+        pet_draw(member->species,20,y+2,30,0);
+        snprintf(line,sizeof(line),"%.18s  LV %d",creature_name(member),member->level);
+        text_draw(55,y+5,line,C(235,230,209),1);
+        snprintf(line,sizeof(line),"HP %d/%d  %s",member->hp,member->max_hp,
+                 i==active?"ACTIVE":member->hp<=0?"NEEDS REST":"READY");
+        text_draw(55,y+17,line,i==active?C(255,201,132):member->hp<=0?C(214,132,123):C(168,199,183),1);
+        graphics_rectangle(55,y+27,150,4,C(57,70,77));
+        if(member->max_hp>0 && member->hp>0) {
+            int filled=150*member->hp/member->max_hp;
+            if(filled>150) filled=150;
+            graphics_rectangle(55,y+27,filled,4,C(125,201,154));
+        }
+    }
+    details_draw(&party->members[cursor]);
+    graphics_rectangle(12,214,456,32,C(32,44,49));
+    if(message && message[0]) text_draw(21,220,message,C(238,198,137),1);
+    else if(cursor==active) text_draw(21,220,"THIS VEYLING IS ALREADY ACTIVE.\nCHOOSE ANOTHER PARTNER.",C(238,198,137),1);
+    else if(party->members[cursor].hp<=0) text_draw(21,220,"THIS VEYLING NEEDS A REST.\nCHOOSE A READY PARTNER.",C(214,151,137),1);
+    else text_draw(21,220,forced?"X SEND OUT THIS VEYLING.":"X SWAP - THIS USES YOUR ACTION.",C(220,213,190),1);
+    text_draw(12,255,forced?"UP/DOWN SELECT   X SEND OUT - REPLACEMENT REQUIRED":
+              "UP/DOWN SELECT   X SWAP   O BACK",C(161,189,181),1);
+}
+
 static void actions_draw(const PartyMenu *menu, const Party *party)
 {
     graphics_rectangle(238,64,230,145,C(174,143,94));
@@ -4379,16 +4431,17 @@ static void voluntary_switch(void)
     assert(b.phase==BATTLE_MENU && b.active==0 && total_uses(&b.enemy)==96);
     open_switch(&b);
     b.switch_cursor=0;confirm(&b);messages(&b);
-    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96 &&
+           strstr(b.switch_message,"ACTIVE"));
     b.switch_cursor=2;confirm(&b);messages(&b);
-    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96 &&
+           strstr(b.switch_message,"REST"));
     b.switch_cursor=1;confirm(&b);
-    assert(b.phase==BATTLE_MESSAGE && b.active==1 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_MESSAGE && b.active==1 && total_uses(&b.enemy)==95);
+    assert(b.acting_side==1 && b.ally.hp<p.members[1].hp);
     same_creature(&b.party.members[0],&outgoing);
-    same_creature(&b.ally,&p.members[1]);
+    assert(b.ally.species==p.members[1].species);
     confirm(&b);
-    assert(total_uses(&b.enemy)==95 && b.ally.hp<p.members[1].hp);
-    messages(&b);
     assert(b.phase==BATTLE_MENU && total_uses(&b.enemy)==95);
     for(int i=0;i<4;++i) battle_update(&b,&(Input){0});
     assert(total_uses(&b.enemy)==95);
@@ -4489,7 +4542,7 @@ int main(void)
     forced_replacement_and_team_loss();
     victory_updates_only_active();
     item_use();
-    puts("PASS: capture odds/charges/storage, one enemy reply, switching, forced replacement, team loss, active-only growth, item turns and party sync");
+    puts("PASS: capture/storage, automatic battle swaps, invalid/forced replacement, team loss, growth, items and party sync");
     return 0;
 }
 ````
@@ -4743,11 +4796,18 @@ static void enemy_first_commands(void)
         Battle b;prepare(&b,1,123,1);
         press(&b);player_menu(&b,1);
         assert(b.enemy.uses[0]==99 && b.ally.uses[0]==100);
+        if(command==2) b.party.members[1].speed=30;
         b.cursor=command;
         if(command==4) b.random=4; /* Failed escape (76/100). */
         press(&b);
         if(command==1) { b.random=1;press(&b); } /* Failed capture (69/100). */
-        if(command==2) { b.switch_cursor=1;press(&b); }
+        if(command==2) {
+            b.switch_cursor=1;press(&b);
+            assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MENU);
+            assert(b.active==1 && b.turn_number==2 && b.turn_index==0);
+            assert(b.enemy.uses[0]==99 && b.acting_side==-1);
+            continue;
+        }
         if(command==3) press(&b);
         assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MESSAGE && b.acting_side==0);
         assert(b.enemy.uses[0]==99 && b.turn_index==2 && b.turn_number==1);
@@ -4780,8 +4840,6 @@ static void forced_replacement(void)
         press(&b);assert(b.phase==BATTLE_SWITCH && b.acting_side==-1);
         cancel(&b);assert(b.phase==BATTLE_SWITCH && b.turn_number==1);
         b.switch_cursor=1;press(&b);
-        assert(b.enemy.uses[0]==99 && b.ally.hp==1000 && b.turn_number==1 && b.acting_side==0);
-        press(&b);
         assert(b.turn_number==2 && b.active==1 && !b.forced_switch);
         player_menu(&b,!fast_reserve);
         assert(b.enemy.uses[0]==(fast_reserve?99:98));
@@ -4807,7 +4865,7 @@ int main(void)
 {
     repeated_turns(0);repeated_turns(1);equal_speed();knockouts();
     enemy_first_commands();forced_replacement();fallback_and_locked_order();
-    puts("PASS: Phase 10 turn order/actions and Phase 11 spotlight actor ownership/menu clearing");
+    puts("PASS: Phase 10 turns, Phase 11 actor spotlight, Phase 12 automatic swap return and forced rounds");
     return 0;
 }
 ````
@@ -6035,7 +6093,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
     render(&g,"previews/battle-switch.ppm");
-    g.battle.switch_cursor=0;update(&g,(Input){.confirm=1},3);
+    g.battle.switch_cursor=0;update(&g,(Input){.confirm=1},2);
     assert(g.battle.active==0 && g.battle.phase==BATTLE_MENU);
     g.battle.cursor=4;g.battle.escape_attempts=2;update(&g,(Input){.confirm=1},2);
     assert(!g.in_battle && g.party.lead==0 && g.party.stored==1);
@@ -6193,7 +6251,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, capture retention, party/inventory, battle lead, drawing budget, actor spotlight states");
+    puts("PASS: world systems, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }
 ````

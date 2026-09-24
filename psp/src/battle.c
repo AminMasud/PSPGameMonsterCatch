@@ -235,19 +235,25 @@ void battle_update(Battle *b,const Input *input)
         return;
     }
     if(b->phase==BATTLE_SWITCH) {
-        if(input->cancel && !b->forced_switch) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
-        if(nav) b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
+        if(input->cancel && !b->forced_switch) {
+            b->acting_side=-1;b->switch_message[0]=0;b->phase=BATTLE_MENU;return;
+        }
+        if(nav) {
+            b->switch_cursor=(b->switch_cursor+nav+b->party.count)%b->party.count;
+            b->switch_message[0]=0;
+        }
         if(!input->confirm) return;
         int selected=b->switch_cursor;
         if(selected==b->active || b->party.members[selected].hp<=0) {
-            message(b,selected==b->active?"THAT VEYLING IS ALREADY ACTIVE.":"THAT VEYLING NEEDS A REST.",AFTER_SWITCH);return;
+            snprintf(b->switch_message,sizeof(b->switch_message),"%s",
+                     selected==b->active?"THAT VEYLING IS ALREADY ACTIVE.":"THAT VEYLING NEEDS A REST.");
+            return;
         }
         sync_active(b);b->active=selected;b->ally=b->party.members[selected];
         int forced=b->forced_switch;b->forced_switch=0;
-        b->move_cursor=0;
-        snprintf(b->message,sizeof(b->message),"%s TAKES THE FIELD.",creature_name(&b->ally));
-        b->phase=BATTLE_MESSAGE;b->after=forced?AFTER_BEGIN_TURN:AFTER_TURN;
-        if(!forced) complete_player_action(b);else b->acting_side=0;
+        b->move_cursor=0;b->switch_message[0]=0;b->acting_side=-1;
+        if(forced) begin_turn(b);
+        else { complete_player_action(b);advance_turn(b); }
         return;
     }
     if(b->phase==BATTLE_ITEMS) {
@@ -287,8 +293,9 @@ void battle_update(Battle *b,const Input *input)
         if(b->after==AFTER_BEGIN_TURN) { begin_turn(b);return; }
         if(b->after==AFTER_MENU) { b->acting_side=-1;b->phase=BATTLE_MENU; return; }
         if(b->after==AFTER_GROWTH) { b->acting_side=-1;growth_next(b);return; }
-        if(b->after==AFTER_SWITCH || b->forced_switch) {
-            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;b->switch_cursor=b->active;return;
+        if(b->forced_switch) {
+            b->acting_side=-1;sync_active(b);b->phase=BATTLE_SWITCH;
+            b->switch_cursor=b->active;b->switch_message[0]=0;return;
         }
         if(b->result==BATTLE_WIN) {
             b->acting_side=-1;
@@ -331,7 +338,7 @@ void battle_update(Battle *b,const Input *input)
     case 1:
         b->phase=BATTLE_CAPTURE;break;
     case 2:
-        sync_active(b);b->switch_cursor=b->active;b->phase=BATTLE_SWITCH;break;
+        sync_active(b);b->switch_cursor=b->active;b->switch_message[0]=0;b->phase=BATTLE_SWITCH;break;
     case 3:
         b->item_cursor=0;b->phase=BATTLE_ITEMS;break;
     default:

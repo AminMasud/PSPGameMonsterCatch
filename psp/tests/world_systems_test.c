@@ -307,7 +307,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     g.battle.cursor=2;update(&g,(Input){.confirm=1},1);
     render(&g,"previews/battle-switch.ppm");
-    g.battle.switch_cursor=0;update(&g,(Input){.confirm=1},3);
+    g.battle.switch_cursor=0;update(&g,(Input){.confirm=1},2);
     assert(g.battle.active==0 && g.battle.phase==BATTLE_MENU);
     g.battle.cursor=4;g.battle.escape_attempts=2;update(&g,(Input){.confirm=1},2);
     assert(!g.in_battle && g.party.lead==0 && g.party.stored==1);
@@ -465,6 +465,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, progression, capture retention, party/inventory, battle lead, drawing budget, actor spotlight states");
+    puts("PASS: world systems, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
     return 0;
 }

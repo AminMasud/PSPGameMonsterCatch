@@ -142,6 +142,44 @@ static void details_draw(const Creature *creature)
     }
 }
 
+void party_menu_draw_battle(const Party *party,int active,int cursor,int forced,
+                            const char *message)
+{
+    char line[80];
+    if(party->count<=0) return;
+    if(cursor<0 || cursor>=party->count) cursor=0;
+    graphics_rectangle(0,0,480,272,C(17,26,33));
+    text_draw(14,12,"BATTLE PARTY",C(241,221,184),2);
+    text_draw(254,18,forced?"CHOOSE A READY REPLACEMENT":"CHOOSE WHO WILL TAKE THE FIELD",C(165,188,181),1);
+    graphics_rectangle(12,52,216,157,C(25,35,45));
+    graphics_rectangle(238,52,230,157,C(25,35,45));
+    for(int i=0;i<party->count;++i) {
+        const Creature *member=&party->members[i];
+        int y=57+i*37;
+        if(i==cursor) graphics_rectangle(16,y,208,34,C(59,78,76));
+        pet_draw(member->species,20,y+2,30,0);
+        snprintf(line,sizeof(line),"%.18s  LV %d",creature_name(member),member->level);
+        text_draw(55,y+5,line,C(235,230,209),1);
+        snprintf(line,sizeof(line),"HP %d/%d  %s",member->hp,member->max_hp,
+                 i==active?"ACTIVE":member->hp<=0?"NEEDS REST":"READY");
+        text_draw(55,y+17,line,i==active?C(255,201,132):member->hp<=0?C(214,132,123):C(168,199,183),1);
+        graphics_rectangle(55,y+27,150,4,C(57,70,77));
+        if(member->max_hp>0 && member->hp>0) {
+            int filled=150*member->hp/member->max_hp;
+            if(filled>150) filled=150;
+            graphics_rectangle(55,y+27,filled,4,C(125,201,154));
+        }
+    }
+    details_draw(&party->members[cursor]);
+    graphics_rectangle(12,214,456,32,C(32,44,49));
+    if(message && message[0]) text_draw(21,220,message,C(238,198,137),1);
+    else if(cursor==active) text_draw(21,220,"THIS VEYLING IS ALREADY ACTIVE.\nCHOOSE ANOTHER PARTNER.",C(238,198,137),1);
+    else if(party->members[cursor].hp<=0) text_draw(21,220,"THIS VEYLING NEEDS A REST.\nCHOOSE A READY PARTNER.",C(214,151,137),1);
+    else text_draw(21,220,forced?"X SEND OUT THIS VEYLING.":"X SWAP - THIS USES YOUR ACTION.",C(220,213,190),1);
+    text_draw(12,255,forced?"UP/DOWN SELECT   X SEND OUT - REPLACEMENT REQUIRED":
+              "UP/DOWN SELECT   X SWAP   O BACK",C(161,189,181),1);
+}
+
 static void actions_draw(const PartyMenu *menu, const Party *party)
 {
     graphics_rectangle(238,64,230,145,C(174,143,94));

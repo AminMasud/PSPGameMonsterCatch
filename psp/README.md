@@ -1,21 +1,22 @@
-# Emberwake — Phase 11 Active-Turn Battle Spotlight
+# Emberwake — Phase 12 Battle Swap Navigation
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
-player command selection, and a clear spotlight on the Veyling performing each
-action. The PNG number minus one is the internal species ID. All 30 forms have
+player command selection, a clear spotlight on the Veyling performing each
+action, and a full-screen battle party selector with automatic return after a
+swap. The PNG number minus one is the internal species ID. All 30 forms have
 stats, descriptions, attacks, capture support, and their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE11.PBP**, titled **Emberwake - Phase 11**. Copy it to:
+Use **EBOOT-PHASE12.PBP**, titled **Emberwake - Phase 12**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
-Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PETS.PBP, and numbered phase
-builds are retained locally for comparison.
+Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP, EBOOT-PETS.PBP,
+and numbered phase builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
@@ -148,11 +149,17 @@ withdrawals, and swapping when the party is full. The final party member cannot
 be deposited. There is no release/delete action. Transfers preserve all state.
 Circle returns to the Field Kit; Triangle closes it completely.
 
-In battle, voluntary switching consumes the player's action. The enemy performs
-its scheduled action only if it has not already acted. Replacing a knocked-out
-ally is free and mandatory while a healthy reserve remains; the replacement
-starts a fresh round and never inherits the knocked-out ally's queued attack.
-The entire party must be defeated before the battle is lost.
+SWAP opens a full-screen BATTLE PARTY view with each partner's artwork, HP,
+level, readiness, and selected-creature details. The current active Veyling and
+fainted Veylings cannot be selected. Circle cancels a voluntary swap without
+spending the action. A valid selection closes the party screen immediately.
+
+Voluntary switching consumes the player's action, so the enemy performs its
+scheduled action only if it has not already acted before the normal command menu
+returns. Replacing a knocked-out ally is free, mandatory, and cannot be canceled
+while a healthy reserve remains. The replacement starts a fresh speed-ordered
+round and never inherits the knocked-out ally's queued attack. The entire party
+must be defeated before the battle is lost.
 
 ITEMS heals the active battler in combat or the lead partner from the Field Kit.
 Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
@@ -249,12 +256,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE11.PBP EXTRA_TARGETS=EBOOT-PHASE11.PBP
+    make PSP_EBOOT=EBOOT-PHASE12.PBP EXTRA_TARGETS=EBOOT-PHASE12.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -270,10 +277,12 @@ All ten C suites run with AddressSanitizer and UndefinedBehaviorSanitizer. The
 dedicated Phase 10 suite covers player-first, enemy-first, equal-speed, every
 first/second-action knockout combination, command actions, forced replacements,
 repeated rounds without duplicates, and Phase 11 actor ownership. The renderer
-checks the normal, ally-action, and enemy-action tint states. The full suite also
-covers movement, all portals, collisions, capture, inventory, menus, all 30 forms
-at levels 1–100, all ten two-step evolution chains, wild availability of every
-form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
+checks the normal, ally-action, and enemy-action tint states. Phase 12 checks
+voluntary cancel, active/fainted rejection, immediate selector exit, exactly one
+enemy response, enemy-first swaps, and fast/slow forced replacements. The full
+suite also covers movement, all portals, collisions, capture, inventory, menus,
+all 30 forms at levels 1–100, all ten two-step evolution chains, wild availability
+of every form, 32-slot storage, v1 migration, v2 game save/load with 36 creatures,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
@@ -282,12 +291,13 @@ through pet-030.png, party/collection/battle/menu scenes, and pet-roster.png fro
 the asset compiler. They are not hardware screenshots.
 
 PSP test route:
-1. Choose an attack and verify the ally stays bright while the enemy dims.
-2. Advance once and verify the brightness focus moves to the enemy.
-3. Verify both sprites return to normal brightness at the command menu.
-4. Repeat with an enemy faster than the ally; its spotlight must appear first.
-5. Check misses, knockouts, items, captures, RUN, and swaps for the correct actor.
-6. Disable animation and verify the static highlight remains clear and readable.
+1. Choose SWAP and verify the full-screen BATTLE PARTY view opens.
+2. Select the active Veyling and a fainted Veyling; both must remain rejected.
+3. Select a ready reserve and verify the party screen closes immediately.
+4. In a player-first round, verify the enemy acts once before the next menu.
+5. In an enemy-first round, verify swapping does not grant a second enemy action.
+6. Force a replacement after a knockout; Circle must not cancel it, and a valid
+   reserve must enter a fresh round with the correct speed order.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.

@@ -125,11 +125,18 @@ static void enemy_first_commands(void)
         Battle b;prepare(&b,1,123,1);
         press(&b);player_menu(&b,1);
         assert(b.enemy.uses[0]==99 && b.ally.uses[0]==100);
+        if(command==2) b.party.members[1].speed=30;
         b.cursor=command;
         if(command==4) b.random=4; /* Failed escape (76/100). */
         press(&b);
         if(command==1) { b.random=1;press(&b); } /* Failed capture (69/100). */
-        if(command==2) { b.switch_cursor=1;press(&b); }
+        if(command==2) {
+            b.switch_cursor=1;press(&b);
+            assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MENU);
+            assert(b.active==1 && b.turn_number==2 && b.turn_index==0);
+            assert(b.enemy.uses[0]==99 && b.acting_side==-1);
+            continue;
+        }
         if(command==3) press(&b);
         assert(b.result==BATTLE_ONGOING && b.phase==BATTLE_MESSAGE && b.acting_side==0);
         assert(b.enemy.uses[0]==99 && b.turn_index==2 && b.turn_number==1);
@@ -162,8 +169,6 @@ static void forced_replacement(void)
         press(&b);assert(b.phase==BATTLE_SWITCH && b.acting_side==-1);
         cancel(&b);assert(b.phase==BATTLE_SWITCH && b.turn_number==1);
         b.switch_cursor=1;press(&b);
-        assert(b.enemy.uses[0]==99 && b.ally.hp==1000 && b.turn_number==1 && b.acting_side==0);
-        press(&b);
         assert(b.turn_number==2 && b.active==1 && !b.forced_switch);
         player_menu(&b,!fast_reserve);
         assert(b.enemy.uses[0]==(fast_reserve?99:98));
@@ -189,6 +194,6 @@ int main(void)
 {
     repeated_turns(0);repeated_turns(1);equal_speed();knockouts();
     enemy_first_commands();forced_replacement();fallback_and_locked_order();
-    puts("PASS: Phase 10 turn order/actions and Phase 11 spotlight actor ownership/menu clearing");
+    puts("PASS: Phase 10 turns, Phase 11 actor spotlight, Phase 12 automatic swap return and forced rounds");
     return 0;
 }

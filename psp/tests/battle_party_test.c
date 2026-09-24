@@ -210,16 +210,17 @@ static void voluntary_switch(void)
     assert(b.phase==BATTLE_MENU && b.active==0 && total_uses(&b.enemy)==96);
     open_switch(&b);
     b.switch_cursor=0;confirm(&b);messages(&b);
-    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96 &&
+           strstr(b.switch_message,"ACTIVE"));
     b.switch_cursor=2;confirm(&b);messages(&b);
-    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_SWITCH && b.active==0 && total_uses(&b.enemy)==96 &&
+           strstr(b.switch_message,"REST"));
     b.switch_cursor=1;confirm(&b);
-    assert(b.phase==BATTLE_MESSAGE && b.active==1 && total_uses(&b.enemy)==96);
+    assert(b.phase==BATTLE_MESSAGE && b.active==1 && total_uses(&b.enemy)==95);
+    assert(b.acting_side==1 && b.ally.hp<p.members[1].hp);
     same_creature(&b.party.members[0],&outgoing);
-    same_creature(&b.ally,&p.members[1]);
+    assert(b.ally.species==p.members[1].species);
     confirm(&b);
-    assert(total_uses(&b.enemy)==95 && b.ally.hp<p.members[1].hp);
-    messages(&b);
     assert(b.phase==BATTLE_MENU && total_uses(&b.enemy)==95);
     for(int i=0;i<4;++i) battle_update(&b,&(Input){0});
     assert(total_uses(&b.enemy)==95);
@@ -320,6 +321,6 @@ int main(void)
     forced_replacement_and_team_loss();
     victory_updates_only_active();
     item_use();
-    puts("PASS: capture odds/charges/storage, one enemy reply, switching, forced replacement, team loss, active-only growth, item turns and party sync");
+    puts("PASS: capture/storage, automatic battle swaps, invalid/forced replacement, team loss, growth, items and party sync");
     return 0;
 }
