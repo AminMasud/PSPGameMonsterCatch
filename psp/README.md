@@ -1,24 +1,24 @@
-# Emberwake — Phase 15 Simple NPC Battle AI
+# Emberwake — Phase 16 East Forest Entrance Challenger
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, a full-screen battle party selector, the reusable ready prompt, and a
-data-driven framework for NPC challengers, and a reusable easy NPC attack policy
-that can expand for later bosses. The PNG number minus one is the internal
+action, a full-screen battle party selector, the reusable ready prompt, a
+data-driven framework for NPC challengers, and the first in-world challenger at
+the East Forest entrance. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE15.PBP**, titled **Emberwake - Phase 15**. Copy it to:
+Use **EBOOT-PHASE16.PBP**, titled **Emberwake - Phase 16**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE14.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE15.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -61,7 +61,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 
 | Area | Contents and connections |
 | --- | --- |
-| Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; east path to woods |
+| Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
 | Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave, east marsh |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
@@ -71,7 +71,8 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 Only completed movement steps trigger encounter rolls. Paths, ordinary grass,
 flowers, boardwalks, and interiors are safe. Eligible terrain has an 18% encounter
 chance after four safe steps following map entry or battle. Standing still never
-triggers an encounter. Entering a map resets NPCs to their starting positions.
+triggers an encounter. Entering a map resets ordinary patrols; a defeated route
+challenger returns to the stepped-aside position stored by progression.
 
 Families within each habitat have equal selection weight. Stage probabilities
 within a chosen family are 90% base, 9% middle, and 1% final. Forest base forms
@@ -86,9 +87,16 @@ YES starts the exact pending encounter; NO or Circle closes the prompt and leave
 the player at the same overworld position. The prompt pauses movement and NPC
 patrols while it is open. Ordinary random wild encounters continue directly to
 battle without showing this confirmation. Trainer parties and NPC challenge
-data are now supported by the reusable NPC battle framework. The current
-exploration NPCs retain their existing dialogue, shop, and healing behavior;
-the East Forest challenger is deliberately reserved for Phase 16.
+data are supported by the reusable NPC battle framework. The existing
+exploration NPCs retain their dialogue, shop, and healing behavior.
+
+Ren stands on Hearth Clearing's east exit and blocks entry to Fernveil Woods.
+Facing Ren and pressing X opens two introductory lines followed by **ARE YOU
+READY?**. YES begins an easy battle against one level-3 Mossprig; NO, Circle, or
+leaving the intro closes the challenge without moving the player. Winning grants
+50 Embermarks once, shows the victory dialogue, and makes Ren step north so the
+portal is open. The defeated bit survives save/load and map changes. Later talks
+repeat the victory dialogue without forcing another battle.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -297,12 +305,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP
+    make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -328,28 +336,32 @@ intro/ready/outcome flow, one-time rewards, optional defeat dialogue, defeated
 state, progression flags, and version-3 persistence with v1/v2 migration. The
 Phase 15 suite checks every move-slot validity rule, selection across available
 attacks, profile dispatch, no mutation during selection, and PRESS ON without an
-unnecessary RNG roll. The full suite also covers movement, all portals,
+unnecessary RNG roll. The Phase 16 integration checks the blocked east portal,
+intro and ready flow, one weak opponent, easy AI profile, one-time reward,
+step-aside behavior, repeat interaction, portal access, and saved defeat state.
+The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, npc-battle.png, spotlight-idle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
+east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
+east-challenger-victory.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
 
 PSP test route:
-1. Load an existing version-2 save and verify the roster, items, money, and
-   location are preserved; saving again upgrades the slot to version 3.
-2. Talk to the current exploration NPCs and verify their existing behavior is
-   unchanged because no challenger is placed through Phase 15.
-3. Walk in encounter terrain and verify ordinary wild battle, capture, and run
-   behavior remains unchanged.
-
-The NPC flow, multi-Veyling battle, and simple AI are exercised by the host
-integration suites. Phase 16 will provide the first in-world challenger for a
-complete device AI playthrough.
+1. From Hearth Clearing, follow the path east. Verify Ren blocks the forest exit.
+2. Talk to Ren, decline once, then accept. Verify the battle has one level-3
+   Mossprig and that capture and run remain locked during the NPC battle.
+3. Win, read both victory lines, and verify Ren steps north and the forest exit
+   opens. Talk again and verify the ready prompt does not return.
+4. Save, restart or leave the map, load, and verify Ren remains defeated and
+   stays beside the open path.
+5. Load an existing version-2 save and verify roster, items, money, and location
+   remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.

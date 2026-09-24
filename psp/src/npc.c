@@ -1,4 +1,14 @@
 #include "npc.h"
+
+static const NpcBattleData east_challenger = {
+    .id=NPC_BATTLE_EAST_CHALLENGER,.name="REN",
+    .before={"THE EAST PATH LEADS INTO FERNVEIL.","SHOW ME ONE CALM BATTLE FIRST."},
+    .victory={"YOU ARE READY FOR THE EAST WOODS.","THE PATH IS OPEN. TRAVEL SAFELY."},
+    .defeat={"REST AT THE LODGE, THEN TRY AGAIN.",0},
+    .party={{SPECIES_MOSSPRIG,3}},.party_count=1,
+    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,.progression_flag=0
+};
+
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
 {
     Npc *p = &n->people[n->count++];
@@ -8,6 +18,7 @@ static void add(Npcs *n, int x, int y, const char *name, const char *a, const ch
     p->actor.x = (float)(x*TILE_SIZE); p->actor.y = (float)(y*TILE_SIZE);
     p->actor.facing = FACE_DOWN;
     p->name = name; p->first = a; p->second = b;
+    p->defeated_x = p->defeated_y = -1;
     p->patrol_start = x; p->patrol_end = end; p->direction = 1; p->wait = 1;
 }
 void npc_load(Npcs *n, int map_id)
@@ -16,6 +27,12 @@ void npc_load(Npcs *n, int map_id)
     if (map_id == 0) {
         add(n,7,10,"MIRA","WELCOME TO HEARTH CLEARING.\nTHE LODGE IS JUST NORTHWEST.","FOLLOW THE EAST PATH TO THE WOODS.\nPRESS X WHILE FACING SOMEONE.",7);
         add(n,9,13,"ORIN","I KEEP THIS PATH CLEAR.","THE WOODS ARE HOME TO VEYLINGS.\nLOOK FOR THEM IN THE TALL GRASS.",13);
+        add(n,38,11,east_challenger.name,east_challenger.before.first,
+            east_challenger.before.second,38);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].battle=&east_challenger;
+        n->people[n->count-1].defeated_x=37;
+        n->people[n->count-1].defeated_y=10;
     } else if (map_id == 1) {
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
     } else if (map_id == 2) {
@@ -26,6 +43,21 @@ void npc_load(Npcs *n, int map_id)
         add(n,4,8,"ELA","BUBFIN AND ZAPPIP LIVE IN THE REEDS.\nPEBCHICK LIKES THE COOL BANKS.","THE BOARDWALK IS SAFE TO FOLLOW.\nLANTERN REST LIES NORTHEAST.",4);
     } else if (map_id == MAP_REST) {
         add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
+    }
+}
+void npc_apply_progress(Npcs *n, uint32_t defeated)
+{
+    for (int i=0;i<n->count;++i) {
+        Npc *p=&n->people[i];
+        if (!p->battle || p->defeated_x<0 || p->defeated_y<0 ||
+            !(defeated&(1u<<p->battle->id))) continue;
+        p->actor.tile_x=p->actor.target_x=p->defeated_x;
+        p->actor.tile_y=p->actor.target_y=p->defeated_y;
+        p->actor.x=(float)(p->defeated_x*TILE_SIZE);
+        p->actor.y=(float)(p->defeated_y*TILE_SIZE);
+        p->actor.moving=0;
+        p->actor.facing=FACE_DOWN;
+        p->patrol_start=p->patrol_end=p->defeated_x;
     }
 }
 int npc_blocks(void *context, int x, int y)

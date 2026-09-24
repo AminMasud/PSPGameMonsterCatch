@@ -7,6 +7,8 @@
 #define NPC_BATTLE_MAX 32
 #define NPC_BATTLE_PARTY_MAX 4
 
+enum { NPC_BATTLE_EAST_CHALLENGER = 0 };
+
 typedef enum {
     NPC_AI_EASY,
     NPC_AI_STANDARD,

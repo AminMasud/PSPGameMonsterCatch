@@ -18,6 +18,7 @@ static void enter_map(Game *g, int id, int x, int y)
     g->player.x = (float)(x*TILE_SIZE);
     g->player.y = (float)(y*TILE_SIZE);
     npc_load(&g->npcs,id);
+    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
     g->encounter.safe_steps = 4;
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
@@ -139,11 +140,11 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
         inventory.quantities[i]=saved->item_quantities[i];
     }
     inventory.embermarks=saved->embermarks;
+    g->npc_battle_progress.defeated=saved->npc_defeated;
+    g->npc_battle_progress.progression=saved->progression_flags;
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
-    g->npc_battle_progress.defeated=saved->npc_defeated;
-    g->npc_battle_progress.progression=saved->progression_flags;
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
@@ -247,6 +248,7 @@ static void game_step(Game *g, const Input *input, float seconds)
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
                     }
+                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
                     dialogue_open(&g->dialogue,npc_data->name,
                                   npc_data->victory.first,npc_data->victory.second);
                 } else if(result==BATTLE_LOSS && npc_data->defeat.first) {
@@ -346,7 +348,10 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (!strcmp(npc->name,"TAVI")) {
+            if (npc->battle) {
+                game_offer_npc_battle(g,npc->battle,
+                    g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
+            } else if (!strcmp(npc->name,"TAVI")) {
                 g->tavi_shop_pending=1;
                 dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
             } else dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);

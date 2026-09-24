@@ -1,4 +1,4 @@
-# Complete Phase 15 source contents
+# Complete Phase 16 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -827,6 +827,8 @@ int npc_ai_choose_move(NpcAiProfile profile,const Creature *actor,uint32_t *rand
 #define NPC_BATTLE_MAX 32
 #define NPC_BATTLE_PARTY_MAX 4
 
+enum { NPC_BATTLE_EAST_CHALLENGER = 0 };
+
 typedef enum {
     NPC_AI_EASY,
     NPC_AI_STANDARD,
@@ -875,15 +877,19 @@ int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *da
 #ifndef EMBERWAKE_NPC_H
 #define EMBERWAKE_NPC_H
 #include "player.h"
+#include "npc_battle.h"
 #define NPC_MAX 4
 typedef struct {
     Player actor;
     const char *name, *first, *second;
+    const NpcBattleData *battle;
+    int defeated_x, defeated_y;
     int patrol_start, patrol_end, direction;
     float wait;
 } Npc;
 typedef struct { Npc people[NPC_MAX]; int count; } Npcs;
 void npc_load(Npcs *npcs, int map_id);
+void npc_apply_progress(Npcs *npcs, uint32_t defeated);
 int npc_blocks(void *context, int x, int y);
 void npc_update(Npcs *npcs, const Map *map, const Player *player, float seconds);
 Npc *npc_facing(Npcs *npcs, const Player *player);
@@ -1141,7 +1147,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 15
+PSP_EBOOT_TITLE = Emberwake - Phase 16
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1174,27 +1180,27 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 15 Simple NPC Battle AI
+# Emberwake — Phase 16 East Forest Entrance Challenger
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
-action, a full-screen battle party selector, the reusable ready prompt, and a
-data-driven framework for NPC challengers, and a reusable easy NPC attack policy
-that can expand for later bosses. The PNG number minus one is the internal
+action, a full-screen battle party selector, the reusable ready prompt, a
+data-driven framework for NPC challengers, and the first in-world challenger at
+the East Forest entrance. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE15.PBP**, titled **Emberwake - Phase 15**. Copy it to:
+Use **EBOOT-PHASE16.PBP**, titled **Emberwake - Phase 16**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE14.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE15.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1237,7 +1243,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 
 | Area | Contents and connections |
 | --- | --- |
-| Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; east path to woods |
+| Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
 | Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave, east marsh |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
@@ -1247,7 +1253,8 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 Only completed movement steps trigger encounter rolls. Paths, ordinary grass,
 flowers, boardwalks, and interiors are safe. Eligible terrain has an 18% encounter
 chance after four safe steps following map entry or battle. Standing still never
-triggers an encounter. Entering a map resets NPCs to their starting positions.
+triggers an encounter. Entering a map resets ordinary patrols; a defeated route
+challenger returns to the stepped-aside position stored by progression.
 
 Families within each habitat have equal selection weight. Stage probabilities
 within a chosen family are 90% base, 9% middle, and 1% final. Forest base forms
@@ -1262,9 +1269,16 @@ YES starts the exact pending encounter; NO or Circle closes the prompt and leave
 the player at the same overworld position. The prompt pauses movement and NPC
 patrols while it is open. Ordinary random wild encounters continue directly to
 battle without showing this confirmation. Trainer parties and NPC challenge
-data are now supported by the reusable NPC battle framework. The current
-exploration NPCs retain their existing dialogue, shop, and healing behavior;
-the East Forest challenger is deliberately reserved for Phase 16.
+data are supported by the reusable NPC battle framework. The existing
+exploration NPCs retain their dialogue, shop, and healing behavior.
+
+Ren stands on Hearth Clearing's east exit and blocks entry to Fernveil Woods.
+Facing Ren and pressing X opens two introductory lines followed by **ARE YOU
+READY?**. YES begins an easy battle against one level-3 Mossprig; NO, Circle, or
+leaving the intro closes the challenge without moving the player. Winning grants
+50 Embermarks once, shows the victory dialogue, and makes Ren step north so the
+portal is open. The defeated bit survives save/load and map changes. Later talks
+repeat the victory dialogue without forcing another battle.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -1473,12 +1487,12 @@ explicitly defined in map.c; arrival tiles are clear of return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE15.PBP EXTRA_TARGETS=EBOOT-PHASE15.PBP
+    make PSP_EBOOT=EBOOT-PHASE16.PBP EXTRA_TARGETS=EBOOT-PHASE16.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1504,28 +1518,32 @@ intro/ready/outcome flow, one-time rewards, optional defeat dialogue, defeated
 state, progression flags, and version-3 persistence with v1/v2 migration. The
 Phase 15 suite checks every move-slot validity rule, selection across available
 attacks, profile dispatch, no mutation during selection, and PRESS ON without an
-unnecessary RNG roll. The full suite also covers movement, all portals,
+unnecessary RNG roll. The Phase 16 integration checks the blocked east portal,
+intro and ready flow, one weak opponent, easy AI profile, one-time reward,
+step-aside behavior, repeat interaction, portal access, and saved defeat state.
+The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
 savedata lifecycle, text bounds, drawing budget, and PCM audio.
 
 Software previews use the real draw functions and embedded texture data. They
-include ready-prompt.png, ready-prompt-no.png, npc-battle.png, spotlight-idle.png,
+include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
+east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
+east-challenger-victory.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
 
 PSP test route:
-1. Load an existing version-2 save and verify the roster, items, money, and
-   location are preserved; saving again upgrades the slot to version 3.
-2. Talk to the current exploration NPCs and verify their existing behavior is
-   unchanged because no challenger is placed through Phase 15.
-3. Walk in encounter terrain and verify ordinary wild battle, capture, and run
-   behavior remains unchanged.
-
-The NPC flow, multi-Veyling battle, and simple AI are exercised by the host
-integration suites. Phase 16 will provide the first in-world challenger for a
-complete device AI playthrough.
+1. From Hearth Clearing, follow the path east. Verify Ren blocks the forest exit.
+2. Talk to Ren, decline once, then accept. Verify the battle has one level-3
+   Mossprig and that capture and run remain locked during the NPC battle.
+3. Win, read both victory lines, and verify Ren steps north and the forest exit
+   opens. Talk again and verify the ready prompt does not return.
+4. Save, restart or leave the map, load, and verify Ren remains defeated and
+   stays beside the open path.
+5. Load an existing version-2 save and verify roster, items, money, and location
+   remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.
@@ -2604,6 +2622,7 @@ static void enter_map(Game *g, int id, int x, int y)
     g->player.x = (float)(x*TILE_SIZE);
     g->player.y = (float)(y*TILE_SIZE);
     npc_load(&g->npcs,id);
+    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
     g->encounter.safe_steps = 4;
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
@@ -2725,11 +2744,11 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
         inventory.quantities[i]=saved->item_quantities[i];
     }
     inventory.embermarks=saved->embermarks;
+    g->npc_battle_progress.defeated=saved->npc_defeated;
+    g->npc_battle_progress.progression=saved->progression_flags;
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
     g->party=party;g->inventory=inventory;
-    g->npc_battle_progress.defeated=saved->npc_defeated;
-    g->npc_battle_progress.progression=saved->progression_flags;
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
@@ -2833,6 +2852,7 @@ static void game_step(Game *g, const Input *input, float seconds)
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
                     }
+                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
                     dialogue_open(&g->dialogue,npc_data->name,
                                   npc_data->victory.first,npc_data->victory.second);
                 } else if(result==BATTLE_LOSS && npc_data->defeat.first) {
@@ -2932,7 +2952,10 @@ static void game_step(Game *g, const Input *input, float seconds)
             npc->actor.facing = g->player.facing == FACE_UP ? FACE_DOWN :
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
-            if (!strcmp(npc->name,"TAVI")) {
+            if (npc->battle) {
+                game_offer_npc_battle(g,npc->battle,
+                    g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);
+            } else if (!strcmp(npc->name,"TAVI")) {
                 g->tavi_shop_pending=1;
                 dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
             } else dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
@@ -3524,6 +3547,16 @@ int npc_battle_mark_defeated(NpcBattleProgress *progress,const NpcBattleData *da
 
 ````text
 #include "npc.h"
+
+static const NpcBattleData east_challenger = {
+    .id=NPC_BATTLE_EAST_CHALLENGER,.name="REN",
+    .before={"THE EAST PATH LEADS INTO FERNVEIL.","SHOW ME ONE CALM BATTLE FIRST."},
+    .victory={"YOU ARE READY FOR THE EAST WOODS.","THE PATH IS OPEN. TRAVEL SAFELY."},
+    .defeat={"REST AT THE LODGE, THEN TRY AGAIN.",0},
+    .party={{SPECIES_MOSSPRIG,3}},.party_count=1,
+    .ai_profile=NPC_AI_EASY,.reward_embermarks=50,.progression_flag=0
+};
+
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
 {
     Npc *p = &n->people[n->count++];
@@ -3533,6 +3566,7 @@ static void add(Npcs *n, int x, int y, const char *name, const char *a, const ch
     p->actor.x = (float)(x*TILE_SIZE); p->actor.y = (float)(y*TILE_SIZE);
     p->actor.facing = FACE_DOWN;
     p->name = name; p->first = a; p->second = b;
+    p->defeated_x = p->defeated_y = -1;
     p->patrol_start = x; p->patrol_end = end; p->direction = 1; p->wait = 1;
 }
 void npc_load(Npcs *n, int map_id)
@@ -3541,6 +3575,12 @@ void npc_load(Npcs *n, int map_id)
     if (map_id == 0) {
         add(n,7,10,"MIRA","WELCOME TO HEARTH CLEARING.\nTHE LODGE IS JUST NORTHWEST.","FOLLOW THE EAST PATH TO THE WOODS.\nPRESS X WHILE FACING SOMEONE.",7);
         add(n,9,13,"ORIN","I KEEP THIS PATH CLEAR.","THE WOODS ARE HOME TO VEYLINGS.\nLOOK FOR THEM IN THE TALL GRASS.",13);
+        add(n,38,11,east_challenger.name,east_challenger.before.first,
+            east_challenger.before.second,38);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].battle=&east_challenger;
+        n->people[n->count-1].defeated_x=37;
+        n->people[n->count-1].defeated_y=10;
     } else if (map_id == 1) {
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
     } else if (map_id == 2) {
@@ -3551,6 +3591,21 @@ void npc_load(Npcs *n, int map_id)
         add(n,4,8,"ELA","BUBFIN AND ZAPPIP LIVE IN THE REEDS.\nPEBCHICK LIKES THE COOL BANKS.","THE BOARDWALK IS SAFE TO FOLLOW.\nLANTERN REST LIES NORTHEAST.",4);
     } else if (map_id == MAP_REST) {
         add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
+    }
+}
+void npc_apply_progress(Npcs *n, uint32_t defeated)
+{
+    for (int i=0;i<n->count;++i) {
+        Npc *p=&n->people[i];
+        if (!p->battle || p->defeated_x<0 || p->defeated_y<0 ||
+            !(defeated&(1u<<p->battle->id))) continue;
+        p->actor.tile_x=p->actor.target_x=p->defeated_x;
+        p->actor.tile_y=p->actor.target_y=p->defeated_y;
+        p->actor.x=(float)(p->defeated_x*TILE_SIZE);
+        p->actor.y=(float)(p->defeated_y*TILE_SIZE);
+        p->actor.moving=0;
+        p->actor.facing=FACE_DOWN;
+        p->patrol_start=p->patrol_end=p->defeated_x;
     }
 }
 int npc_blocks(void *context, int x, int y)
@@ -6163,7 +6218,9 @@ def chunk(kind, payload):
 
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
-for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
+for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle',
+             'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
+             'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
@@ -6571,6 +6628,7 @@ int main(void)
         for(int i=0;i<n.count;++i) {
             assert(map_walkable(m,n.people[i].actor.tile_x,n.people[i].actor.tile_y));
             fits(n.people[i].first); fits(n.people[i].second);
+            if(n.people[i].battle) assert(npc_battle_data_valid(n.people[i].battle));
         }
         for(int y=0;y<m->height;++y) {
             assert(strlen(m->rows[y])==(size_t)m->width);
@@ -6594,8 +6652,43 @@ int main(void)
     assert(g.map_id==MAP_LODGE);
     update(&g,(Input){0,1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
+
+    /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
+    assert(g.npcs.count==3 && g.npcs.people[2].battle);
+    assert(g.npcs.people[2].battle->id==NPC_BATTLE_EAST_CHALLENGER);
+    assert(g.npcs.people[2].actor.tile_x==38 && g.npcs.people[2].actor.tile_y==11);
+    render(&g,"previews/east-challenger.ppm");
     update(&g,(Input){1,0,0,0,0,0},10);
+    assert(g.map_id==MAP_CLEARING && g.player.tile_x==37); /* Ren blocks the portal. */
+    int east_marks=g.inventory.embermarks;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"REN"));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
+    render(&g,"previews/east-challenger-ready.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.npc_battle && g.battle.enemy_count==1);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==3);
+    assert(g.battle.ai_profile==NPC_AI_EASY);
+    g.transition=0;
+    render(&g,"previews/east-challenger-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
+           NPC_BATTLE_EAST_CHALLENGER));
+    assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
+    assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
+    g.transition=0;
+    render(&g,"previews/east-challenger-victory.ppm");
+    update(&g,(Input){.cancel=1},1);
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE &&
+           !g.ready_prompt.active); /* A defeated Ren only repeats victory dialogue. */
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
 
     place(&g,MAP_FOREST,29,11);
@@ -6992,7 +7085,7 @@ int main(void)
     }
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
-    g.npc_battle_progress.defeated=(1u<<3)|(1u<<11);
+    g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
     g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
@@ -7009,13 +7102,16 @@ int main(void)
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
            g.npc_battle_progress.progression==npc_snapshot.progression);
+    Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
+    assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, ready prompt, NPC battle flow/persistence, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: Phase 16 entrance challenger, world systems, NPC battle persistence, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }
 ````

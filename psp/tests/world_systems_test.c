@@ -116,6 +116,7 @@ int main(void)
         for(int i=0;i<n.count;++i) {
             assert(map_walkable(m,n.people[i].actor.tile_x,n.people[i].actor.tile_y));
             fits(n.people[i].first); fits(n.people[i].second);
+            if(n.people[i].battle) assert(npc_battle_data_valid(n.people[i].battle));
         }
         for(int y=0;y<m->height;++y) {
             assert(strlen(m->rows[y])==(size_t)m->width);
@@ -139,8 +140,43 @@ int main(void)
     assert(g.map_id==MAP_LODGE);
     update(&g,(Input){0,1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
+
+    /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
+    assert(g.npcs.count==3 && g.npcs.people[2].battle);
+    assert(g.npcs.people[2].battle->id==NPC_BATTLE_EAST_CHALLENGER);
+    assert(g.npcs.people[2].actor.tile_x==38 && g.npcs.people[2].actor.tile_y==11);
+    render(&g,"previews/east-challenger.ppm");
     update(&g,(Input){1,0,0,0,0,0},10);
+    assert(g.map_id==MAP_CLEARING && g.player.tile_x==37); /* Ren blocks the portal. */
+    int east_marks=g.inventory.embermarks;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"REN"));
+    update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.ready_prompt.active && g.npc_battle.flow==NPC_BATTLE_FLOW_READY);
+    render(&g,"previews/east-challenger-ready.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.in_battle && g.battle.npc_battle && g.battle.enemy_count==1);
+    assert(g.battle.enemy.species==SPECIES_MOSSPRIG && g.battle.enemy.level==3);
+    assert(g.battle.ai_profile==NPC_AI_EASY);
+    g.transition=0;
+    render(&g,"previews/east-challenger-battle.ppm");
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && npc_battle_is_defeated(&g.npc_battle_progress,
+           NPC_BATTLE_EAST_CHALLENGER));
+    assert(g.inventory.embermarks==east_marks+50 && g.dialogue.active);
+    assert(g.npcs.people[2].actor.tile_x==37 && g.npcs.people[2].actor.tile_y==10);
+    g.transition=0;
+    render(&g,"previews/east-challenger-victory.ppm");
+    update(&g,(Input){.cancel=1},1);
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && g.npc_battle.flow==NPC_BATTLE_FLOW_NONE &&
+           !g.ready_prompt.active); /* A defeated Ren only repeats victory dialogue. */
+    update(&g,(Input){.cancel=1},1);
+    update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
 
     place(&g,MAP_FOREST,29,11);
@@ -537,7 +573,7 @@ int main(void)
     }
     assert(g.party.count==4 && g.party.stored==32);
     g.party.lead=2;g.inventory.embermarks=4242;
-    g.npc_battle_progress.defeated=(1u<<3)|(1u<<11);
+    g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
     g.npc_battle_progress.progression=(1u<<6)|(1u<<14);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
@@ -554,12 +590,15 @@ int main(void)
     assert(g.party.count==4 && g.party.stored==32 && g.party.lead==2 && g.inventory.embermarks==4242);
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
            g.npc_battle_progress.progression==npc_snapshot.progression);
+    Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
+    assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
     for(int i=0;i<PARTY_MAX+COLLECTION_MAX;++i) {
         const Creature *a=i<4?&snapshot.members[i]:&snapshot.collection[i-4];
         const Creature *b=i<4?&g.party.members[i]:&g.party.collection[i-4];
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: world systems, ready prompt, NPC battle flow/persistence, progression, party/inventory, battle party screen, drawing budget, actor spotlight states");
+    puts("PASS: Phase 16 entrance challenger, world systems, NPC battle persistence, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }
