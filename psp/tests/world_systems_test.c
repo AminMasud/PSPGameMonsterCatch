@@ -133,6 +133,8 @@ int main(void)
                     ++locked_gates;
                     assert(gate_is_locked(p,0) && !gate_can_enter(p,0));
                     assert(p->gatekeeper && gate_current_dialogue(p,0));
+                    fits(p->locked_dialogue.first);fits(p->locked_dialogue.second);
+                    fits(p->unlocked_dialogue.first);fits(p->unlocked_dialogue.second);
                 }
                 assert(seen[y][x]);
                 assert(map_walkable(m,x,y));
@@ -143,7 +145,7 @@ int main(void)
             }
         }
     }
-    assert(portals==10 && locked_gates==1);
+    assert(portals==10 && locked_gates==2);
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -204,11 +206,33 @@ int main(void)
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
 
+    /* Phase 19: the later-region gatekeeper states the exact boss requirement. */
     place(&g,MAP_FOREST,29,11);
+    const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
+    assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(g.npcs.count==2 && g.npcs.people[1].gate==sunthread_gate);
+    assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
+    update(&g,(Input){.horizontal=1},10);
+    assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"VAREL") &&
+           strstr(g.dialogue.pages[1],"VEYLING GUARDIAN"));
+    render(&g,"previews/forest-gatekeeper-locked.ppm");
+    update(&g,(Input){.cancel=1},1);
+    assert(progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    npc_apply_progress(&g.npcs,g.npc_battle_progress.defeated,&g.progression);
+    assert(g.npcs.people[1].actor.tile_x==29 && g.npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(sunthread_gate,&g.progression));
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"HAS YIELDED"));
+    render(&g,"previews/forest-gatekeeper-open.ppm");
+    update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_MARSH);
     update(&g,(Input){.horizontal=-1},10);
-    assert(g.map_id==MAP_FOREST);
+    assert(g.map_id==MAP_FOREST && g.npcs.people[1].actor.tile_x==29 &&
+           g.npcs.people[1].actor.tile_y==10);
     place(&g,MAP_MARSH,24,5);
     update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_REST);
@@ -600,6 +624,7 @@ int main(void)
     g.party.lead=2;g.inventory.embermarks=4242;
     g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
     progression_set(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
     progression_set(&g.progression,PROGRESSION_CAVE_UNLOCKED);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
@@ -619,8 +644,12 @@ int main(void)
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
            progression_save_bits(&g.progression)==progression_save_bits(&progression_snapshot));
     Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
-    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
     assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
+    npc_load(&restored_npcs,MAP_FOREST);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
+    assert(restored_npcs.people[1].actor.tile_x==29 && restored_npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
     npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
     assert(progression_has(&phase16_save,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
@@ -630,6 +659,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 18 locked gate, entrance challenger, world systems, NPC persistence, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 19 forest gatekeepers, locked gates, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }

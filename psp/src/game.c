@@ -18,7 +18,7 @@ static void enter_map(Game *g, int id, int x, int y)
     g->player.x = (float)(x*TILE_SIZE);
     g->player.y = (float)(y*TILE_SIZE);
     npc_load(&g->npcs,id);
-    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
+    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
     g->encounter.safe_steps = 4;
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
@@ -256,7 +256,7 @@ static void game_step(Game *g, const Input *input, float seconds)
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
                     }
-                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
+                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
                     dialogue_open(&g->dialogue,npc_data->name,
                                   npc_data->victory.first,npc_data->victory.second);
                 } else if(result==BATTLE_LOSS && npc_data->defeat.first) {

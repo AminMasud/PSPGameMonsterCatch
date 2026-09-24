@@ -1,4 +1,4 @@
-# Emberwake — Phase 18 Locked Gate System
+# Emberwake — Phase 19 Forest Gatekeepers
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -7,19 +7,19 @@ player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
-flag-controlled entrances with gatekeeper dialogue. The PNG number minus one is the internal
+flag-controlled entrances, and progression-aware forest gatekeepers. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE18.PBP**, titled **Emberwake - Phase 18**. Copy it to:
+Use **EBOOT-PHASE19.PBP**, titled **Emberwake - Phase 19**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE17.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE18.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -63,7 +63,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave, east marsh |
+| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave; Varel guards the east road to the marsh |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
 | Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
@@ -122,8 +122,16 @@ rejected by the same collision path as terrain and NPCs, so it cannot be crossed
 The Hearth Clearing east entrance is the first configured locked gate. It
 requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
 Before victory, Ren starts the existing challenge and the gate blocks entry.
-Afterward, Ren uses the gate's unlocked dialogue and the destination opens. All
-other current entrances remain open; later forests and bosses are not added here.
+Afterward, Ren uses the gate's unlocked dialogue and the destination opens.
+
+Varel now guards Fernveil Woods' east road into Sunthread Marsh. The road starts
+locked and his dialogue tells the player to defeat Fernveil's Veyling Guardian.
+The gate requires `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, the stable flag that
+the later East Forest boss will award. When present, Varel steps north, confirms
+that the Guardian has yielded, and opens the road. This position and dialogue
+are reconstructed from the saved progression state after every map entry or
+load. The reverse road remains open so an older save already in Sunthread Marsh
+cannot become trapped.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -333,12 +341,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP
+    make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -373,6 +381,9 @@ save reconciliation.
 The Phase 18 suite validates gate definitions, destinations, progression
 requirements, locked and unlocked state, gatekeeper dialogue, open entrances,
 invalid data, movement blocking, and the complete Ren unlock flow.
+The Phase 19 integration checks both forest gatekeepers, Varel's exact Guardian
+requirement, changed post-flag dialogue, immediate step-aside behavior, blocked
+and open traversal, reverse-route safety, and save/load restoration.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -381,7 +392,8 @@ savedata lifecycle, text bounds, drawing budget, and PCM audio.
 Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
-east-challenger-victory.png, spotlight-idle.png,
+east-challenger-victory.png, forest-gatekeeper-locked.png,
+forest-gatekeeper-open.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
@@ -394,7 +406,10 @@ PSP test route:
    opens. Talk again and verify the ready prompt does not return.
 4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
    beside the open path, and does not offer another battle.
-5. Load an existing version-2 save and verify roster, items, money, and location
+5. In Fernveil Woods, follow the main road east. Verify Varel blocks Sunthread
+   Marsh and explains that Fernveil's Veyling Guardian must be defeated. Save and
+   load there and verify the road remains locked.
+6. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,

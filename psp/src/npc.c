@@ -21,7 +21,7 @@ static void add(Npcs *n, int x, int y, const char *name, const char *a, const ch
     p->actor.x = (float)(x*TILE_SIZE); p->actor.y = (float)(y*TILE_SIZE);
     p->actor.facing = FACE_DOWN;
     p->name = name; p->first = a; p->second = b;
-    p->defeated_x = p->defeated_y = -1;
+    p->open_x = p->open_y = -1;
     p->patrol_start = x; p->patrol_end = end; p->direction = 1; p->wait = 1;
 }
 void npc_load(Npcs *n, int map_id)
@@ -35,10 +35,17 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].actor.facing=FACE_LEFT;
         n->people[n->count-1].battle=&east_challenger;
         n->people[n->count-1].gate=map_gate(MAP_CLEARING,38,11);
-        n->people[n->count-1].defeated_x=37;
-        n->people[n->count-1].defeated_y=10;
+        n->people[n->count-1].open_x=37;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 1) {
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
+        const Gate *sunthread=map_gate(MAP_FOREST,30,11);
+        add(n,30,11,sunthread->gatekeeper,sunthread->locked_dialogue.first,
+            sunthread->locked_dialogue.second,30);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].gate=sunthread;
+        n->people[n->count-1].open_x=29;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {
@@ -49,19 +56,20 @@ void npc_load(Npcs *n, int map_id)
         add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
     }
 }
-void npc_apply_progress(Npcs *n, uint32_t defeated)
+void npc_apply_progress(Npcs *n,uint32_t defeated,const ProgressionState *progression)
 {
     for (int i=0;i<n->count;++i) {
         Npc *p=&n->people[i];
-        if (!p->battle || p->defeated_x<0 || p->defeated_y<0 ||
-            !(defeated&(1u<<p->battle->id))) continue;
-        p->actor.tile_x=p->actor.target_x=p->defeated_x;
-        p->actor.tile_y=p->actor.target_y=p->defeated_y;
-        p->actor.x=(float)(p->defeated_x*TILE_SIZE);
-        p->actor.y=(float)(p->defeated_y*TILE_SIZE);
+        int battle_cleared=p->battle && (defeated&(1u<<p->battle->id));
+        int gate_open=p->gate && !gate_is_locked(p->gate,progression);
+        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !gate_open)) continue;
+        p->actor.tile_x=p->actor.target_x=p->open_x;
+        p->actor.tile_y=p->actor.target_y=p->open_y;
+        p->actor.x=(float)(p->open_x*TILE_SIZE);
+        p->actor.y=(float)(p->open_y*TILE_SIZE);
         p->actor.moving=0;
         p->actor.facing=FACE_DOWN;
-        p->patrol_start=p->patrol_end=p->defeated_x;
+        p->patrol_start=p->patrol_end=p->open_x;
     }
 }
 void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression)

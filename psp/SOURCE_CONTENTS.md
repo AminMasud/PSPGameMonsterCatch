@@ -1,4 +1,4 @@
-# Complete Phase 18 source contents
+# Complete Phase 19 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -919,13 +919,13 @@ typedef struct {
     const char *name, *first, *second;
     const NpcBattleData *battle;
     const Gate *gate;
-    int defeated_x, defeated_y;
+    int open_x, open_y;
     int patrol_start, patrol_end, direction;
     float wait;
 } Npc;
 typedef struct { Npc people[NPC_MAX]; int count; } Npcs;
 void npc_load(Npcs *npcs, int map_id);
-void npc_apply_progress(Npcs *npcs, uint32_t defeated);
+void npc_apply_progress(Npcs *npcs,uint32_t defeated,const ProgressionState *progression);
 void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression);
 int npc_blocks(void *context, int x, int y);
 void npc_update(Npcs *npcs, const Map *map, const Player *player, float seconds);
@@ -1218,7 +1218,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 18
+PSP_EBOOT_TITLE = Emberwake - Phase 19
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1251,7 +1251,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 18 Locked Gate System
+# Emberwake — Phase 19 Forest Gatekeepers
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1260,19 +1260,19 @@ player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
 data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
-flag-controlled entrances with gatekeeper dialogue. The PNG number minus one is the internal
+flag-controlled entrances, and progression-aware forest gatekeepers. The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE18.PBP**, titled **Emberwake - Phase 18**. Copy it to:
+Use **EBOOT-PHASE19.PBP**, titled **Emberwake - Phase 19**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE17.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE18.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1316,7 +1316,7 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave, east marsh |
+| Fernveil Woods | Sen, tall-grass encounters; west to clearing, northeast cave; Varel guards the east road to the marsh |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
 | Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
 | Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
@@ -1375,8 +1375,16 @@ rejected by the same collision path as terrain and NPCs, so it cannot be crossed
 The Hearth Clearing east entrance is the first configured locked gate. It
 requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
 Before victory, Ren starts the existing challenge and the gate blocks entry.
-Afterward, Ren uses the gate's unlocked dialogue and the destination opens. All
-other current entrances remain open; later forests and bosses are not added here.
+Afterward, Ren uses the gate's unlocked dialogue and the destination opens.
+
+Varel now guards Fernveil Woods' east road into Sunthread Marsh. The road starts
+locked and his dialogue tells the player to defeat Fernveil's Veyling Guardian.
+The gate requires `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, the stable flag that
+the later East Forest boss will award. When present, Varel steps north, confirms
+that the Guardian has yielded, and opens the road. This position and dialogue
+are reconstructed from the saved progression state after every map entry or
+load. The reverse road remains open so an older save already in Sunthread Marsh
+cannot become trapped.
 
 Each NPC battle definition has a stable ID, name, up to four Veylings with
 species and levels, one or two pages of dialogue before battle and after
@@ -1586,12 +1594,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE18.PBP EXTRA_TARGETS=EBOOT-PHASE18.PBP
+    make PSP_EBOOT=EBOOT-PHASE19.PBP EXTRA_TARGETS=EBOOT-PHASE19.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1626,6 +1634,9 @@ save reconciliation.
 The Phase 18 suite validates gate definitions, destinations, progression
 requirements, locked and unlocked state, gatekeeper dialogue, open entrances,
 invalid data, movement blocking, and the complete Ren unlock flow.
+The Phase 19 integration checks both forest gatekeepers, Varel's exact Guardian
+requirement, changed post-flag dialogue, immediate step-aside behavior, blocked
+and open traversal, reverse-route safety, and save/load restoration.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -1634,7 +1645,8 @@ savedata lifecycle, text bounds, drawing budget, and PCM audio.
 Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
-east-challenger-victory.png, spotlight-idle.png,
+east-challenger-victory.png, forest-gatekeeper-locked.png,
+forest-gatekeeper-open.png, spotlight-idle.png,
 spotlight-ally.png, spotlight-enemy.png, pet-001.png through pet-030.png,
 party/collection/battle/menu scenes, and pet-roster.png from the asset compiler.
 They are not hardware screenshots.
@@ -1647,7 +1659,10 @@ PSP test route:
    opens. Talk again and verify the ready prompt does not return.
 4. Save, restart or leave the map, load, and verify Ren remains defeated, stays
    beside the open path, and does not offer another battle.
-5. Load an existing version-2 save and verify roster, items, money, and location
+5. In Fernveil Woods, follow the main road east. Verify Varel blocks Sunthread
+   Marsh and explains that Fernveil's Veyling Guardian must be defeated. Save and
+   load there and verify the road remains locked.
+6. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
@@ -2727,7 +2742,7 @@ static void enter_map(Game *g, int id, int x, int y)
     g->player.x = (float)(x*TILE_SIZE);
     g->player.y = (float)(y*TILE_SIZE);
     npc_load(&g->npcs,id);
-    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
+    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
     g->encounter.safe_steps = 4;
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
@@ -2965,7 +2980,7 @@ static void game_step(Game *g, const Input *input, float seconds)
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
                     }
-                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated);
+                    npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
                     dialogue_open(&g->dialogue,npc_data->name,
                                   npc_data->victory.first,npc_data->victory.second);
                 } else if(result==BATTLE_LOSS && npc_data->defeat.first) {
@@ -3588,7 +3603,12 @@ static const Gate portals[] = {
     OPEN_PORTAL(MAP_LODGE,7,7,MAP_CLEARING,5,10),
     OPEN_PORTAL(MAP_FOREST,28,5,MAP_CAVE,2,10),
     OPEN_PORTAL(MAP_CAVE,2,11,MAP_FOREST,28,6),
-    OPEN_PORTAL(MAP_FOREST,30,11,MAP_MARSH,2,10),
+    {.from=MAP_FOREST,.x=30,.y=11,.to=MAP_MARSH,.arrival_x=2,.arrival_y=10,
+     .required_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,.gatekeeper="VAREL",
+     .locked_dialogue={"THE SUNTHREAD WAY IS SEALED.",
+                       "DEFEAT FERNVEIL'S VEYLING GUARDIAN\nTO OPEN THE ROAD EAST."},
+     .unlocked_dialogue={"FERNVEIL'S GUARDIAN HAS YIELDED.",
+                         "THE SUNTHREAD WAY IS OPEN."}},
     OPEN_PORTAL(MAP_MARSH,1,10,MAP_FOREST,29,11),
     OPEN_PORTAL(MAP_MARSH,24,4,MAP_REST,7,6),
     OPEN_PORTAL(MAP_REST,7,7,MAP_MARSH,24,5)
@@ -3747,7 +3767,7 @@ static void add(Npcs *n, int x, int y, const char *name, const char *a, const ch
     p->actor.x = (float)(x*TILE_SIZE); p->actor.y = (float)(y*TILE_SIZE);
     p->actor.facing = FACE_DOWN;
     p->name = name; p->first = a; p->second = b;
-    p->defeated_x = p->defeated_y = -1;
+    p->open_x = p->open_y = -1;
     p->patrol_start = x; p->patrol_end = end; p->direction = 1; p->wait = 1;
 }
 void npc_load(Npcs *n, int map_id)
@@ -3761,10 +3781,17 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].actor.facing=FACE_LEFT;
         n->people[n->count-1].battle=&east_challenger;
         n->people[n->count-1].gate=map_gate(MAP_CLEARING,38,11);
-        n->people[n->count-1].defeated_x=37;
-        n->people[n->count-1].defeated_y=10;
+        n->people[n->count-1].open_x=37;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 1) {
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
+        const Gate *sunthread=map_gate(MAP_FOREST,30,11);
+        add(n,30,11,sunthread->gatekeeper,sunthread->locked_dialogue.first,
+            sunthread->locked_dialogue.second,30);
+        n->people[n->count-1].actor.facing=FACE_LEFT;
+        n->people[n->count-1].gate=sunthread;
+        n->people[n->count-1].open_x=29;
+        n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {
@@ -3775,19 +3802,20 @@ void npc_load(Npcs *n, int map_id)
         add(n,7,3,"ILSEN","WELCOME TO LANTERN REST.\nTHE GREEN DAIS RESTORES YOUR TEAM.","SAVE BEFORE YOUR NEXT ADVENTURE.\nTHE MARSH IS WAITING OUTSIDE.",7);
     }
 }
-void npc_apply_progress(Npcs *n, uint32_t defeated)
+void npc_apply_progress(Npcs *n,uint32_t defeated,const ProgressionState *progression)
 {
     for (int i=0;i<n->count;++i) {
         Npc *p=&n->people[i];
-        if (!p->battle || p->defeated_x<0 || p->defeated_y<0 ||
-            !(defeated&(1u<<p->battle->id))) continue;
-        p->actor.tile_x=p->actor.target_x=p->defeated_x;
-        p->actor.tile_y=p->actor.target_y=p->defeated_y;
-        p->actor.x=(float)(p->defeated_x*TILE_SIZE);
-        p->actor.y=(float)(p->defeated_y*TILE_SIZE);
+        int battle_cleared=p->battle && (defeated&(1u<<p->battle->id));
+        int gate_open=p->gate && !gate_is_locked(p->gate,progression);
+        if (p->open_x<0 || p->open_y<0 || (!battle_cleared && !gate_open)) continue;
+        p->actor.tile_x=p->actor.target_x=p->open_x;
+        p->actor.tile_y=p->actor.target_y=p->open_y;
+        p->actor.x=(float)(p->open_x*TILE_SIZE);
+        p->actor.y=(float)(p->open_y*TILE_SIZE);
         p->actor.moving=0;
         p->actor.facing=FACE_DOWN;
-        p->patrol_start=p->patrol_end=p->defeated_x;
+        p->patrol_start=p->patrol_end=p->open_x;
     }
 }
 void npc_reconcile_progression(uint32_t defeated,ProgressionState *progression)
@@ -6576,6 +6604,7 @@ output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
+             'forest-gatekeeper-locked', 'forest-gatekeeper-open',
              'encounter', 'battle-menu', 'battle-moves', 'learn-move', 'evolution', 'partner',
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
@@ -7007,6 +7036,8 @@ int main(void)
                     ++locked_gates;
                     assert(gate_is_locked(p,0) && !gate_can_enter(p,0));
                     assert(p->gatekeeper && gate_current_dialogue(p,0));
+                    fits(p->locked_dialogue.first);fits(p->locked_dialogue.second);
+                    fits(p->unlocked_dialogue.first);fits(p->unlocked_dialogue.second);
                 }
                 assert(seen[y][x]);
                 assert(map_walkable(m,x,y));
@@ -7017,7 +7048,7 @@ int main(void)
             }
         }
     }
-    assert(portals==10 && locked_gates==1);
+    assert(portals==10 && locked_gates==2);
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -7078,11 +7109,33 @@ int main(void)
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST);
 
+    /* Phase 19: the later-region gatekeeper states the exact boss requirement. */
     place(&g,MAP_FOREST,29,11);
+    const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
+    assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(g.npcs.count==2 && g.npcs.people[1].gate==sunthread_gate);
+    assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
+    update(&g,(Input){.horizontal=1},10);
+    assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"VAREL") &&
+           strstr(g.dialogue.pages[1],"VEYLING GUARDIAN"));
+    render(&g,"previews/forest-gatekeeper-locked.ppm");
+    update(&g,(Input){.cancel=1},1);
+    assert(progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    npc_apply_progress(&g.npcs,g.npc_battle_progress.defeated,&g.progression);
+    assert(g.npcs.people[1].actor.tile_x==29 && g.npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(sunthread_gate,&g.progression));
+    g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && strstr(g.dialogue.pages[0],"HAS YIELDED"));
+    render(&g,"previews/forest-gatekeeper-open.ppm");
+    update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_MARSH);
     update(&g,(Input){.horizontal=-1},10);
-    assert(g.map_id==MAP_FOREST);
+    assert(g.map_id==MAP_FOREST && g.npcs.people[1].actor.tile_x==29 &&
+           g.npcs.people[1].actor.tile_y==10);
     place(&g,MAP_MARSH,24,5);
     update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_REST);
@@ -7474,6 +7527,7 @@ int main(void)
     g.party.lead=2;g.inventory.embermarks=4242;
     g.npc_battle_progress.defeated=(1u<<NPC_BATTLE_EAST_CHALLENGER)|(1u<<3)|(1u<<11);
     progression_set(&g.progression,PROGRESSION_FIRST_CHALLENGER_DEFEATED);
+    progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
     progression_set(&g.progression,PROGRESSION_CAVE_UNLOCKED);
     Party snapshot=g.party;
     NpcBattleProgress npc_snapshot=g.npc_battle_progress;
@@ -7493,8 +7547,12 @@ int main(void)
     assert(g.npc_battle_progress.defeated==npc_snapshot.defeated &&
            progression_save_bits(&g.progression)==progression_save_bits(&progression_snapshot));
     Npcs restored_npcs;npc_load(&restored_npcs,MAP_CLEARING);
-    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
     assert(restored_npcs.people[2].actor.tile_x==37 && restored_npcs.people[2].actor.tile_y==10);
+    npc_load(&restored_npcs,MAP_FOREST);
+    npc_apply_progress(&restored_npcs,g.npc_battle_progress.defeated,&g.progression);
+    assert(restored_npcs.people[1].actor.tile_x==29 && restored_npcs.people[1].actor.tile_y==10);
+    assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
     npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
     assert(progression_has(&phase16_save,PROGRESSION_FIRST_CHALLENGER_DEFEATED));
@@ -7504,7 +7562,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 18 locked gate, entrance challenger, world systems, NPC persistence, party/inventory, drawing budget, actor spotlight states");
+    puts("PASS: Phase 19 forest gatekeepers, locked gates, NPC persistence, world systems, party/inventory, drawing budget, actor spotlight states");
     return 0;
 }
 ````
