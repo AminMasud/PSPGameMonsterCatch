@@ -12,6 +12,7 @@
 #include "ready_prompt.h"
 #include "npc_battle.h"
 #include "boss.h"
+#include "healing.h"
 typedef struct {
     SpeciesId species;
     int level;
@@ -54,6 +55,7 @@ typedef struct {
     char shop_message[112];
     SaveStatus save_seen_status;
     ReadyPrompt ready_prompt;
+    HealingPrompt healing_prompt;
     PendingBattle pending_battle;
     NpcBattleProgress npc_battle_progress;
     ProgressionState progression;

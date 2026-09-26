@@ -244,7 +244,7 @@ static void growth_next(Battle *b)
         b->phase=BATTLE_LEARN;return;
     }
     if(b->next_enemy_pending) { send_next_enemy(b);return; }
-    message(b,"TEAM RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
+    message(b,"BATTLE COMPLETE.\nX RETURN TO EXPLORING",AFTER_DONE);
 }
 void battle_update(Battle *b,const Input *input)
 {
@@ -267,7 +267,7 @@ void battle_update(Battle *b,const Input *input)
             int destination=party_add(&b->party,&b->enemy);
             b->result=BATTLE_CAUGHT;
             b->turn_state=TURN_COMPLETE;
-            snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nTEAM RESTORED AFTER BATTLE.",creature_name(&b->enemy),
+            snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nX RETURN TO EXPLORING.",creature_name(&b->enemy),
                      destination==1?"ADDED TO YOUR PARTY.":"SENT TO YOUR COLLECTION.");
             b->phase=BATTLE_MESSAGE;b->after=AFTER_DONE;
         } else {
@@ -356,7 +356,7 @@ void battle_update(Battle *b,const Input *input)
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
             b->acting_side=-1;
-            message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nFIND A HEALING POINT.",AFTER_DONE);
         } else advance_turn(b);
         return;
     }
@@ -396,7 +396,7 @@ void battle_update(Battle *b,const Input *input)
         if(b->escape_attempts>=3 || random_next(b)%100<70) {
             b->result=BATTLE_ESCAPED;
             b->turn_state=TURN_COMPLETE;
-            message(b,"YOU GOT AWAY SAFELY.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOU GOT AWAY SAFELY.\nX RETURN TO EXPLORING.",AFTER_DONE);
         } else {
             message(b,"THE WAY OUT IS BLOCKED.\nTHE WILD VEYLING MOVES CLOSER.",AFTER_TURN);
         }

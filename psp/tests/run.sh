@@ -11,7 +11,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/boss.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/boss.c src/healing.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \

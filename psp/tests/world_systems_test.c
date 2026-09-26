@@ -158,12 +158,53 @@ int main(void)
         }
     }
     assert(portals==10 && locked_gates==3);
+    assert(healing_point_count()==2);
+    for(int i=0;i<healing_point_count();++i) {
+        const HealingPoint *point=i==0?healing_point_at(MAP_LODGE,2,1):
+                                  healing_point_at(MAP_REST,2,2);
+        assert(point && healing_point_valid(point));
+    }
+    assert(!healing_point_at(MAP_FOREST,2,1));
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
     assert(g.map_id==MAP_LODGE);
     update(&g,(Input){0,1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
+
+    /* Phase 25: map-defined healing points require confirmation and restore only there. */
+    place(&g,MAP_LODGE,3,1);
+    g.player.facing=FACE_LEFT;
+    g.party.members[0].hp=1;g.party.members[0].uses[0]=0;
+    int damaged_hp=g.party.members[0].hp;
+    update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
+    assert(g.menu_open && g.party.members[0].hp==damaged_hp && !g.healing_prompt.active);
+    update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
+    assert(!g.menu_open);
+    g.transition=0;
+    render(&g,"previews/healing-point.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active && g.healing_prompt.point &&
+           !strcmp(g.healing_prompt.point->name,"WAYFARER DAIS"));
+    render(&g,"previews/healing-prompt.ppm");
+    update(&g,(Input){.vertical=1},1);
+    update(&g,(Input){0},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.healing_prompt.active && !g.dialogue.active && g.party.members[0].hp==damaged_hp);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.healing_prompt.active && g.dialogue.active &&
+           g.party.members[0].hp==g.party.members[0].max_hp &&
+           g.party.members[0].uses[0]==attack_get(g.party.members[0].moves[0])->uses);
+    render(&g,"previews/healing-complete.ppm");
+    update(&g,(Input){.cancel=1},1);
+
+    g.party.members[0].hp=4;
+    battle_begin_party_with_inventory(&g.battle,&g.party,&g.inventory,SPECIES_MOSSPRIG,3,91);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_ESCAPED;g.in_battle=1;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && g.party.members[0].hp==4); /* Battles no longer grant location-free healing. */
 
     /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
@@ -544,7 +585,7 @@ int main(void)
     update(&g,(Input){0,0,1,0,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
-    assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
+    assert(g.party.members[g.party.lead].hp<g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
     battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_TITANOCERA,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
@@ -552,7 +593,7 @@ int main(void)
     assert(g.battle.result==BATTLE_LOSS);
     update(&g,(Input){0,0,1,0,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
-    assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp);
+    assert(g.party.members[g.party.lead].hp<=0); /* Returning home does not bypass a healing point. */
     /* Real game integration: victory -> learning choice -> persistent partner. */
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,5);
     g.party.members[g.party.lead].experience=creature_xp_for_level(6)-1;
@@ -611,7 +652,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(!g.in_battle && g.party.count==4 && g.party.stored==1);
     assert(g.party.collection[0].species==SPECIES_MOSSPRIG && g.party.collection[0].level==3);
-    assert(g.party.collection[0].hp==g.party.collection[0].max_hp);
+    assert(g.party.collection[0].hp==1); /* Captured Veylings keep their battle condition. */
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
     render(&g,"previews/player-menu.ppm");
@@ -633,6 +674,7 @@ int main(void)
     assert(g.party.lead==1);
     update(&g,(Input){.menu=1},1);
     assert(!g.roster_open);
+    g.party.members[0].hp=g.party.members[0].max_hp;
     battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
     g.battle.enemy.speed=0;
@@ -666,6 +708,8 @@ int main(void)
     place(&g,MAP_LODGE,2,2);
     g.player.facing=FACE_UP;
     g.party.members[0].hp=1;g.party.members[0].uses[0]=0;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active && g.party.members[0].hp==1 && g.party.members[0].uses[0]==0);
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.party.members[0].hp==g.party.members[0].max_hp &&
            g.party.members[0].uses[0]==attack_get(g.party.members[0].moves[0])->uses);

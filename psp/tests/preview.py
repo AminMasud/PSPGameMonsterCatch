@@ -15,6 +15,7 @@ def chunk(kind, payload):
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
+             'healing-point', 'healing-prompt', 'healing-complete',
              'east-forest-boss', 'east-forest-boss-ready',
              'east-forest-boss-battle', 'east-forest-boss-victory',
              'east-forest-route-open',

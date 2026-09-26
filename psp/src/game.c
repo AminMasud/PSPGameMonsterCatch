@@ -23,14 +23,14 @@ static void enter_map(Game *g, int id, int x, int y)
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
 }
-static char facing_tile(const Game *g)
+static const HealingPoint *facing_healing_point(const Game *g)
 {
     int x=g->player.tile_x, y=g->player.tile_y;
     if(g->player.facing==FACE_UP) --y;
     else if(g->player.facing==FACE_DOWN) ++y;
     else if(g->player.facing==FACE_LEFT) --x;
     else ++x;
-    return map_tile(g->map,x,y);
+    return healing_point_at(g->map_id,x,y);
 }
 static int world_blocks(void *context,int x,int y)
 {
@@ -157,6 +157,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
+    g->healing_prompt=(HealingPrompt){0};
     g->npc_battle=(PendingNpcBattle){0};
     g->boss_battle=(PendingBossBattle){0};
     return 1;
@@ -208,7 +209,7 @@ int game_offer_important_battle(Game *g,const char *opponent,
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
        g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
        g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
     g->pending_battle=(PendingBattle){species,level,seed};
     ready_prompt_open(&g->ready_prompt,opponent);
@@ -220,7 +221,8 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
     if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     if(npc_battle_is_defeated(&g->npc_battle_progress,data->id)) {
         dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
         return 1;
@@ -237,7 +239,8 @@ int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
        g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     if(boss_is_defeated(&g->progression,data)) {
         dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
         return 1;
@@ -264,10 +267,6 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->in_battle=0;
             g->party=g->battle.party; /* Includes captures and every switched creature. */
             g->inventory=g->battle.inventory;
-            /* The prototype still restores the complete team after battle so
-               encounter and progression testing stays repeatable. The lodge
-               dais gives the player an explicit refill while exploring. */
-            party_restore(&g->party);
             if(result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
             g->encounter.safe_steps=4;
             g->transition=0.22f;
@@ -302,6 +301,17 @@ static void game_step(Game *g, const Input *input, float seconds)
                 }
                 g->boss_battle=(PendingBossBattle){0};
             }
+        }
+        return;
+    }
+    if(g->healing_prompt.active) {
+        HealingPromptResult choice=healing_prompt_update(&g->healing_prompt,input);
+        if(choice==HEALING_ACCEPTED) {
+            const HealingPoint *point=g->healing_prompt.point;
+            party_restore(&g->party);
+            dialogue_open(&g->dialogue,point->name,"YOUR VEYLINGS ARE RESTORED.",
+                          "HP AND ATTACK USES ARE READY.");
+            g->transition=0.22f;audio_play(SOUND_HEAL);
         }
         return;
     }
@@ -395,10 +405,9 @@ static void game_step(Game *g, const Input *input, float seconds)
         return;
     }
     if (input->confirm && !g->player.moving) {
-        if (facing_tile(g)=='H') {
-            party_restore(&g->party);
-            dialogue_open(&g->dialogue,map_name(g->map_id),"YOUR TEAM IS RESTORED.\nHP AND ATTACK USES ARE READY.","TAKE A BREATH. THEN KEEP MOVING.");
-            audio_play(SOUND_HEAL);
+        const HealingPoint *healing=facing_healing_point(g);
+        if (healing) {
+            healing_prompt_open(&g->healing_prompt,healing);
             return;
         }
         Npc *npc = npc_facing(&g->npcs,&g->player);
@@ -447,7 +456,7 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds>0.05f) seconds=0.05f;
     int busy=save_data_status()==SAVE_STATUS_BUSY;
     int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
-              g->ready_prompt.active || g->in_battle;
+              g->ready_prompt.active || g->healing_prompt.active || g->in_battle;
     int direction=input->vertical?input->vertical:input->horizontal;
     if (!busy && modal && direction && direction!=g->previous_ui_direction) audio_play(SOUND_CURSOR);
     if (!busy && (input->confirm || input->cancel || (input->menu&INPUT_MENU_OPEN))) audio_play(SOUND_CONFIRM);
@@ -492,6 +501,7 @@ static void draw_scene(const Game *g)
         text_draw(22,34,map_name(g->map_id),GU_RGBA(239,218,173,255),1);
     }
     if(g->ready_prompt.active) { ready_prompt_draw(&g->ready_prompt);return; }
+    if(g->healing_prompt.active) { healing_prompt_draw(&g->healing_prompt);return; }
     if (g->shop_open) {
         graphics_rectangle(38,37,404,205,GU_RGBA(184,150,96,255));
         graphics_rectangle(40,39,400,201,GU_RGBA(21,30,36,255));

@@ -1,4 +1,4 @@
-# Complete Phase 24 source contents
+# Complete Phase 25 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -689,6 +689,7 @@ int encounter_step(Encounter *e, int area, EncounterResult *result);
 #include "ready_prompt.h"
 #include "npc_battle.h"
 #include "boss.h"
+#include "healing.h"
 typedef struct {
     SpeciesId species;
     int level;
@@ -731,6 +732,7 @@ typedef struct {
     char shop_message[112];
     SaveStatus save_seen_status;
     ReadyPrompt ready_prompt;
+    HealingPrompt healing_prompt;
     PendingBattle pending_battle;
     NpcBattleProgress npc_battle_progress;
     ProgressionState progression;
@@ -1268,7 +1270,7 @@ void world_actor_draw(const Player *p, const Camera *camera, int npc);
 
 ````text
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/boss.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/boss.o src/healing.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -1281,7 +1283,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 24
+PSP_EBOOT_TITLE = Emberwake - Phase 25
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1314,7 +1316,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 24 Forest Boss Catalog
+# Emberwake — Phase 25 Healing Location Framework
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1326,20 +1328,20 @@ East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
 special presentation, Elder Sylva, Fernveil's first in-world Guardian,
-data-linked boss-gated routes, and a reusable forest boss catalog.
+data-linked boss-gated routes, and a reusable forest boss catalog, plus reusable confirmation-based healing points.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE24.PBP**, titled **Emberwake - Phase 24**. Copy it to:
+Use **EBOOT-PHASE25.PBP**, titled **Emberwake - Phase 25**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE23.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE24.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1567,8 +1569,7 @@ New attacks fill empty slots automatically. If all four are occupied, choose a
 move to replace or keep the current moves. Circle declines. Known moves and
 nicknames survive evolution. There is no nickname editor yet.
 
-**Temporary prototype rule:** every party and stored creature regains all HP and
-attack uses after every battle, including escape, capture, and defeat. The last
+Battle HP and attack uses persist after victory, capture, escape, and defeat. The last
 active battler becomes the lead. Defeat returns the player to Hearth Clearing;
 other outcomes return to the same exploration position. Four safe steps follow.
 
@@ -1612,8 +1613,10 @@ Pulse Tonic restores up to 25 HP; a full-restoration item restores maximum HP.
 Invalid, full-HP, fainted, or out-of-stock uses consume nothing. A valid combat
 use consumes the player's action; the enemy acts afterward only when still due
 in that round. Buy supplies with Embermarks after finishing Tavi's dialogue in
-the lodge. Face either green healing dais and press X to restore the whole
-roster's HP and attack uses.
+the lodge. Face a green healing dais and press X, then choose YES, to restore
+the whole roster's HP and attack uses. The registered points are the Wayfarer
+Dais in the lodge and the Lantern Dais at Lantern Rest; Field Kit menus cannot
+heal a party.
 
 ## Existing saves
 
@@ -1705,12 +1708,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE25.PBP EXTRA_TARGETS=EBOOT-PHASE25.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP
+    make PSP_EBOOT=EBOOT-PHASE25.PBP EXTRA_TARGETS=EBOOT-PHASE25.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1769,6 +1772,9 @@ Phase 24 validates both catalog entries, their distinct parties, dialogue,
 rewards, completion flags, and AI profiles. It also verifies the Northern Woods
 entry remains unavailable until the East Forest flag is set, then enters the
 same reusable intro flow without an in-world placement.
+Phase 25 validates the registered Wayfarer and Lantern healing points, their map
+placements and prompts, YES/NO behavior, restoration of HP and attack uses, and
+the persistence of battle damage until a point is used.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -1778,7 +1784,8 @@ Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-forest-boss.png, east-forest-boss-ready.png,
 east-forest-boss-battle.png, east-forest-boss-victory.png,
-east-forest-route-open.png,
+east-forest-route-open.png, healing-point.png, healing-prompt.png,
+healing-complete.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -1805,7 +1812,10 @@ PSP test route:
 7. Follow Fernveil's northeast path. Verify Maren visibly blocks Hollowstone Cave
    and explains that the Fernveil and Northern Woods Guardians must be defeated.
    Save and load there and verify the cave remains sealed.
-8. Load an existing version-2 save and verify roster, items, money, and location
+8. In Wayfarer Lodge, face the green dais. Choose NO once and verify the party is
+   unchanged; then choose YES and verify every party member's HP and attack uses
+   are restored. Confirm the Field Kit has no healing command.
+9. Load an existing version-2 save and verify roster, items, money, and location
    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
@@ -2401,7 +2411,7 @@ static void growth_next(Battle *b)
         b->phase=BATTLE_LEARN;return;
     }
     if(b->next_enemy_pending) { send_next_enemy(b);return; }
-    message(b,"TEAM RESTORED AFTER BATTLE.\nX RETURN TO EXPLORING",AFTER_DONE);
+    message(b,"BATTLE COMPLETE.\nX RETURN TO EXPLORING",AFTER_DONE);
 }
 void battle_update(Battle *b,const Input *input)
 {
@@ -2424,7 +2434,7 @@ void battle_update(Battle *b,const Input *input)
             int destination=party_add(&b->party,&b->enemy);
             b->result=BATTLE_CAUGHT;
             b->turn_state=TURN_COMPLETE;
-            snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nTEAM RESTORED AFTER BATTLE.",creature_name(&b->enemy),
+            snprintf(b->message,sizeof(b->message),"%s JOINS YOU.\n%s\nX RETURN TO EXPLORING.",creature_name(&b->enemy),
                      destination==1?"ADDED TO YOUR PARTY.":"SENT TO YOUR COLLECTION.");
             b->phase=BATTLE_MESSAGE;b->after=AFTER_DONE;
         } else {
@@ -2513,7 +2523,7 @@ void battle_update(Battle *b,const Input *input)
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
         } else if(b->result==BATTLE_LOSS) {
             b->acting_side=-1;
-            message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOUR TEAM NEEDS A REST.\nRETURNING TO HEARTH CLEARING.\nFIND A HEALING POINT.",AFTER_DONE);
         } else advance_turn(b);
         return;
     }
@@ -2553,7 +2563,7 @@ void battle_update(Battle *b,const Input *input)
         if(b->escape_attempts>=3 || random_next(b)%100<70) {
             b->result=BATTLE_ESCAPED;
             b->turn_state=TURN_COMPLETE;
-            message(b,"YOU GOT AWAY SAFELY.\nTEAM RESTORED AFTER BATTLE.",AFTER_DONE);
+            message(b,"YOU GOT AWAY SAFELY.\nX RETURN TO EXPLORING.",AFTER_DONE);
         } else {
             message(b,"THE WAY OUT IS BLOCKED.\nTHE WILD VEYLING MOVES CLOSER.",AFTER_TURN);
         }
@@ -2978,14 +2988,14 @@ static void enter_map(Game *g, int id, int x, int y)
     camera_update(&g->camera,&g->player,g->map);
     g->transition=0.22f;g->area_label=2.0f;
 }
-static char facing_tile(const Game *g)
+static const HealingPoint *facing_healing_point(const Game *g)
 {
     int x=g->player.tile_x, y=g->player.tile_y;
     if(g->player.facing==FACE_UP) --y;
     else if(g->player.facing==FACE_DOWN) ++y;
     else if(g->player.facing==FACE_LEFT) --x;
     else ++x;
-    return map_tile(g->map,x,y);
+    return healing_point_at(g->map_id,x,y);
 }
 static int world_blocks(void *context,int x,int y)
 {
@@ -3112,6 +3122,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->encounter.safe_steps=saved->encounter_safe_steps;
     g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
+    g->healing_prompt=(HealingPrompt){0};
     g->npc_battle=(PendingNpcBattle){0};
     g->boss_battle=(PendingBossBattle){0};
     return 1;
@@ -3163,7 +3174,7 @@ int game_offer_important_battle(Game *g,const char *opponent,
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
        g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
        g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE ||
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
     g->pending_battle=(PendingBattle){species,level,seed};
     ready_prompt_open(&g->ready_prompt,opponent);
@@ -3175,7 +3186,8 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
     if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     if(npc_battle_is_defeated(&g->npc_battle_progress,data->id)) {
         dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
         return 1;
@@ -3192,7 +3204,8 @@ int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
        g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
-       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
+       g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
+       save_data_status()==SAVE_STATUS_BUSY) return 0;
     if(boss_is_defeated(&g->progression,data)) {
         dialogue_open(&g->dialogue,data->name,data->victory.first,data->victory.second);
         return 1;
@@ -3219,10 +3232,6 @@ static void game_step(Game *g, const Input *input, float seconds)
             g->in_battle=0;
             g->party=g->battle.party; /* Includes captures and every switched creature. */
             g->inventory=g->battle.inventory;
-            /* The prototype still restores the complete team after battle so
-               encounter and progression testing stays repeatable. The lodge
-               dais gives the player an explicit refill while exploring. */
-            party_restore(&g->party);
             if(result==BATTLE_LOSS) enter_map(g,MAP_CLEARING,5,11);
             g->encounter.safe_steps=4;
             g->transition=0.22f;
@@ -3257,6 +3266,17 @@ static void game_step(Game *g, const Input *input, float seconds)
                 }
                 g->boss_battle=(PendingBossBattle){0};
             }
+        }
+        return;
+    }
+    if(g->healing_prompt.active) {
+        HealingPromptResult choice=healing_prompt_update(&g->healing_prompt,input);
+        if(choice==HEALING_ACCEPTED) {
+            const HealingPoint *point=g->healing_prompt.point;
+            party_restore(&g->party);
+            dialogue_open(&g->dialogue,point->name,"YOUR VEYLINGS ARE RESTORED.",
+                          "HP AND ATTACK USES ARE READY.");
+            g->transition=0.22f;audio_play(SOUND_HEAL);
         }
         return;
     }
@@ -3350,10 +3370,9 @@ static void game_step(Game *g, const Input *input, float seconds)
         return;
     }
     if (input->confirm && !g->player.moving) {
-        if (facing_tile(g)=='H') {
-            party_restore(&g->party);
-            dialogue_open(&g->dialogue,map_name(g->map_id),"YOUR TEAM IS RESTORED.\nHP AND ATTACK USES ARE READY.","TAKE A BREATH. THEN KEEP MOVING.");
-            audio_play(SOUND_HEAL);
+        const HealingPoint *healing=facing_healing_point(g);
+        if (healing) {
+            healing_prompt_open(&g->healing_prompt,healing);
             return;
         }
         Npc *npc = npc_facing(&g->npcs,&g->player);
@@ -3402,7 +3421,7 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds>0.05f) seconds=0.05f;
     int busy=save_data_status()==SAVE_STATUS_BUSY;
     int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
-              g->ready_prompt.active || g->in_battle;
+              g->ready_prompt.active || g->healing_prompt.active || g->in_battle;
     int direction=input->vertical?input->vertical:input->horizontal;
     if (!busy && modal && direction && direction!=g->previous_ui_direction) audio_play(SOUND_CURSOR);
     if (!busy && (input->confirm || input->cancel || (input->menu&INPUT_MENU_OPEN))) audio_play(SOUND_CONFIRM);
@@ -3447,6 +3466,7 @@ static void draw_scene(const Game *g)
         text_draw(22,34,map_name(g->map_id),GU_RGBA(239,218,173,255),1);
     }
     if(g->ready_prompt.active) { ready_prompt_draw(&g->ready_prompt);return; }
+    if(g->healing_prompt.active) { healing_prompt_draw(&g->healing_prompt);return; }
     if (g->shop_open) {
         graphics_rectangle(38,37,404,205,GU_RGBA(184,150,96,255));
         graphics_rectangle(40,39,400,201,GU_RGBA(21,30,36,255));
@@ -6994,6 +7014,7 @@ def chunk(kind, payload):
 output = pathlib.Path(__file__).resolve().parent.parent / 'previews'
 output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
+             'healing-point', 'healing-prompt', 'healing-complete',
              'east-forest-boss', 'east-forest-boss-ready',
              'east-forest-boss-battle', 'east-forest-boss-victory',
              'east-forest-route-open',
@@ -7035,7 +7056,7 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
 previews/overworld-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iinclude \
     tests/world_systems_test.c src/game.c src/map.c src/player.c src/camera.c \
-    src/npc.c src/npc_battle.c src/boss.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
+    src/npc.c src/npc_battle.c src/boss.c src/healing.c src/progression.c src/gate.c src/dialogue.c src/encounter.c src/world_draw.c src/text.c \
     src/attacks.c src/battle.c src/battle_draw.c src/creature.c src/npc_ai.c \
     src/party.c src/capture.c src/party_menu.c src/inventory.c src/player_menu.c src/pet_draw.c src/pet_assets.S \
     src/ready_prompt.c \
@@ -7459,12 +7480,53 @@ int main(void)
         }
     }
     assert(portals==10 && locked_gates==3);
+    assert(healing_point_count()==2);
+    for(int i=0;i<healing_point_count();++i) {
+        const HealingPoint *point=i==0?healing_point_at(MAP_LODGE,2,1):
+                                  healing_point_at(MAP_REST,2,2);
+        assert(point && healing_point_valid(point));
+    }
+    assert(!healing_point_at(MAP_FOREST,2,1));
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
     assert(g.map_id==MAP_LODGE);
     update(&g,(Input){0,1,0,0,0,0},10);
     assert(g.map_id==MAP_CLEARING && g.player.tile_y==10);
+
+    /* Phase 25: map-defined healing points require confirmation and restore only there. */
+    place(&g,MAP_LODGE,3,1);
+    g.player.facing=FACE_LEFT;
+    g.party.members[0].hp=1;g.party.members[0].uses[0]=0;
+    int damaged_hp=g.party.members[0].hp;
+    update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
+    assert(g.menu_open && g.party.members[0].hp==damaged_hp && !g.healing_prompt.active);
+    update(&g,(Input){.menu=INPUT_MENU_OPEN},1);
+    assert(!g.menu_open);
+    g.transition=0;
+    render(&g,"previews/healing-point.ppm");
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active && g.healing_prompt.point &&
+           !strcmp(g.healing_prompt.point->name,"WAYFARER DAIS"));
+    render(&g,"previews/healing-prompt.ppm");
+    update(&g,(Input){.vertical=1},1);
+    update(&g,(Input){0},1);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.healing_prompt.active && !g.dialogue.active && g.party.members[0].hp==damaged_hp);
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active);
+    update(&g,(Input){.confirm=1},1);
+    assert(!g.healing_prompt.active && g.dialogue.active &&
+           g.party.members[0].hp==g.party.members[0].max_hp &&
+           g.party.members[0].uses[0]==attack_get(g.party.members[0].moves[0])->uses);
+    render(&g,"previews/healing-complete.ppm");
+    update(&g,(Input){.cancel=1},1);
+
+    g.party.members[0].hp=4;
+    battle_begin_party_with_inventory(&g.battle,&g.party,&g.inventory,SPECIES_MOSSPRIG,3,91);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_ESCAPED;g.in_battle=1;
+    update(&g,(Input){0},1);
+    assert(!g.in_battle && g.party.members[0].hp==4); /* Battles no longer grant location-free healing. */
 
     /* Phase 16: Ren guards the east portal until the first easy NPC victory. */
     place(&g,MAP_CLEARING,37,11);
@@ -7845,7 +7907,7 @@ int main(void)
     update(&g,(Input){0,0,1,0,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_FOREST);
     assert(g.player.x==before_x && g.player.y==before_y);
-    assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
+    assert(g.party.members[g.party.lead].hp<g.party.members[g.party.lead].max_hp && g.encounter.safe_steps==4);
     battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_TITANOCERA,7,99);g.in_battle=1;
     g.battle.ally.hp=1;g.battle.enemy.speed=999;
     for(int i=0;i<4;++i) g.battle.enemy.moves[i]=MOVE_NUDGE;
@@ -7853,7 +7915,7 @@ int main(void)
     assert(g.battle.result==BATTLE_LOSS);
     update(&g,(Input){0,0,1,0,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
-    assert(g.party.members[g.party.lead].hp==g.party.members[g.party.lead].max_hp);
+    assert(g.party.members[g.party.lead].hp<=0); /* Returning home does not bypass a healing point. */
     /* Real game integration: victory -> learning choice -> persistent partner. */
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,5);
     g.party.members[g.party.lead].experience=creature_xp_for_level(6)-1;
@@ -7912,7 +7974,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(!g.in_battle && g.party.count==4 && g.party.stored==1);
     assert(g.party.collection[0].species==SPECIES_MOSSPRIG && g.party.collection[0].level==3);
-    assert(g.party.collection[0].hp==g.party.collection[0].max_hp);
+    assert(g.party.collection[0].hp==1); /* Captured Veylings keep their battle condition. */
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
     render(&g,"previews/player-menu.ppm");
@@ -7934,6 +7996,7 @@ int main(void)
     assert(g.party.lead==1);
     update(&g,(Input){.menu=1},1);
     assert(!g.roster_open);
+    g.party.members[0].hp=g.party.members[0].max_hp;
     battle_begin_party(&g.battle,&g.party,SPECIES_GRUBBL,5,2);g.in_battle=1;
     assert(g.battle.active==1 && g.battle.ally.species==g.party.members[1].species);
     g.battle.enemy.speed=0;
@@ -7967,6 +8030,8 @@ int main(void)
     place(&g,MAP_LODGE,2,2);
     g.player.facing=FACE_UP;
     g.party.members[0].hp=1;g.party.members[0].uses[0]=0;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.healing_prompt.active && g.party.members[0].hp==1 && g.party.members[0].uses[0]==0);
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.party.members[0].hp==g.party.members[0].max_hp &&
            g.party.members[0].uses[0]==attack_get(g.party.members[0].moves[0])->uses);
@@ -8214,4 +8279,114 @@ for i, entry in enumerate(manifest):
     texture = binary[i*32768:(i+1)*32768]
     assert hashlib.sha256(texture).hexdigest() == entry['texture_sha256']
 print('PASS: all 30 numbered PNGs, roster IDs, and compiled texture checksums match')
+````
+
+## include/healing.h
+
+````text
+#ifndef EMBERWAKE_HEALING_H
+#define EMBERWAKE_HEALING_H
+
+#include "input.h"
+
+#define HEALING_POINT_MAX 8
+
+typedef struct {
+    int map_id, x, y;
+    const char *name;
+    const char *prompt;
+} HealingPoint;
+
+typedef enum { HEALING_WAITING, HEALING_ACCEPTED, HEALING_DECLINED } HealingPromptResult;
+
+typedef struct {
+    int active, cursor, previous_direction;
+    const HealingPoint *point;
+} HealingPrompt;
+
+int healing_point_valid(const HealingPoint *point);
+int healing_point_count(void);
+const HealingPoint *healing_point_at(int map_id,int x,int y);
+void healing_prompt_open(HealingPrompt *prompt,const HealingPoint *point);
+HealingPromptResult healing_prompt_update(HealingPrompt *prompt,const Input *input);
+void healing_prompt_draw(const HealingPrompt *prompt);
+
+#endif
+````
+
+## src/healing.c
+
+````text
+#include <stdio.h>
+#include <pspgu.h>
+#include "healing.h"
+#include "map.h"
+#include "graphics.h"
+#include "text.h"
+
+#define C(r,g,b) GU_RGBA(r,g,b,255)
+
+static const HealingPoint points[] = {
+    {MAP_LODGE,2,1,"WAYFARER DAIS","RESTORE YOUR WHOLE TEAM?"},
+    {MAP_REST,2,2,"LANTERN DAIS","RESTORE YOUR WHOLE TEAM?"}
+};
+
+int healing_point_valid(const HealingPoint *point)
+{
+    return point && point->map_id>=0 && point->map_id<MAP_COUNT &&
+           point->x>=0 && point->y>=0 && point->name && point->name[0] &&
+           point->prompt && point->prompt[0] &&
+           map_tile(map_get(point->map_id),point->x,point->y)=='H';
+}
+
+int healing_point_count(void)
+{
+    return (int)(sizeof(points)/sizeof(points[0]));
+}
+
+const HealingPoint *healing_point_at(int map_id,int x,int y)
+{
+    for(int i=0;i<healing_point_count();++i)
+        if(points[i].map_id==map_id && points[i].x==x && points[i].y==y)
+            return &points[i];
+    return 0;
+}
+
+void healing_prompt_open(HealingPrompt *prompt,const HealingPoint *point)
+{
+    if(!prompt || !healing_point_valid(point)) return;
+    *prompt=(HealingPrompt){0};
+    prompt->active=1;
+    prompt->point=point;
+}
+
+HealingPromptResult healing_prompt_update(HealingPrompt *prompt,const Input *input)
+{
+    if(!prompt || !prompt->active) return HEALING_WAITING;
+    int direction=input->vertical;
+    if(direction && direction!=prompt->previous_direction) prompt->cursor=1-prompt->cursor;
+    prompt->previous_direction=direction;
+    if(input->cancel) { prompt->active=0;return HEALING_DECLINED; }
+    if(!input->confirm) return HEALING_WAITING;
+    prompt->active=0;
+    return prompt->cursor==0?HEALING_ACCEPTED:HEALING_DECLINED;
+}
+
+void healing_prompt_draw(const HealingPrompt *prompt)
+{
+    if(!prompt || !prompt->active || !prompt->point) return;
+    graphics_rectangle(72,38,336,196,C(179,145,91));
+    graphics_rectangle(75,41,330,190,C(18,27,34));
+    text_draw(133,61,"REST AT HEALING POINT?",C(245,217,166),1);
+    text_draw(172,91,prompt->point->name,C(165,195,186),1);
+    for(int i=0;i<2;++i) {
+        int y=119+i*39;
+        if(i==prompt->cursor) {
+            graphics_rectangle(132,y,216,31,C(65,83,78));
+            graphics_rectangle(132,y,4,31,C(115,214,171));
+        }
+        text_draw(220,y+11,i==0?"YES":"NO",i==prompt->cursor?C(198,255,212):C(174,190,186),1);
+    }
+    text_draw(133,211,"UP/DOWN SELECT   X CONFIRM   O NO",C(158,187,179),1);
+}
 ````
