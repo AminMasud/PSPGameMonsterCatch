@@ -155,7 +155,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     g->party=party;g->inventory=inventory;
     g->encounter.random=saved->encounter_random?saved->encounter_random:0x712a9u;
     g->encounter.safe_steps=saved->encounter_safe_steps;
-    g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->shop_open=0;g->tavi_shop_pending=0;
+    g->dialogue=(Dialogue){0};g->roster_open=0;g->menu_open=0;g->world_map=(WorldMap){0};g->shop_open=0;g->tavi_shop_pending=0;
     g->ready_prompt=(ReadyPrompt){0};g->pending_battle=(PendingBattle){0};
     g->healing_prompt=(HealingPrompt){0};
     g->npc_battle=(PendingNpcBattle){0};
@@ -207,7 +207,7 @@ int game_offer_important_battle(Game *g,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed)
 {
     if(!g || species<0 || species>=SPECIES_COUNT || level<1 || level>CREATURE_MAX_LEVEL ||
-       g->in_battle || g->ready_prompt.active || g->menu_open || g->roster_open ||
+       g->in_battle || g->ready_prompt.active || g->menu_open || g->world_map.active || g->roster_open ||
        g->shop_open || g->dialogue.active || g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
@@ -219,7 +219,7 @@ int game_offer_important_battle(Game *g,const char *opponent,
 int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
 {
     if(!g || !npc_battle_data_valid(data) || g->in_battle || g->ready_prompt.active ||
-       g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+       g->menu_open || g->world_map.active || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
@@ -237,7 +237,7 @@ int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
 {
     if(!g || !boss_data_valid(data) || !boss_is_available(&g->progression,data) ||
        g->in_battle || g->ready_prompt.active ||
-       g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+       g->menu_open || g->world_map.active || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || g->healing_prompt.active ||
        save_data_status()==SAVE_STATUS_BUSY) return 0;
@@ -352,9 +352,14 @@ static void game_step(Game *g, const Input *input, float seconds)
         if (!g->roster_open && (input->menu&INPUT_MENU_OPEN)) g->menu_open=0;
         return;
     }
+    if(g->world_map.active) {
+        if(world_map_update(&g->world_map,input)) player_menu_open(&g->menu);
+        return;
+    }
     if(g->menu_open) {
         PlayerMenuAction action=player_menu_update(&g->menu,&g->party,&g->inventory,&g->options,input);
         if (action==MENU_CLOSE) g->menu_open=0;
+        else if (action==MENU_MAP) world_map_open(&g->world_map);
         else if (action==MENU_PARTY || action==MENU_COLLECTION) {
             party_menu_open(&g->roster);g->roster.tab=action==MENU_COLLECTION;g->roster_open=1;
         } else if (action==MENU_SAVE) start_save(g);
@@ -455,7 +460,7 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds<0) seconds=0;
     if (seconds>0.05f) seconds=0.05f;
     int busy=save_data_status()==SAVE_STATUS_BUSY;
-    int modal=g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
+    int modal=g->menu_open || g->world_map.active || g->roster_open || g->shop_open || g->dialogue.active ||
               g->ready_prompt.active || g->healing_prompt.active || g->in_battle;
     int direction=input->vertical?input->vertical:input->horizontal;
     if (!busy && modal && direction && direction!=g->previous_ui_direction) audio_play(SOUND_CURSOR);
@@ -488,6 +493,7 @@ static void draw_scene(const Game *g)
 {
     if(g->in_battle) { battle_draw(&g->battle); return; }
     if(g->roster_open) { party_menu_draw(&g->roster,&g->party);return; }
+    if(g->world_map.active) { world_map_draw(&g->world_map);return; }
     if(g->menu_open) { player_menu_draw(&g->menu,&g->party,&g->inventory,&g->options,g->map_id);return; }
     world_draw(g->map,&g->player,&g->camera,g->options.motion?g->animation:0);
     for (int i=0;i<g->npcs.count;++i)

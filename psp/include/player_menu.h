@@ -4,7 +4,7 @@
 #include "party.h"
 #include "inventory.h"
 typedef enum { MENU_HOME, MENU_BAG, MENU_PLAYER, MENU_OPTIONS } PlayerMenuPage;
-typedef enum { MENU_STAY, MENU_CLOSE, MENU_PARTY, MENU_COLLECTION, MENU_SAVE, MENU_LOAD } PlayerMenuAction;
+typedef enum { MENU_STAY, MENU_CLOSE, MENU_PARTY, MENU_COLLECTION, MENU_MAP, MENU_SAVE, MENU_LOAD } PlayerMenuAction;
 typedef struct {
     int music, effects, motion;
 } GameOptions;

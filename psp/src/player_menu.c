@@ -18,13 +18,14 @@ PlayerMenuAction player_menu_update(PlayerMenu *m,Party *party,Inventory *bag,Ga
     }
     if (input->menu&INPUT_MENU_LOAD) return MENU_LOAD;
     if (input->menu&INPUT_MENU_SAVE) return MENU_SAVE;
-    int count=m->page==MENU_HOME?6:m->page==MENU_BAG?ITEM_COUNT:m->page==MENU_OPTIONS?3:1;
+    int count=m->page==MENU_HOME?7:m->page==MENU_BAG?ITEM_COUNT:m->page==MENU_OPTIONS?3:1;
     if (edge) m->cursor=(m->cursor+direction+count)%count;
     if (!input->confirm) return MENU_STAY;
     if (m->page==MENU_HOME) {
         if (m->cursor==0) return MENU_PARTY;
         if (m->cursor==2) return MENU_COLLECTION;
-        if (m->cursor==4) return MENU_SAVE;
+        if (m->cursor==4) return MENU_MAP;
+        if (m->cursor==5) return MENU_SAVE;
         m->page=m->cursor==1?MENU_BAG:m->cursor==3?MENU_PLAYER:MENU_OPTIONS;
         m->cursor=0;
     } else if (m->page==MENU_BAG) {
@@ -63,8 +64,8 @@ void player_menu_draw(const PlayerMenu *m,const Party *party,const Inventory *ba
     snprintf(line,sizeof(line),"TEAM %d/4   STORED %d/%d",party->count,party->stored,COLLECTION_MAX);
     text_draw(32,191,line,C(160,190,181),1);
     if (m->page==MENU_HOME) {
-        const char *const names[]={"CREATURES","ITEMS","COLLECTION","PLAYER","SAVE","OPTIONS"};
-        for (int i=0;i<6;++i) row(51+i*29,names[i],i==m->cursor);
+        const char *const names[]={"CREATURES","ITEMS","COLLECTION","PLAYER","MAP","SAVE","OPTIONS"};
+        for (int i=0;i<7;++i) row(34+i*29,names[i],i==m->cursor);
         text_draw(20,233,"TAKE A MOMENT. YOUR JOURNEY IS PAUSED.",C(170,191,181),1);
     } else if (m->page==MENU_BAG) {
         text_draw(256,57,"ITEMS",C(244,198,118),2);

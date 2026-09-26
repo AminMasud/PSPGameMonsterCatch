@@ -682,6 +682,16 @@ int main(void)
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
     render(&g,"previews/player-menu.ppm");
+    int map_x=g.player.tile_x,map_y=g.player.tile_y;
+    for(int i=0;i<4;++i) { update(&g,(Input){.vertical=1},1);update(&g,(Input){0},1); }
+    update(&g,(Input){.confirm=1},1);
+    assert(g.menu_open && g.world_map.active && g.player.tile_x==map_x && g.player.tile_y==map_y);
+    render(&g,"previews/world-map.ppm");
+    update(&g,(Input){.horizontal=1},2);
+    assert(g.world_map.active && g.player.tile_x==map_x && g.player.tile_y==map_y);
+    update(&g,(Input){.cancel=1},1);
+    assert(g.menu_open && !g.world_map.active && g.menu.page==MENU_HOME);
+    g.menu.cursor=0;
     update(&g,(Input){.confirm=1},1);
     assert(g.roster_open);
     render(&g,"previews/party.ppm");
@@ -766,7 +776,7 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(g.party.members[0].hp==g.party.members[0].max_hp && g.inventory.quantities[0]==2);
     render(&g,"previews/field-items.ppm");
-    update(&g,(Input){.cancel=1},1);g.menu.cursor=5;
+    update(&g,(Input){.cancel=1},1);g.menu.cursor=6;
     update(&g,(Input){.confirm=1},1);
     assert(g.menu.page==MENU_OPTIONS);
     update(&g,(Input){.confirm=1},1);

@@ -86,7 +86,7 @@ int main(void)
     player_menu_update(&m,&party,&bag,&options,&(Input){.confirm=1});
     assert(bag.quantities[0]==2 && party.members[0].hp==0);
     player_menu_update(&m,&party,&bag,&options,&(Input){.cancel=1});
-    m.cursor=5;player_menu_update(&m,&party,&bag,&options,&(Input){.confirm=1});
+    m.cursor=6;player_menu_update(&m,&party,&bag,&options,&(Input){.confirm=1});
     for(int i=0;i<3;++i) { m.cursor=i;player_menu_update(&m,&party,&bag,&options,&(Input){.confirm=1}); }
     assert(!options.music && !options.effects && !options.motion);
     assert(player_menu_update(&m,&party,&bag,&options,&(Input){.menu=INPUT_MENU_SAVE})==MENU_SAVE);
