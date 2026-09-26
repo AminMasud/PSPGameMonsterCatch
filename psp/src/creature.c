@@ -99,6 +99,20 @@ const Species *species_get(int id)
 {
     return &species[id>=0 && id<SPECIES_COUNT?id:SPECIES_CINDLET];
 }
+EvolutionRequirement species_evolution_requirement(const Species *s)
+{
+    EvolutionRequirement requirement={EVOLUTION_NONE,(SpeciesId)-1,0};
+    if(s && s->evolution_level>0 && s->evolved_species>=0) {
+        requirement.method=EVOLUTION_LEVEL;requirement.target=(SpeciesId)s->evolved_species;
+        requirement.level=s->evolution_level;
+    }
+    return requirement;
+}
+int species_can_evolve(const Species *s,int level)
+{
+    EvolutionRequirement requirement=species_evolution_requirement(s);
+    return requirement.method==EVOLUTION_LEVEL && level>=requirement.level;
+}
 const char *creature_name(const Creature *c) { return c->nickname[0]?c->nickname:c->name; }
 int creature_xp_for_level(int level)
 {
@@ -180,8 +194,8 @@ void creature_gain_xp(Creature *c,int amount,CreatureGrowth *g)
         ++c->level;
         const Species *s=species_get(c->species);
         queue_moves(c,s,1,g);
-        while(s->evolution_level>0 && c->level>=s->evolution_level) {
-            c->species=(SpeciesId)s->evolved_species;
+        while(species_can_evolve(s,c->level)) {
+            c->species=species_evolution_requirement(s).target;
             s=species_get(c->species);
             queue_moves(c,s,0,g);
         }

@@ -32,7 +32,12 @@ int main(void)
         assert(s->overworld_sprite==id && s->battle_sprite==id);
         assert(s->evolution_level==(id%3==0?8:id%3==1?16:0));
         assert(s->evolved_species==(id%3==2?-1:id+1));
-        if(s->evolution_level) assert(s->evolved_species>=0 && s->evolved_species<SPECIES_COUNT && s->evolved_species!=id);
+        EvolutionRequirement requirement=species_evolution_requirement(s);
+        if(s->evolution_level) {
+            assert(requirement.method==EVOLUTION_LEVEL && (int)requirement.target==s->evolved_species &&
+                   requirement.level==s->evolution_level && species_can_evolve(s,requirement.level));
+            assert(s->evolved_species>=0 && s->evolved_species<SPECIES_COUNT && s->evolved_species!=id);
+        } else assert(requirement.method==EVOLUTION_NONE && !species_can_evolve(s,100));
         for(int i=0;i<s->learn_count;++i) {
             assert(s->learnset[i].move>=0 && s->learnset[i].move<MOVE_COUNT);
             assert(s->learnset[i].level>=1 && s->learnset[i].level<=100);

@@ -16,6 +16,8 @@ typedef enum {
     SPECIES_GLIMGRUB, SPECIES_COCOGLOW, SPECIES_LUNARAE, SPECIES_COUNT
 } SpeciesId;
 typedef struct { int level, move; } LearnMove;
+typedef enum { EVOLUTION_NONE, EVOLUTION_LEVEL } EvolutionMethod;
+typedef struct { EvolutionMethod method; SpeciesId target; int level; } EvolutionRequirement;
 typedef struct {
     SpeciesId id;
     const char *name, *description;
@@ -40,6 +42,8 @@ typedef struct {
     int moves[MOVE_COUNT], move_count;
 } CreatureGrowth;
 const Species *species_get(int id);
+EvolutionRequirement species_evolution_requirement(const Species *species);
+int species_can_evolve(const Species *species,int level);
 const char *creature_name(const Creature *c);
 void creature_create(Creature *c,int species,int level);
 void creature_restore(Creature *c);

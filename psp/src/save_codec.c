@@ -63,8 +63,8 @@ static int migrate_creature(SaveCreature *out,const SaveCreature *old)
     /* Existing high-level partners already qualify for their new forms,
        including level-100 saves that cannot trigger another level-up. */
     const Species *form=species_get(out->species);
-    while(form->evolution_level && out->level>=form->evolution_level) {
-        out->species=form->evolved_species;form=species_get(out->species);
+    while(species_can_evolve(form,out->level)) {
+        out->species=species_evolution_requirement(form).target;form=species_get(out->species);
     }
     int new_max=species_get(out->species)->base_hp+5*out->level;
     out->hp=old->hp?new_max-(old_max-old->hp):0;
