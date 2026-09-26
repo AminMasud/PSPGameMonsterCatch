@@ -23,6 +23,8 @@ static void close_growth(Battle *b)
 }
 int main(void)
 {
+    const int evolution_levels[SPECIES_COUNT]={10,22,0,12,24,0,13,28,0,14,30,0,20,42,0,
+                                                22,46,0,15,32,0,11,23,0,16,34,0,18,36,0};
     assert(SPECIES_COUNT==30);
     for(int id=0;id<SPECIES_COUNT;++id) {
         const Species *s=species_get(id);
@@ -30,7 +32,7 @@ int main(void)
         assert(s->base_hp>0 && s->base_attack>0 && s->base_defense>0 && s->base_speed>0);
         assert(s->experience_yield>0 && s->learn_count>0 && s->learn_count<=8);
         assert(s->overworld_sprite==id && s->battle_sprite==id);
-        assert(s->evolution_level==(id%3==0?8:id%3==1?16:0));
+        assert(s->evolution_level==evolution_levels[id]);
         assert(s->evolved_species==(id%3==2?-1:id+1));
         EvolutionRequirement requirement=species_evolution_requirement(s);
         if(s->evolution_level) {
@@ -54,15 +56,17 @@ int main(void)
     }
     for(int family=0;family<10;++family) {
         Creature pet;CreatureGrowth growth;
-        creature_create(&pet,family*3,7);
+        int middle=species_get(family*3)->evolution_level;
+        int final=species_get(family*3+1)->evolution_level;
+        creature_create(&pet,family*3,middle-1);
         strcpy(pet.nickname,"BUDDY");
-        creature_gain_xp(&pet,creature_xp_for_level(8)-pet.experience,&growth);
+        creature_gain_xp(&pet,creature_xp_for_level(middle)-pet.experience,&growth);
         assert((int)pet.species==family*3+1 && !strcmp(creature_name(&pet),"BUDDY"));
-        creature_gain_xp(&pet,creature_xp_for_level(16)-pet.experience,&growth);
-        assert((int)pet.species==family*3+2 && pet.level==16);
+        creature_gain_xp(&pet,creature_xp_for_level(final)-pet.experience,&growth);
+        assert((int)pet.species==family*3+2 && pet.level==final);
         creature_create(&pet,family*3,5);
-        creature_gain_xp(&pet,creature_xp_for_level(20)-pet.experience,&growth);
-        assert((int)pet.species==family*3+2 && pet.level==20);
+        creature_gain_xp(&pet,creature_xp_for_level(final)-pet.experience,&growth);
+        assert((int)pet.species==family*3+2 && pet.level==final);
     }
     Creature c;CreatureGrowth g;
     creature_create(&c,SPECIES_CINDLET,5);
@@ -78,21 +82,21 @@ int main(void)
     assert(!creature_learn(&c,MOVE_LEAF,4));
 
     strcpy(c.nickname,"SPARK");
-    creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
-    assert(c.species==SPECIES_EMBERYN && c.level==8 && c.attack==42);
+    creature_gain_xp(&c,creature_xp_for_level(10)-c.experience,&g);
+    assert(c.species==SPECIES_EMBERYN && c.level==10 && c.attack==48);
     assert(!strcmp(creature_name(&c),"SPARK"));
     assert(g.old_species==SPECIES_CINDLET && c.moves[1]==MOVE_HEAT);
     creature_gain_xp(&c,0,&g);assert(g.move_count==0 && g.old_species==SPECIES_EMBERYN);
-    creature_gain_xp(&c,-5,&g);assert(c.experience==creature_xp_for_level(8));
+    creature_gain_xp(&c,-5,&g);assert(c.experience==creature_xp_for_level(10));
     creature_gain_xp(&c,INT_MAX,&g);
     assert(c.level==100 && c.experience==creature_xp_for_level(100) && !creature_xp_remaining(&c));
     creature_gain_xp(&c,INT_MAX,&g);assert(g.move_count==0);
-    creature_create(&c,SPECIES_MOSSPRIG,7);c.hp=0;
-    creature_gain_xp(&c,creature_xp_for_level(8)-c.experience,&g);
+    creature_create(&c,SPECIES_MOSSPRIG,12);c.hp=0;
+    creature_gain_xp(&c,creature_xp_for_level(13)-c.experience,&g);
     assert(c.species==SPECIES_THORNEL && c.hp==0); /* Stats cannot revive a fainted creature. */
     creature_create(&c,SPECIES_GRUBBL,1);
-    creature_gain_xp(&c,creature_xp_for_level(12),&g);
-    assert(c.species==SPECIES_CRAGBEET && c.level==12 && g.move_count<=MOVE_COUNT);
+    creature_gain_xp(&c,creature_xp_for_level(20),&g);
+    assert(c.species==SPECIES_CRAGBEET && c.level==20 && g.move_count<=MOVE_COUNT);
 
     Battle b;
     creature_create(&c,SPECIES_CINDLET,5);c.experience=creature_xp_for_level(6)-1;
@@ -108,7 +112,7 @@ int main(void)
     battle_update(&b,&(Input){0,0,0,1,0,0});close_growth(&b);
     assert(b.ally.moves[1]==MOVE_CINDER);
 
-    creature_create(&c,SPECIES_CINDLET,7);c.experience=creature_xp_for_level(8)-1;
+    creature_create(&c,SPECIES_CINDLET,9);c.experience=creature_xp_for_level(10)-1;
     victory(&b,&c);assert(b.ally.species==SPECIES_EMBERYN);
     close_growth(&b);assert(b.ally.species==SPECIES_EMBERYN);
     creature_create(&c,SPECIES_CINDLET,5);

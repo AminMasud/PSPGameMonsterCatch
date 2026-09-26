@@ -90,7 +90,7 @@ static void migration_checks(void)
     complete(0,1);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
     assert(loaded.version==SAVE_DATA_VERSION && loaded.party.stored==24);
-    for(int level=20;level<=100;level+=80) {
+    for(int level=22;level<=100;level+=78) {
         memcpy(bytes,original,sizeof(bytes));
         /* Old Emberlyn at a high level becomes the eligible final form. */
         put32(bytes,104,level);put32(bytes,108,creature_xp_for_level(level));

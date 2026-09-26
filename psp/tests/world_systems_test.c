@@ -636,8 +636,8 @@ int main(void)
     int saved_xp=g.party.members[g.party.lead].experience;
     update(&g,(Input){0},5);assert(g.party.members[g.party.lead].experience==saved_xp);
 
-    creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,7);
-    g.party.members[g.party.lead].experience=creature_xp_for_level(8)-1;
+    creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,9);
+    g.party.members[g.party.lead].experience=creature_xp_for_level(10)-1;
     battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},6);
