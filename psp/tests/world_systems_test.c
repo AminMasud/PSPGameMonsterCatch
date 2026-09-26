@@ -687,14 +687,19 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(g.menu_open && g.world_map.active && g.world_map.map_id==MAP_CLEARING &&
            g.player.tile_x==map_x && g.player.tile_y==map_y);
+    assert(g.world_map.cursor==MAP_CLEARING);
     render(&g,"previews/world-map.ppm");
-    update(&g,(Input){.horizontal=1},2);
+    update(&g,(Input){.horizontal=1},1);
+    assert(g.world_map.cursor==MAP_FOREST);
+    update(&g,(Input){0},1);
+    update(&g,(Input){.vertical=-1},1);
+    assert(g.world_map.cursor==MAP_CLEARING);
     assert(g.world_map.active && g.player.tile_x==map_x && g.player.tile_y==map_y);
     update(&g,(Input){.cancel=1},1);
     assert(g.menu_open && !g.world_map.active && g.menu.page==MENU_HOME);
     g.map_id=MAP_CAVE;g.map=map_get(MAP_CAVE);player_menu_open(&g.menu);g.menu_open=1;g.menu.cursor=4;
     update(&g,(Input){.confirm=1},1);
-    assert(g.world_map.active && g.world_map.map_id==MAP_CAVE);
+    assert(g.world_map.active && g.world_map.map_id==MAP_CAVE && g.world_map.cursor==MAP_CAVE);
     update(&g,(Input){.cancel=1},1);
     g.menu.cursor=0;
     update(&g,(Input){.confirm=1},1);

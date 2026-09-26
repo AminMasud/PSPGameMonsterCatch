@@ -1,4 +1,4 @@
-# Emberwake — Phase 29 World Map Position
+# Emberwake — Phase 30 World Map Cursor
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,13 +17,13 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE29.PBP**, titled **Emberwake - Phase 29**. Copy it to:
+Use **EBOOT-PHASE30.PBP**, titled **Emberwake - Phase 30**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE28.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE29.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -390,12 +390,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE29.PBP EXTRA_TARGETS=EBOOT-PHASE29.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE30.PBP EXTRA_TARGETS=EBOOT-PHASE30.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE29.PBP EXTRA_TARGETS=EBOOT-PHASE29.PBP
+    make PSP_EBOOT=EBOOT-PHASE30.PBP EXTRA_TARGETS=EBOOT-PHASE30.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:

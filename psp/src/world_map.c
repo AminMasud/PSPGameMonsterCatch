@@ -24,7 +24,7 @@ static void place(int x,int y,int w,int h,unsigned int fill,const char *name)
 void world_map_open(WorldMap *map,int map_id)
 {
     if(!map) return;
-    map->active=1;map->map_id=map_id;
+    map->active=1;map->map_id=map_id;map->cursor=map_id;map->previous_direction=0;
 }
 
 static void marker(int map_id)
@@ -38,11 +38,27 @@ static void marker(int map_id)
     else if(map_id==MAP_REST) { x=401;y=151;name="LANTERN REST"; }
     graphics_rectangle(x-7,y-7,8,4,C(255,224,112));graphics_rectangle(x-7,y-7,4,8,C(255,224,112));
     graphics_rectangle(x+51,y-7,8,4,C(255,224,112));graphics_rectangle(x+55,y-7,4,8,C(255,224,112));
-    text_draw(188,242,"YOU ARE IN",C(150,188,179),1);text_draw(267,242,name,C(246,213,158),1);
+    text_draw(24,221,"YOU ARE IN",C(150,188,179),1);text_draw(102,221,name,C(246,213,158),1);
+}
+
+static void cursor_draw(int map_id)
+{
+    int x=68,y=149;
+    if(map_id==MAP_FOREST) { x=173;y=120; }
+    else if(map_id==MAP_CAVE) { x=272;y=149; }
+    else if(map_id==MAP_MARSH) { x=375;y=111; }
+    else if(map_id==MAP_LODGE) { x=129;y=84; }
+    else if(map_id==MAP_REST) { x=411;y=160; }
+    graphics_rectangle(x-7,y-10,14,3,C(255,244,164));
+    graphics_rectangle(x-7,y-10,3,14,C(255,244,164));
 }
 int world_map_update(WorldMap *map,const Input *input)
 {
     if(!map || !map->active) return 0;
+    int direction=input->vertical?input->vertical:input->horizontal;
+    if(direction && direction!=map->previous_direction)
+        map->cursor=(map->cursor+direction+MAP_COUNT)%MAP_COUNT;
+    map->previous_direction=direction;
     if(input->cancel || (input->menu&INPUT_MENU_OPEN)) { map->active=0;return 1; }
     return 0;
 }
@@ -67,5 +83,9 @@ void world_map_draw(const WorldMap *map)
     graphics_rectangle(401,151,20,17,C(94,81,69));graphics_rectangle(404,147,14,7,C(171,142,95));
     text_draw(389,178,"LANTERN REST",C(235,211,166),1);
     marker(map->map_id);
-    text_draw(24,259,"O RETURN",C(169,195,182),1);
+    cursor_draw(map->cursor);
+    text_draw(24,240,"SELECTED",C(150,188,179),1);
+    text_draw(92,240,map_name(map->cursor),C(246,213,158),1);
+    text_draw(280,240,map->cursor==map->map_id?"CURRENT":"KNOWN",C(235,211,166),1);
+    text_draw(24,259,"D-PAD INSPECT   O RETURN",C(169,195,182),1);
 }
