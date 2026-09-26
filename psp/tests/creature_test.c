@@ -102,14 +102,12 @@ int main(void)
     creature_create(&c,SPECIES_CINDLET,5);c.experience=creature_xp_for_level(6)-1;
     victory(&b,&c);int earned=b.ally.experience;
     assert(b.ally.level==6 && b.reward_given);
-    for(int i=0;i<8 && b.phase!=BATTLE_LEARN;++i) confirm(&b);
-    assert(b.phase==BATTLE_LEARN && b.learn_cursor==4);
-    b.learn_cursor=1;confirm(&b);
-    assert(b.ally.moves[1]==MOVE_HEAT);
+    for(int i=0;i<8 && b.phase!=BATTLE_DONE;++i) confirm(&b);
+    assert(b.phase!=BATTLE_LEARN && b.ally.moves[1]==MOVE_CINDER);
     close_growth(&b);confirm(&b);assert(b.ally.experience==earned);
     victory(&b,&c);
-    for(int i=0;i<8 && b.phase!=BATTLE_LEARN;++i) confirm(&b);
-    battle_update(&b,&(Input){0,0,0,1,0,0});close_growth(&b);
+    for(int i=0;i<8 && b.phase!=BATTLE_DONE;++i) confirm(&b);
+    close_growth(&b);
     assert(b.ally.moves[1]==MOVE_CINDER);
 
     creature_create(&c,SPECIES_CINDLET,9);c.experience=creature_xp_for_level(10)-1;

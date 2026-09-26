@@ -293,10 +293,9 @@ static void victory_updates_only_active(void)
     int earned=b.ally.experience;
     assert(earned==p.members[1].experience+species_get(SPECIES_MOSSPRIG)->experience_yield*3);
     messages(&b);
-    assert(b.phase==BATTLE_LEARN);
-    b.learn_cursor=1;confirm(&b);messages(&b);
+    assert(b.phase==BATTLE_DONE);
     assert(b.phase==BATTLE_DONE && b.party.lead==1);
-    assert(b.ally.moves[1]==MOVE_HEAT && b.party.members[1].moves[1]==MOVE_HEAT);
+    assert(b.ally.moves[1]==MOVE_CINDER && b.party.members[1].moves[1]==MOVE_CINDER);
     same_creature(&b.party.members[1],&b.ally);
     same_creature(&b.party.members[0],&outgoing);
     same_creature(&b.party.members[2],&p.members[2]);

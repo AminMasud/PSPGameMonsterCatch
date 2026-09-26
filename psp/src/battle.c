@@ -240,8 +240,8 @@ static void growth_next(Battle *b)
             snprintf(b->message,sizeof(b->message),"%s LEARNED\n%s.",creature_name(&b->ally),attack_get(move)->name);
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
         }
-        b->learn_cursor=4; /* Default to KEEP CURRENT MOVES; no silent replacement. */
-        b->phase=BATTLE_LEARN;return;
+        /* A full move set remains intact. Future phases improve known moves. */
+        ++b->growth_move;
     }
     if(b->next_enemy_pending) { send_next_enemy(b);return; }
     message(b,"BATTLE COMPLETE.\nX RETURN TO EXPLORING",AFTER_DONE);
@@ -312,20 +312,6 @@ void battle_update(Battle *b,const Input *input)
         snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d HP RESTORED.",creature_name(&b->ally),
                  inventory_item_name((ItemId)b->item_cursor),restored);
         b->phase=BATTLE_MESSAGE;b->after=AFTER_TURN;
-        return;
-    }
-    if(b->phase==BATTLE_LEARN) {
-        if(nav) b->learn_cursor=(b->learn_cursor+nav+5)%5;
-        if(input->cancel || (input->confirm && b->learn_cursor==4)) {
-            ++b->growth_move;growth_next(b);return;
-        }
-        if(input->confirm) {
-            int move=b->growth.moves[b->growth_move++];
-            const char *old=attack_get(b->ally.moves[b->learn_cursor])->name;
-            creature_learn(&b->ally,move,b->learn_cursor);
-            snprintf(b->message,sizeof(b->message),"%s LEARNED %s.\nREPLACED %s.",creature_name(&b->ally),attack_get(move)->name,old);
-            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;
-        }
         return;
     }
     if(b->phase==BATTLE_MESSAGE) {

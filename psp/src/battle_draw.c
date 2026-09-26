@@ -87,18 +87,6 @@ void battle_draw(const Battle *b)
         }
         text_draw(300,224,b->item_cursor==ITEM_PULSE_TONIC?"UP TO 25 HP RESTORED.":"FULL HP RESTORE.",C(220,225,215),1);
         text_draw(18,258,"X USE   O BACK",C(236,236,218),1);
-    } else if(b->phase==BATTLE_LEARN) {
-        const Attack *move=attack_get(b->growth.moves[b->growth_move]);
-        text_draw(18,188,"LEARN A NEW ATTACK?",C(244,198,118),1);
-        text_draw(18,205,move->name,C(236,236,218),1);
-        char detail[64];
-        snprintf(detail,sizeof(detail),"POWER %d  ACCURACY %d",move->power,move->accuracy);
-        text_draw(18,220,detail,C(188,204,190),1);
-        text_draw(18,239,"X REPLACE   O DECLINE",C(188,204,190),1);
-        for(int i=0;i<5;++i) {
-            if(i==b->learn_cursor) graphics_rectangle(290,182+i*15,174,14,C(79,92,86));
-            text_draw(296,186+i*15,i==4?"KEEP CURRENT MOVES":attack_get(b->ally.moves[i])->name,C(239,227,200),1);
-        }
     } else if(b->phase==BATTLE_MESSAGE || b->phase==BATTLE_DONE) {
         text_box(18,188,444,56,b->message,C(236,236,218));
         text_draw(18,251,"X CONTINUE",C(167,194,180),1);

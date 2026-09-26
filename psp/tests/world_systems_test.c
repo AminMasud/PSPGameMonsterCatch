@@ -620,7 +620,7 @@ int main(void)
     update(&g,(Input){0,0,1,0,0,0},2);
     assert(!g.in_battle && g.map_id==MAP_CLEARING && g.player.tile_x==5);
     assert(g.party.members[g.party.lead].hp<=0); /* Returning home does not bypass a healing point. */
-    /* Real game integration: victory -> learning choice -> persistent partner. */
+    /* Real game integration: a full move set stays intact after level-up. */
     creature_create(&g.party.members[g.party.lead],SPECIES_CINDLET,5);
     g.party.members[g.party.lead].experience=creature_xp_for_level(6)-1;
     battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
@@ -628,11 +628,10 @@ int main(void)
     update(&g,(Input){0,0,1,0,0,0},4);
     assert(g.battle.ally.level==6);
     update(&g,(Input){0,0,1,0,0,0},2);
-    assert(g.battle.phase==BATTLE_LEARN);
-    render(&g,"previews/learn-move.ppm");
-    g.battle.learn_cursor=1;update(&g,(Input){0,0,1,0,0,0},1);
+    assert(g.battle.phase!=BATTLE_LEARN);
+    render(&g,"previews/battle-menu.ppm");
     for(int i=0;i<20 && g.in_battle;++i) update(&g,(Input){0,0,1,0,0,0},1);
-    assert(!g.in_battle && g.party.members[g.party.lead].level==6 && g.party.members[g.party.lead].moves[1]==MOVE_HEAT);
+    assert(!g.in_battle && g.party.members[g.party.lead].level==6 && g.party.members[g.party.lead].moves[1]==MOVE_CINDER);
     int saved_xp=g.party.members[g.party.lead].experience;
     update(&g,(Input){0},5);assert(g.party.members[g.party.lead].experience==saved_xp);
 
