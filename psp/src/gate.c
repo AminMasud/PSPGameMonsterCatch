@@ -1,4 +1,5 @@
 #include "gate.h"
+#include "boss.h"
 
 static int dialogue_valid(GateDialogue dialogue)
 {
@@ -31,6 +32,13 @@ int gate_is_locked(const Gate *gate,const ProgressionState *progression)
 int gate_can_enter(const Gate *gate,const ProgressionState *progression)
 {
     return gate && !gate_is_locked(gate,progression);
+}
+
+int gate_requires_boss_completion(const Gate *gate,const BossData *boss)
+{
+    return gate_valid(gate) && boss && gate->required_flag!=PROGRESSION_NONE &&
+           progression_flag_valid(boss->completion_flag) &&
+           gate->required_flag==boss->completion_flag;
 }
 
 const GateDialogue *gate_current_dialogue(const Gate *gate,

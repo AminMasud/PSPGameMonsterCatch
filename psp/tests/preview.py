@@ -17,6 +17,7 @@ output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
              'east-forest-boss', 'east-forest-boss-ready',
              'east-forest-boss-battle', 'east-forest-boss-victory',
+             'east-forest-route-open',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
              'forest-gatekeeper-locked', 'forest-gatekeeper-open',
              'cave-gatekeeper-locked', 'cave-gatekeeper-open',

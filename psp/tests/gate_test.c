@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "gate.h"
+#include "boss.h"
 
 int main(void)
 {
@@ -24,6 +25,18 @@ int main(void)
     words=gate_current_dialogue(&cave,&progression);
     assert(words && !strcmp(words->first,"THE SIGIL ANSWERS."));
 
+    BossData east_boss={.completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED};
+    BossData north_boss={.completion_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED};
+    Gate east_route=cave;
+    east_route.required_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED;
+    Gate north_route=cave;
+    north_route.required_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED;
+    assert(gate_requires_boss_completion(&east_route,&east_boss));
+    assert(!gate_requires_boss_completion(&east_route,&north_boss));
+    assert(gate_requires_boss_completion(&north_route,&north_boss));
+    east_boss.completion_flag=PROGRESSION_NONE;
+    assert(!gate_requires_boss_completion(&east_route,&east_boss));
+
     Gate open={.from=0,.x=1,.y=1,.to=1,.arrival_x=2,.arrival_y=2,
                .required_flag=PROGRESSION_NONE};
     assert(gate_valid(&open) && gate_can_enter(&open,&progression));
@@ -45,6 +58,6 @@ int main(void)
     assert(!gate_can_enter(0,&progression));
     assert(!gate_current_dialogue(0,&progression));
 
-    puts("PASS: generic locked gates, destinations, flags, gatekeepers, and state dialogue");
+    puts("PASS: generic locked and boss-gated routes, flags, gatekeepers, and state dialogue");
     return 0;
 }

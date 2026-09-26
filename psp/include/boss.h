@@ -10,7 +10,7 @@ typedef enum {
     BOSS_COUNT
 } BossId;
 
-typedef struct {
+typedef struct BossData {
     int id;
     const char *name;
     const char *title;

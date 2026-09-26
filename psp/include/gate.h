@@ -3,6 +3,8 @@
 
 #include "progression.h"
 
+typedef struct BossData BossData;
+
 typedef struct {
     const char *first;
     const char *second;
@@ -20,6 +22,8 @@ typedef struct {
 int gate_valid(const Gate *gate);
 int gate_is_locked(const Gate *gate,const ProgressionState *progression);
 int gate_can_enter(const Gate *gate,const ProgressionState *progression);
+/* Routes depend on the boss completion flag, never on a boss map position. */
+int gate_requires_boss_completion(const Gate *gate,const BossData *boss);
 const GateDialogue *gate_current_dialogue(const Gate *gate,
                                           const ProgressionState *progression);
 

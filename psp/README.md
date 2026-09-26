@@ -1,4 +1,4 @@
-# Emberwake — Phase 22 East Forest Boss
+# Emberwake — Phase 23 Boss-Gated Forest Routes
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -9,20 +9,21 @@ data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
-special presentation, and Elder Sylva, Fernveil's first in-world Guardian.
+special presentation, Elder Sylva, Fernveil's first in-world Guardian, and
+data-linked boss-gated routes.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE22.PBP**, titled **Emberwake - Phase 22**. Copy it to:
+Use **EBOOT-PHASE23.PBP**, titled **Emberwake - Phase 23**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE21.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE22.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -121,6 +122,12 @@ destination and arrival tile, optional required progression flag, gatekeeper,
 and locked and unlocked dialogue. `gate_is_locked`, `gate_can_enter`, and
 `gate_current_dialogue` provide the common state checks. A locked gate is
 rejected by the same collision path as terrain and NPCs, so it cannot be crossed.
+
+`gate_requires_boss_completion` explicitly connects a gate's required progression
+flag to a boss definition's completion flag. The connection is data-driven, so it
+does not depend on where either the boss or gate is placed. East Forest uses
+Sylva's completion flag for Varel's Sunthread route; a later boss can unlock a
+different route by using another named flag.
 
 The Hearth Clearing east entrance is the first configured locked gate. It
 requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
@@ -375,12 +382,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP
+    make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -431,6 +438,10 @@ checks the two-member party and level curve, runs the intro and ready flow,
 renders the Guardian battle, records victory and its one-time reward, updates
 Sylva and Varel immediately, repeats the post-victory dialogue, enters the newly
 opened Sunthread route, and rebuilds both NPC positions from saved progression.
+Phase 23 additionally verifies the explicit boss-to-gate flag link, checks a
+different future boss flag can map to a different route, opens Varel's dialogue
+through the real post-boss interaction, and confirms the unlocked dialogue after
+save/load restoration.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -440,6 +451,7 @@ Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-forest-boss.png, east-forest-boss-ready.png,
 east-forest-boss-battle.png, east-forest-boss-victory.png,
+east-forest-route-open.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,

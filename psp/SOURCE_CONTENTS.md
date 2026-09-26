@@ -1,4 +1,4 @@
-# Complete Phase 22 source contents
+# Complete Phase 23 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -531,7 +531,7 @@ typedef enum {
     BOSS_COUNT
 } BossId;
 
-typedef struct {
+typedef struct BossData {
     int id;
     const char *name;
     const char *title;
@@ -752,6 +752,8 @@ void game_draw(const Game *game);
 
 #include "progression.h"
 
+typedef struct BossData BossData;
+
 typedef struct {
     const char *first;
     const char *second;
@@ -769,6 +771,8 @@ typedef struct {
 int gate_valid(const Gate *gate);
 int gate_is_locked(const Gate *gate,const ProgressionState *progression);
 int gate_can_enter(const Gate *gate,const ProgressionState *progression);
+/* Routes depend on the boss completion flag, never on a boss map position. */
+int gate_requires_boss_completion(const Gate *gate,const BossData *boss);
 const GateDialogue *gate_current_dialogue(const Gate *gate,
                                           const ProgressionState *progression);
 
@@ -1271,7 +1275,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 22
+PSP_EBOOT_TITLE = Emberwake - Phase 23
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1304,7 +1308,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 22 East Forest Boss
+# Emberwake — Phase 23 Boss-Gated Forest Routes
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1315,20 +1319,21 @@ data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
-special presentation, and Elder Sylva, Fernveil's first in-world Guardian.
+special presentation, Elder Sylva, Fernveil's first in-world Guardian, and
+data-linked boss-gated routes.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE22.PBP**, titled **Emberwake - Phase 22**. Copy it to:
+Use **EBOOT-PHASE23.PBP**, titled **Emberwake - Phase 23**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE21.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE22.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1427,6 +1432,12 @@ destination and arrival tile, optional required progression flag, gatekeeper,
 and locked and unlocked dialogue. `gate_is_locked`, `gate_can_enter`, and
 `gate_current_dialogue` provide the common state checks. A locked gate is
 rejected by the same collision path as terrain and NPCs, so it cannot be crossed.
+
+`gate_requires_boss_completion` explicitly connects a gate's required progression
+flag to a boss definition's completion flag. The connection is data-driven, so it
+does not depend on where either the boss or gate is placed. East Forest uses
+Sylva's completion flag for Varel's Sunthread route; a later boss can unlock a
+different route by using another named flag.
 
 The Hearth Clearing east entrance is the first configured locked gate. It
 requires `PROGRESSION_FIRST_CHALLENGER_DEFEATED` and uses Ren as its gatekeeper.
@@ -1681,12 +1692,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE22.PBP EXTRA_TARGETS=EBOOT-PHASE22.PBP
+    make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1737,6 +1748,10 @@ checks the two-member party and level curve, runs the intro and ready flow,
 renders the Guardian battle, records victory and its one-time reward, updates
 Sylva and Varel immediately, repeats the post-victory dialogue, enters the newly
 opened Sunthread route, and rebuilds both NPC positions from saved progression.
+Phase 23 additionally verifies the explicit boss-to-gate flag link, checks a
+different future boss flag can map to a different route, opens Varel's dialogue
+through the real post-boss interaction, and confirms the unlocked dialogue after
+save/load restoration.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -1746,6 +1761,7 @@ Software previews use the real draw functions and embedded texture data. They
 include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-forest-boss.png, east-forest-boss-ready.png,
 east-forest-boss-battle.png, east-forest-boss-victory.png,
+east-forest-route-open.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -3411,6 +3427,7 @@ void game_draw(const Game *g)
 
 ````text
 #include "gate.h"
+#include "boss.h"
 
 static int dialogue_valid(GateDialogue dialogue)
 {
@@ -3443,6 +3460,13 @@ int gate_is_locked(const Gate *gate,const ProgressionState *progression)
 int gate_can_enter(const Gate *gate,const ProgressionState *progression)
 {
     return gate && !gate_is_locked(gate,progression);
+}
+
+int gate_requires_boss_completion(const Gate *gate,const BossData *boss)
+{
+    return gate_valid(gate) && boss && gate->required_flag!=PROGRESSION_NONE &&
+           progression_flag_valid(boss->completion_flag) &&
+           gate->required_flag==boss->completion_flag;
 }
 
 const GateDialogue *gate_current_dialogue(const Gate *gate,
@@ -6086,6 +6110,7 @@ int main(void)
 #include <stdio.h>
 #include <string.h>
 #include "gate.h"
+#include "boss.h"
 
 int main(void)
 {
@@ -6108,6 +6133,18 @@ int main(void)
     words=gate_current_dialogue(&cave,&progression);
     assert(words && !strcmp(words->first,"THE SIGIL ANSWERS."));
 
+    BossData east_boss={.completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED};
+    BossData north_boss={.completion_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED};
+    Gate east_route=cave;
+    east_route.required_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED;
+    Gate north_route=cave;
+    north_route.required_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED;
+    assert(gate_requires_boss_completion(&east_route,&east_boss));
+    assert(!gate_requires_boss_completion(&east_route,&north_boss));
+    assert(gate_requires_boss_completion(&north_route,&north_boss));
+    east_boss.completion_flag=PROGRESSION_NONE;
+    assert(!gate_requires_boss_completion(&east_route,&east_boss));
+
     Gate open={.from=0,.x=1,.y=1,.to=1,.arrival_x=2,.arrival_y=2,
                .required_flag=PROGRESSION_NONE};
     assert(gate_valid(&open) && gate_can_enter(&open,&progression));
@@ -6129,7 +6166,7 @@ int main(void)
     assert(!gate_can_enter(0,&progression));
     assert(!gate_current_dialogue(0,&progression));
 
-    puts("PASS: generic locked gates, destinations, flags, gatekeepers, and state dialogue");
+    puts("PASS: generic locked and boss-gated routes, flags, gatekeepers, and state dialogue");
     return 0;
 }
 ````
@@ -6890,6 +6927,7 @@ output.mkdir(exist_ok=True)
 for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-battle',
              'east-forest-boss', 'east-forest-boss-ready',
              'east-forest-boss-battle', 'east-forest-boss-victory',
+             'east-forest-route-open',
              'east-challenger', 'east-challenger-ready', 'east-challenger-battle', 'east-challenger-victory',
              'forest-gatekeeper-locked', 'forest-gatekeeper-open',
              'cave-gatekeeper-locked', 'cave-gatekeeper-open',
@@ -7481,6 +7519,7 @@ int main(void)
     const BossData *east_boss=g.npcs.people[3].boss;
     assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
            east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(gate_requires_boss_completion(sunthread_gate,east_boss));
     assert(east_boss->party_count==2 && east_boss->party[0].level>3 &&
            east_boss->party[1].level>east_boss->party[0].level);
     assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==11);
@@ -7514,9 +7553,19 @@ int main(void)
     g.transition=0;
     render(&g,"previews/east-forest-boss-victory.ppm");
     update(&g,(Input){.cancel=1},1);
-    update(&g,(Input){.horizontal=1},1);
-    update(&g,(Input){0},10);
-    assert(g.player.tile_x==26 && g.player.tile_y==11);
+    g.player.tile_x=g.player.target_x=29;
+    g.player.tile_y=g.player.target_y=11;
+    g.player.x=(float)(29*TILE_SIZE);g.player.y=(float)(11*TILE_SIZE);
+    g.player.moving=0;g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"VAREL") &&
+           strstr(g.dialogue.pages[0],"HAS YIELDED"));
+    render(&g,"previews/east-forest-route-open.ppm");
+    update(&g,(Input){.cancel=1},1);
+    g.player.tile_x=g.player.target_x=26;
+    g.player.tile_y=g.player.target_y=11;
+    g.player.x=(float)(26*TILE_SIZE);g.player.y=(float)(11*TILE_SIZE);
+    g.player.moving=0;
     g.player.facing=FACE_UP;
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE &&
@@ -7978,6 +8027,8 @@ int main(void)
     assert(restored_npcs.people[2].actor.tile_x==29 && restored_npcs.people[2].actor.tile_y==6);
     assert(restored_npcs.people[3].actor.tile_x==26 && restored_npcs.people[3].actor.tile_y==10);
     assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
+    assert(strstr(gate_current_dialogue(map_gate(MAP_FOREST,30,11),&g.progression)->first,
+                  "HAS YIELDED"));
     assert(gate_can_enter(map_gate(MAP_FOREST,28,5),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
     npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
@@ -7988,7 +8039,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 22 East Forest boss, boss flow, cave lock, gatekeepers, persistence, world systems and drawing budget");
+    puts("PASS: Phase 23 boss-gated routes, East Forest boss, gatekeepers, persistence and drawing budget");
     return 0;
 }
 ````

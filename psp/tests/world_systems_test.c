@@ -287,6 +287,7 @@ int main(void)
     const BossData *east_boss=g.npcs.people[3].boss;
     assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
            east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(gate_requires_boss_completion(sunthread_gate,east_boss));
     assert(east_boss->party_count==2 && east_boss->party[0].level>3 &&
            east_boss->party[1].level>east_boss->party[0].level);
     assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==11);
@@ -320,9 +321,19 @@ int main(void)
     g.transition=0;
     render(&g,"previews/east-forest-boss-victory.ppm");
     update(&g,(Input){.cancel=1},1);
-    update(&g,(Input){.horizontal=1},1);
-    update(&g,(Input){0},10);
-    assert(g.player.tile_x==26 && g.player.tile_y==11);
+    g.player.tile_x=g.player.target_x=29;
+    g.player.tile_y=g.player.target_y=11;
+    g.player.x=(float)(29*TILE_SIZE);g.player.y=(float)(11*TILE_SIZE);
+    g.player.moving=0;g.player.facing=FACE_UP;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"VAREL") &&
+           strstr(g.dialogue.pages[0],"HAS YIELDED"));
+    render(&g,"previews/east-forest-route-open.ppm");
+    update(&g,(Input){.cancel=1},1);
+    g.player.tile_x=g.player.target_x=26;
+    g.player.tile_y=g.player.target_y=11;
+    g.player.x=(float)(26*TILE_SIZE);g.player.y=(float)(11*TILE_SIZE);
+    g.player.moving=0;
     g.player.facing=FACE_UP;
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE &&
@@ -784,6 +795,8 @@ int main(void)
     assert(restored_npcs.people[2].actor.tile_x==29 && restored_npcs.people[2].actor.tile_y==6);
     assert(restored_npcs.people[3].actor.tile_x==26 && restored_npcs.people[3].actor.tile_y==10);
     assert(gate_can_enter(map_gate(MAP_FOREST,30,11),&g.progression));
+    assert(strstr(gate_current_dialogue(map_gate(MAP_FOREST,30,11),&g.progression)->first,
+                  "HAS YIELDED"));
     assert(gate_can_enter(map_gate(MAP_FOREST,28,5),&g.progression));
     ProgressionState phase16_save;progression_init(&phase16_save);
     npc_reconcile_progression(1u<<NPC_BATTLE_EAST_CHALLENGER,&phase16_save);
@@ -794,6 +807,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 22 East Forest boss, boss flow, cave lock, gatekeepers, persistence, world systems and drawing budget");
+    puts("PASS: Phase 23 boss-gated routes, East Forest boss, gatekeepers, persistence and drawing budget");
     return 0;
 }
