@@ -101,6 +101,7 @@ static const BossData framework_guardian={
     .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
     .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .required_flag=PROGRESSION_NONE,
     .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
     .presentation=BATTLE_PRESENTATION_GUARDIAN
 };
@@ -285,6 +286,7 @@ int main(void)
     sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(g.npcs.count==4 && g.npcs.people[3].boss);
     const BossData *east_boss=g.npcs.people[3].boss;
+    assert(east_boss==boss_get(BOSS_EAST_FOREST_GUARDIAN));
     assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
            east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
     assert(gate_requires_boss_completion(sunthread_gate,east_boss));
@@ -486,6 +488,18 @@ int main(void)
     assert(game_offer_boss_battle(&g,&framework_guardian,213));
     assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
     assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+
+    /* Phase 24: catalog entries can add a later boss without a copied flow. */
+    place(&g,MAP_CLEARING,10,13);
+    const BossData *north_boss=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
+    assert(north_boss && !boss_is_available(&g.progression,north_boss));
+    assert(!game_offer_boss_battle(&g,north_boss,241));
+    assert(progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    assert(boss_is_available(&g.progression,north_boss));
+    assert(game_offer_boss_battle(&g,north_boss,241));
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"WARDEN RUNE") &&
+           g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
     update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
@@ -807,6 +821,6 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 23 boss-gated routes, East Forest boss, gatekeepers, persistence and drawing budget");
+    puts("PASS: Phase 24 data-driven forest bosses, routes, gatekeepers, persistence and drawing budget");
     return 0;
 }

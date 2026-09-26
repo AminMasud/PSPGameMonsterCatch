@@ -1,4 +1,4 @@
-# Complete Phase 23 source contents
+# Complete Phase 24 source contents
 
 Binary artwork is committed in assets/pets/ and assets/generated/pets.rgba4444.
 The assets/generated/pets.json manifest records all original PNG and texture checksums.
@@ -528,6 +528,7 @@ void battle_animate(Battle *b,float seconds,int motion);
 
 typedef enum {
     BOSS_EAST_FOREST_GUARDIAN,
+    BOSS_NORTHERN_WOODS_GUARDIAN,
     BOSS_COUNT
 } BossId;
 
@@ -542,13 +543,18 @@ typedef struct BossData {
     int party_count;
     NpcAiProfile ai_profile;
     int reward_embermarks;
+    /* NONE means the boss is available without an earlier boss victory. */
+    ProgressionFlag required_flag;
     ProgressionFlag completion_flag;
     BattlePresentation presentation;
 } BossData;
 
 int boss_data_valid(const BossData *boss);
+int boss_is_available(const ProgressionState *progression,const BossData *boss);
 int boss_is_defeated(const ProgressionState *progression,const BossData *boss);
 int boss_mark_victory(ProgressionState *progression,const BossData *boss);
+int boss_catalog_count(void);
+const BossData *boss_get(BossId id);
 
 #endif
 ````
@@ -1275,7 +1281,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 23
+PSP_EBOOT_TITLE = Emberwake - Phase 24
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -1308,7 +1314,7 @@ $(TARGET).elf: | check-pets
 ## README.md
 
 ````text
-# Emberwake — Phase 23 Boss-Gated Forest Routes
+# Emberwake — Phase 24 Forest Boss Catalog
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -1319,21 +1325,21 @@ data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
-special presentation, Elder Sylva, Fernveil's first in-world Guardian, and
-data-linked boss-gated routes.
+special presentation, Elder Sylva, Fernveil's first in-world Guardian,
+data-linked boss-gated routes, and a reusable forest boss catalog.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE23.PBP**, titled **Emberwake - Phase 23**. Copy it to:
+Use **EBOOT-PHASE24.PBP**, titled **Emberwake - Phase 24**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE22.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE23.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -1479,9 +1485,9 @@ optional defeat dialogue after the normal return to Hearth Clearing.
 
 Boss definitions are a separate reusable layer with a stable boss ID, speaker
 name, battle title, party of up to four Veylings, AI profile, intro, victory and
-optional defeat dialogue, Embermark reward, required completion flag, and an
-optional battle presentation. The boss flow is intro dialogue → ready prompt →
-party battle → outcome dialogue. A completed boss uses its victory dialogue on
+optional defeat dialogue, Embermark reward, prerequisite flag, completion flag,
+and optional battle presentation. The boss flow is intro dialogue → ready prompt
+→ party battle → outcome dialogue. A completed boss uses its victory dialogue on
 later interactions and does not start another battle.
 
 The completion flag is the source of truth for boss victory and already travels
@@ -1498,6 +1504,13 @@ make the encounter stronger than Ren's single level-3 challenger. Victory grants
 300 Embermarks once, sets `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, moves Sylva
 off the road, and immediately moves Varel aside to open the Sunthread route.
 Later talks use Sylva's post-victory dialogue without another battle or reward.
+
+The boss catalog now owns forest boss data. Sylva is loaded from its East Forest
+entry; a Northern Woods Guardian placeholder is catalog data only and is not
+placed in the world. It requires Sylva's completion flag, has a distinct
+three-Veyling party, dialogue, 650-Embermark reward, North Forest completion
+flag, and AI profile. Adding a later boss therefore needs a new data entry and
+placement, without copying the battle flow.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -1692,12 +1705,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP
+    make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -1752,6 +1765,10 @@ Phase 23 additionally verifies the explicit boss-to-gate flag link, checks a
 different future boss flag can map to a different route, opens Varel's dialogue
 through the real post-boss interaction, and confirms the unlocked dialogue after
 save/load restoration.
+Phase 24 validates both catalog entries, their distinct parties, dialogue,
+rewards, completion flags, and AI profiles. It also verifies the Northern Woods
+entry remains unavailable until the East Forest flag is set, then enters the
+same reusable intro flow without an in-world placement.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -2550,6 +2567,38 @@ void battle_update(Battle *b,const Input *input)
 ````text
 #include "boss.h"
 
+typedef char BossCatalogFits[(BOSS_COUNT<=BOSS_MAX)?1:-1];
+
+static const BossData catalog[BOSS_COUNT] = {
+    [BOSS_EAST_FOREST_GUARDIAN] = {
+        .id=BOSS_EAST_FOREST_GUARDIAN,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
+        .intro={"I AM SYLVA, KEEPER OF FERNVEIL.",
+                "SHOW ME THE BOND THAT GUIDES YOUR VEYLINGS."},
+        .victory={"FERNVEIL RECOGNIZES YOUR BOND.",
+                  "THE SUNTHREAD WAY NOW OPENS TO YOU."},
+        .defeat={"THE FOREST ASKS FOR PATIENCE.",
+                 "RETURN WHEN YOUR TEAM IS READY."},
+        .party={{SPECIES_MOSSPRIG,6},{SPECIES_GUSTLET,7}},.party_count=2,
+        .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+        .required_flag=PROGRESSION_NONE,
+        .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+        .presentation=BATTLE_PRESENTATION_GUARDIAN
+    },
+    [BOSS_NORTHERN_WOODS_GUARDIAN] = {
+        .id=BOSS_NORTHERN_WOODS_GUARDIAN,.name="WARDEN RUNE",.title="NORTHWOOD GUARDIAN",
+        .intro={"THE NORTHERN WOODS REMEMBER EVERY STORM.",
+                "PROVE THAT FERNVEIL'S TRUST ENDURES."},
+        .victory={"THE NORTHWOOD BOWS TO YOUR RESOLVE.",
+                  "A NEW WAY CAN OPEN BEYOND THE PINES."},
+        .defeat={"THE PINES WILL WAIT FOR YOUR RETURN.",0},
+        .party={{SPECIES_TOXLET,12},{SPECIES_PEBCHICK,13},{SPECIES_GALETALON,14}},.party_count=3,
+        .ai_profile=NPC_AI_STANDARD,.reward_embermarks=650,
+        .required_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
+        .completion_flag=PROGRESSION_NORTH_FOREST_BOSS_DEFEATED,
+        .presentation=BATTLE_PRESENTATION_GUARDIAN
+    }
+};
+
 static int dialogue_valid(NpcBattleDialogue dialogue,int optional)
 {
     if(!dialogue.first || !dialogue.first[0]) return optional && !dialogue.second;
@@ -2563,12 +2612,20 @@ int boss_data_valid(const BossData *boss)
        !dialogue_valid(boss->victory,0) || !dialogue_valid(boss->defeat,1) ||
        boss->party_count<1 || boss->party_count>NPC_BATTLE_PARTY_MAX ||
        boss->ai_profile<0 || boss->ai_profile>=NPC_AI_PROFILE_COUNT ||
-       boss->reward_embermarks<0 || !progression_flag_valid(boss->completion_flag) ||
+       boss->reward_embermarks<0 ||
+       (boss->required_flag!=PROGRESSION_NONE && !progression_flag_valid(boss->required_flag)) ||
+       !progression_flag_valid(boss->completion_flag) ||
        boss->presentation<0 || boss->presentation>=BATTLE_PRESENTATION_COUNT) return 0;
     for(int i=0;i<boss->party_count;++i)
         if(boss->party[i].species<0 || boss->party[i].species>=SPECIES_COUNT ||
            boss->party[i].level<1 || boss->party[i].level>CREATURE_MAX_LEVEL) return 0;
     return 1;
+}
+
+int boss_is_available(const ProgressionState *progression,const BossData *boss)
+{
+    return boss_data_valid(boss) && (boss->required_flag==PROGRESSION_NONE ||
+                                     progression_has(progression,boss->required_flag));
 }
 
 int boss_is_defeated(const ProgressionState *progression,const BossData *boss)
@@ -2579,6 +2636,13 @@ int boss_is_defeated(const ProgressionState *progression,const BossData *boss)
 int boss_mark_victory(ProgressionState *progression,const BossData *boss)
 {
     return boss_data_valid(boss) && progression_set(progression,boss->completion_flag);
+}
+
+int boss_catalog_count(void) { return BOSS_COUNT; }
+
+const BossData *boss_get(BossId id)
+{
+    return id>=0 && id<BOSS_COUNT ? &catalog[id] : 0;
 }
 ````
 
@@ -3124,7 +3188,8 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
 }
 int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
 {
-    if(!g || !boss_data_valid(data) || g->in_battle || g->ready_prompt.active ||
+    if(!g || !boss_data_valid(data) || !boss_is_available(&g->progression,data) ||
+       g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;
@@ -3988,20 +4053,6 @@ static const NpcBattleData east_challenger = {
     .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
 
-static const BossData east_forest_guardian = {
-    .id=BOSS_EAST_FOREST_GUARDIAN,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
-    .intro={"I AM SYLVA, KEEPER OF FERNVEIL.",
-            "SHOW ME THE BOND THAT GUIDES YOUR VEYLINGS."},
-    .victory={"FERNVEIL RECOGNIZES YOUR BOND.",
-              "THE SUNTHREAD WAY NOW OPENS TO YOU."},
-    .defeat={"THE FOREST ASKS FOR PATIENCE.",
-             "RETURN WHEN YOUR TEAM IS READY."},
-    .party={{SPECIES_MOSSPRIG,6},{SPECIES_GUSTLET,7}},.party_count=2,
-    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
-    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
-    .presentation=BATTLE_PRESENTATION_GUARDIAN
-};
-
 static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
@@ -4030,6 +4081,7 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].open_x=37;
         n->people[n->count-1].open_y=10;
     } else if (map_id == 1) {
+        const BossData *east_forest_guardian=boss_get(BOSS_EAST_FOREST_GUARDIAN);
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
         const Gate *sunthread=map_gate(MAP_FOREST,30,11);
         add(n,30,11,sunthread->gatekeeper,sunthread->locked_dialogue.first,
@@ -4045,10 +4097,10 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].gate=hollowstone;
         n->people[n->count-1].open_x=29;
         n->people[n->count-1].open_y=6;
-        add(n,26,11,east_forest_guardian.name,east_forest_guardian.intro.first,
-            east_forest_guardian.intro.second,26);
+        add(n,26,11,east_forest_guardian->name,east_forest_guardian->intro.first,
+            east_forest_guardian->intro.second,26);
         n->people[n->count-1].actor.facing=FACE_LEFT;
-        n->people[n->count-1].boss=&east_forest_guardian;
+        n->people[n->count-1].boss=east_forest_guardian;
         n->people[n->count-1].open_x=26;
         n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {
@@ -5948,6 +6000,7 @@ static const BossData guardian={
     .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
     .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .required_flag=PROGRESSION_NONE,
     .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
     .presentation=BATTLE_PRESENTATION_GUARDIAN
 };
@@ -5964,6 +6017,21 @@ int main(void)
     assert(!boss_mark_victory(&progression,&guardian));
     assert(progression_save_bits(&progression)==completed);
 
+    const BossData *east=boss_get(BOSS_EAST_FOREST_GUARDIAN);
+    const BossData *north=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
+    ProgressionState catalog_progression={0};
+    assert(boss_catalog_count()==BOSS_COUNT && east && north && !boss_get((BossId)BOSS_COUNT));
+    assert(boss_data_valid(east) && boss_data_valid(north));
+    assert(east->party_count!=north->party_count && east->ai_profile!=north->ai_profile &&
+           east->reward_embermarks!=north->reward_embermarks &&
+           east->completion_flag!=north->completion_flag);
+    assert(east->required_flag==PROGRESSION_NONE &&
+           north->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(boss_is_available(&catalog_progression,east));
+    assert(!boss_is_available(&catalog_progression,north));
+    assert(boss_mark_victory(&catalog_progression,east));
+    assert(boss_is_available(&catalog_progression,north));
+
     changed=guardian;changed.id=BOSS_MAX;assert(!boss_data_valid(&changed));
     changed=guardian;changed.name="";assert(!boss_data_valid(&changed));
     changed=guardian;changed.title=0;assert(!boss_data_valid(&changed));
@@ -5975,10 +6043,11 @@ int main(void)
     changed=guardian;changed.party[0].level=0;assert(!boss_data_valid(&changed));
     changed=guardian;changed.ai_profile=NPC_AI_PROFILE_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.reward_embermarks=-1;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.required_flag=PROGRESSION_FLAG_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.completion_flag=PROGRESSION_NONE;assert(!boss_data_valid(&changed));
     changed=guardian;changed.completion_flag=PROGRESSION_FLAG_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.presentation=BATTLE_PRESENTATION_COUNT;assert(!boss_data_valid(&changed));
-    puts("PASS: boss definitions, validation, and one-time completion");
+    puts("PASS: boss catalog definitions, prerequisites, validation, and one-time completion");
     return 0;
 }
 ````
@@ -7333,6 +7402,7 @@ static const BossData framework_guardian={
     .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
     .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .required_flag=PROGRESSION_NONE,
     .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
     .presentation=BATTLE_PRESENTATION_GUARDIAN
 };
@@ -7517,6 +7587,7 @@ int main(void)
     sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(g.npcs.count==4 && g.npcs.people[3].boss);
     const BossData *east_boss=g.npcs.people[3].boss;
+    assert(east_boss==boss_get(BOSS_EAST_FOREST_GUARDIAN));
     assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
            east_boss->completion_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
     assert(gate_requires_boss_completion(sunthread_gate,east_boss));
@@ -7718,6 +7789,18 @@ int main(void)
     assert(game_offer_boss_battle(&g,&framework_guardian,213));
     assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE && !g.ready_prompt.active);
     assert(g.inventory.embermarks==marks_before+framework_guardian.reward_embermarks);
+    update(&g,(Input){.cancel=1},1);
+
+    /* Phase 24: catalog entries can add a later boss without a copied flow. */
+    place(&g,MAP_CLEARING,10,13);
+    const BossData *north_boss=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
+    assert(north_boss && !boss_is_available(&g.progression,north_boss));
+    assert(!game_offer_boss_battle(&g,north_boss,241));
+    assert(progression_set(&g.progression,PROGRESSION_EAST_FOREST_BOSS_DEFEATED));
+    assert(boss_is_available(&g.progression,north_boss));
+    assert(game_offer_boss_battle(&g,north_boss,241));
+    assert(g.dialogue.active && !strcmp(g.dialogue.title,"WARDEN RUNE") &&
+           g.boss_battle.flow==NPC_BATTLE_FLOW_INTRO);
     update(&g,(Input){.cancel=1},1);
 
     place(&g,MAP_FOREST,8,12);
@@ -8039,7 +8122,7 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
-    puts("PASS: Phase 23 boss-gated routes, East Forest boss, gatekeepers, persistence and drawing budget");
+    puts("PASS: Phase 24 data-driven forest bosses, routes, gatekeepers, persistence and drawing budget");
     return 0;
 }
 ````

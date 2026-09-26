@@ -10,20 +10,6 @@ static const NpcBattleData east_challenger = {
     .progression_flag=PROGRESSION_FIRST_CHALLENGER_DEFEATED
 };
 
-static const BossData east_forest_guardian = {
-    .id=BOSS_EAST_FOREST_GUARDIAN,.name="ELDER SYLVA",.title="FERNVEIL GUARDIAN",
-    .intro={"I AM SYLVA, KEEPER OF FERNVEIL.",
-            "SHOW ME THE BOND THAT GUIDES YOUR VEYLINGS."},
-    .victory={"FERNVEIL RECOGNIZES YOUR BOND.",
-              "THE SUNTHREAD WAY NOW OPENS TO YOU."},
-    .defeat={"THE FOREST ASKS FOR PATIENCE.",
-             "RETURN WHEN YOUR TEAM IS READY."},
-    .party={{SPECIES_MOSSPRIG,6},{SPECIES_GUSTLET,7}},.party_count=2,
-    .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
-    .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
-    .presentation=BATTLE_PRESENTATION_GUARDIAN
-};
-
 static const NpcBattleData *battle_registry[] = {&east_challenger};
 
 static void add(Npcs *n, int x, int y, const char *name, const char *a, const char *b, int end)
@@ -52,6 +38,7 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].open_x=37;
         n->people[n->count-1].open_y=10;
     } else if (map_id == 1) {
+        const BossData *east_forest_guardian=boss_get(BOSS_EAST_FOREST_GUARDIAN);
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
         const Gate *sunthread=map_gate(MAP_FOREST,30,11);
         add(n,30,11,sunthread->gatekeeper,sunthread->locked_dialogue.first,
@@ -67,10 +54,10 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].gate=hollowstone;
         n->people[n->count-1].open_x=29;
         n->people[n->count-1].open_y=6;
-        add(n,26,11,east_forest_guardian.name,east_forest_guardian.intro.first,
-            east_forest_guardian.intro.second,26);
+        add(n,26,11,east_forest_guardian->name,east_forest_guardian->intro.first,
+            east_forest_guardian->intro.second,26);
         n->people[n->count-1].actor.facing=FACE_LEFT;
-        n->people[n->count-1].boss=&east_forest_guardian;
+        n->people[n->count-1].boss=east_forest_guardian;
         n->people[n->count-1].open_x=26;
         n->people[n->count-1].open_y=10;
     } else if (map_id == 2) {

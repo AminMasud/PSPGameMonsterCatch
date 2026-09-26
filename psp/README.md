@@ -1,4 +1,4 @@
-# Emberwake — Phase 23 Boss-Gated Forest Routes
+# Emberwake — Phase 24 Forest Boss Catalog
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -9,21 +9,21 @@ data-driven framework for NPC challengers, the first in-world challenger at the
 East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
-special presentation, Elder Sylva, Fernveil's first in-world Guardian, and
-data-linked boss-gated routes.
+special presentation, Elder Sylva, Fernveil's first in-world Guardian,
+data-linked boss-gated routes, and a reusable forest boss catalog.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE23.PBP**, titled **Emberwake - Phase 23**. Copy it to:
+Use **EBOOT-PHASE24.PBP**, titled **Emberwake - Phase 24**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE22.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE23.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -169,9 +169,9 @@ optional defeat dialogue after the normal return to Hearth Clearing.
 
 Boss definitions are a separate reusable layer with a stable boss ID, speaker
 name, battle title, party of up to four Veylings, AI profile, intro, victory and
-optional defeat dialogue, Embermark reward, required completion flag, and an
-optional battle presentation. The boss flow is intro dialogue → ready prompt →
-party battle → outcome dialogue. A completed boss uses its victory dialogue on
+optional defeat dialogue, Embermark reward, prerequisite flag, completion flag,
+and optional battle presentation. The boss flow is intro dialogue → ready prompt
+→ party battle → outcome dialogue. A completed boss uses its victory dialogue on
 later interactions and does not start another battle.
 
 The completion flag is the source of truth for boss victory and already travels
@@ -188,6 +188,13 @@ make the encounter stronger than Ren's single level-3 challenger. Victory grants
 300 Embermarks once, sets `PROGRESSION_EAST_FOREST_BOSS_DEFEATED`, moves Sylva
 off the road, and immediately moves Varel aside to open the Sunthread route.
 Later talks use Sylva's post-victory dialogue without another battle or reward.
+
+The boss catalog now owns forest boss data. Sylva is loaded from its East Forest
+entry; a Northern Woods Guardian placeholder is catalog data only and is not
+placed in the world. It requires Sylva's completion flag, has a distinct
+three-Veyling party, dialogue, 650-Embermark reward, North Forest completion
+flag, and AI profile. Adding a later boss therefore needs a new data entry and
+placement, without copying the battle flow.
 
 The easy NPC AI selects randomly from the acting Veyling's currently usable
 move slots. Empty slots, invalid move IDs, and attacks with zero uses are never
@@ -382,12 +389,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE23.PBP EXTRA_TARGETS=EBOOT-PHASE23.PBP
+    make PSP_EBOOT=EBOOT-PHASE24.PBP EXTRA_TARGETS=EBOOT-PHASE24.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -442,6 +449,10 @@ Phase 23 additionally verifies the explicit boss-to-gate flag link, checks a
 different future boss flag can map to a different route, opens Varel's dialogue
 through the real post-boss interaction, and confirms the unlocked dialogue after
 save/load restoration.
+Phase 24 validates both catalog entries, their distinct parties, dialogue,
+rewards, completion flags, and AI profiles. It also verifies the Northern Woods
+entry remains unavailable until the East Forest flag is set, then enters the
+same reusable intro flow without an in-world placement.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,

@@ -233,7 +233,8 @@ int game_offer_npc_battle(Game *g,const NpcBattleData *data,uint32_t seed)
 }
 int game_offer_boss_battle(Game *g,const BossData *data,uint32_t seed)
 {
-    if(!g || !boss_data_valid(data) || g->in_battle || g->ready_prompt.active ||
+    if(!g || !boss_data_valid(data) || !boss_is_available(&g->progression,data) ||
+       g->in_battle || g->ready_prompt.active ||
        g->menu_open || g->roster_open || g->shop_open || g->dialogue.active ||
        g->npc_battle.flow!=NPC_BATTLE_FLOW_NONE ||
        g->boss_battle.flow!=NPC_BATTLE_FLOW_NONE || save_data_status()==SAVE_STATUS_BUSY) return 0;

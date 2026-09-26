@@ -9,6 +9,7 @@ static const BossData guardian={
     .defeat={"COURAGE ALSO MEANS RETURNING PREPARED.",0},
     .party={{SPECIES_MOSSPRIG,7},{SPECIES_GUSTLET,8}},.party_count=2,
     .ai_profile=NPC_AI_BOSS,.reward_embermarks=300,
+    .required_flag=PROGRESSION_NONE,
     .completion_flag=PROGRESSION_EAST_FOREST_BOSS_DEFEATED,
     .presentation=BATTLE_PRESENTATION_GUARDIAN
 };
@@ -25,6 +26,21 @@ int main(void)
     assert(!boss_mark_victory(&progression,&guardian));
     assert(progression_save_bits(&progression)==completed);
 
+    const BossData *east=boss_get(BOSS_EAST_FOREST_GUARDIAN);
+    const BossData *north=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
+    ProgressionState catalog_progression={0};
+    assert(boss_catalog_count()==BOSS_COUNT && east && north && !boss_get((BossId)BOSS_COUNT));
+    assert(boss_data_valid(east) && boss_data_valid(north));
+    assert(east->party_count!=north->party_count && east->ai_profile!=north->ai_profile &&
+           east->reward_embermarks!=north->reward_embermarks &&
+           east->completion_flag!=north->completion_flag);
+    assert(east->required_flag==PROGRESSION_NONE &&
+           north->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
+    assert(boss_is_available(&catalog_progression,east));
+    assert(!boss_is_available(&catalog_progression,north));
+    assert(boss_mark_victory(&catalog_progression,east));
+    assert(boss_is_available(&catalog_progression,north));
+
     changed=guardian;changed.id=BOSS_MAX;assert(!boss_data_valid(&changed));
     changed=guardian;changed.name="";assert(!boss_data_valid(&changed));
     changed=guardian;changed.title=0;assert(!boss_data_valid(&changed));
@@ -36,9 +52,10 @@ int main(void)
     changed=guardian;changed.party[0].level=0;assert(!boss_data_valid(&changed));
     changed=guardian;changed.ai_profile=NPC_AI_PROFILE_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.reward_embermarks=-1;assert(!boss_data_valid(&changed));
+    changed=guardian;changed.required_flag=PROGRESSION_FLAG_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.completion_flag=PROGRESSION_NONE;assert(!boss_data_valid(&changed));
     changed=guardian;changed.completion_flag=PROGRESSION_FLAG_COUNT;assert(!boss_data_valid(&changed));
     changed=guardian;changed.presentation=BATTLE_PRESENTATION_COUNT;assert(!boss_data_valid(&changed));
-    puts("PASS: boss definitions, validation, and one-time completion");
+    puts("PASS: boss catalog definitions, prerequisites, validation, and one-time completion");
     return 0;
 }
