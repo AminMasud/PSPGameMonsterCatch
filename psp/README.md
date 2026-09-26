@@ -1,4 +1,4 @@
-# Emberwake — Phase 25 Healing Location Framework
+# Emberwake — Phase 26 Healing Locations
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -10,20 +10,20 @@ East Forest entrance, a reusable named progression-flag system, and reusable
 flag-controlled entrances, progression-aware forest gatekeepers, a sealed
 Hollowstone Cave entrance, a reusable boss battle framework with optional
 special presentation, Elder Sylva, Fernveil's first in-world Guardian,
-data-linked boss-gated routes, and a reusable forest boss catalog, plus reusable confirmation-based healing points.
+data-linked boss-gated routes, and a reusable forest boss catalog, plus limited, map-placed healing locations across the journey.
 The PNG number minus one is the internal
 species ID. All 30 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE25.PBP**, titled **Emberwake - Phase 25**. Copy it to:
+Use **EBOOT-PHASE26.PBP**, titled **Emberwake - Phase 26**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
 The images and audio are embedded. No separate asset folders are needed on the
 Memory Stick. Earlier EBOOT-PHASE10.PBP, EBOOT-PHASE11.PBP,
-EBOOT-PHASE12.PBP through EBOOT-PHASE24.PBP, EBOOT-PETS.PBP, and numbered phase
+EBOOT-PHASE12.PBP through EBOOT-PHASE25.PBP, EBOOT-PETS.PBP, and numbered phase
 builds are retained locally for comparison.
 
 - D-pad: move; select menu entries. Release finishes the current tile.
@@ -67,10 +67,10 @@ image is mirrored to face the opponent; these are not separately drawn back spri
 | Area | Contents and connections |
 | --- | --- |
 | Hearth Clearing | Mira, patrolling Orin; northwest lodge doorway; Ren guards the east path to the woods |
-| Fernveil Woods | Sen and Elder Sylva, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
+| Fernveil Woods | Sen, Elder Sylva, Fernveil Spring, tall-grass encounters; west to clearing; Maren seals the northeast cave; Varel guards the east road |
 | Wayfarer Lodge | Tavi's supply shop, green healing dais; south to clearing |
-| Hollowstone Cave | Nel, rough-floor encounters; southwest doorway to woods |
-| Sunthread Marsh | Ela, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
+| Hollowstone Cave | Nel, Hollowstone Camp, rough-floor encounters; southwest doorway to woods |
+| Sunthread Marsh | Ela, Sunthread Shrine, reed encounters, ponds and safe boardwalk; west to woods, northeast rest house |
 | Lantern Rest | Ilsen, green healing dais; south to marsh |
 
 Only completed movement steps trigger encounter rolls. Paths, ordinary grass,
@@ -296,9 +296,9 @@ Invalid, full-HP, fainted, or out-of-stock uses consume nothing. A valid combat
 use consumes the player's action; the enemy acts afterward only when still due
 in that round. Buy supplies with Embermarks after finishing Tavi's dialogue in
 the lodge. Face a green healing dais and press X, then choose YES, to restore
-the whole roster's HP and attack uses. The registered points are the Wayfarer
-Dais in the lodge and the Lantern Dais at Lantern Rest; Field Kit menus cannot
-heal a party.
+the whole roster's HP and attack uses. The registered points are the Wayfarer Dais in the lodge, Lantern Dais at Lantern
+Rest, Fernveil Spring, Hollowstone Camp, and Sunthread Shrine. Field Kit menus
+cannot heal a party.
 
 ## Existing saves
 
@@ -390,12 +390,12 @@ return triggers.
 
 From PowerShell on this machine:
 
-    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE25.PBP EXTRA_TARGETS=EBOOT-PHASE25.PBP'
+    wsl -d Ubuntu -- bash -lc 'cd /mnt/c/Users/polo1/OneDrive/Documents/app/psp && sh tests/run.sh && make PSP_EBOOT=EBOOT-PHASE26.PBP EXTRA_TARGETS=EBOOT-PHASE26.PBP'
 
 From a configured Linux/WSL PSPDEV shell in this directory:
 
     sh tests/run.sh
-    make PSP_EBOOT=EBOOT-PHASE25.PBP EXTRA_TARGETS=EBOOT-PHASE25.PBP
+    make PSP_EBOOT=EBOOT-PHASE26.PBP EXTRA_TARGETS=EBOOT-PHASE26.PBP
 
 The build checks that all PNGs, numbered species IDs, and compiled textures match.
 For changed PNGs, regenerate first using Python 3 with Pillow installed:
@@ -457,6 +457,9 @@ same reusable intro flow without an in-world placement.
 Phase 25 validates the registered Wayfarer and Lantern healing points, their map
 placements and prompts, YES/NO behavior, restoration of HP and attack uses, and
 the persistence of battle damage until a point is used.
+Phase 26 validates Fernveil Spring, Hollowstone Camp, and Sunthread Shrine: their
+limited placement, clear markers, reachability, confirmation interaction, and party
+restoration.
 The full suite also covers movement, all portals,
 collisions, capture, inventory, menus, all 30 forms at levels 1–100, all ten
 two-step evolution chains, wild availability of every form, 32-slot storage,
@@ -467,7 +470,8 @@ include ready-prompt.png, ready-prompt-no.png, npc-battle.png, boss-battle.png,
 east-forest-boss.png, east-forest-boss-ready.png,
 east-forest-boss-battle.png, east-forest-boss-victory.png,
 east-forest-route-open.png, healing-point.png, healing-prompt.png,
-healing-complete.png,
+healing-complete.png, forest-healing-point.png, cave-healing-point.png,
+marsh-healing-point.png,
 east-challenger.png, east-challenger-ready.png, east-challenger-battle.png,
 east-challenger-victory.png, forest-gatekeeper-locked.png,
 forest-gatekeeper-open.png, cave-gatekeeper-locked.png,
@@ -497,8 +501,11 @@ PSP test route:
 8. In Wayfarer Lodge, face the green dais. Choose NO once and verify the party is
    unchanged; then choose YES and verify every party member's HP and attack uses
    are restored. Confirm the Field Kit has no healing command.
-9. Load an existing version-2 save and verify roster, items, money, and location
-   remain intact; saving again upgrades the slot to version 3.
+9. In Fernveil Woods, Hollowstone Cave, and Sunthread Marsh, find the Spring,
+   Camp, and Shrine. Verify each is an obvious green marker with the same YES/NO
+   healing interaction, without adding extra healing locations to those maps.
+10. Load an existing version-2 save and verify roster, items, money, and location
+    remain intact; saving again upgrades the slot to version 3.
 
 Host tests and PSP compilation validate the code; actual PSP texture rendering,
 sound, and performance still require this device test.

@@ -158,13 +158,16 @@ int main(void)
         }
     }
     assert(portals==10 && locked_gates==3);
-    assert(healing_point_count()==2);
+    assert(healing_point_count()==5);
     for(int i=0;i<healing_point_count();++i) {
         const HealingPoint *point=i==0?healing_point_at(MAP_LODGE,2,1):
-                                  healing_point_at(MAP_REST,2,2);
+                                  i==1?healing_point_at(MAP_REST,2,2):
+                                  i==2?healing_point_at(MAP_FOREST,4,1):
+                                  i==3?healing_point_at(MAP_CAVE,3,1):
+                                        healing_point_at(MAP_MARSH,4,1);
         assert(point && healing_point_valid(point));
     }
-    assert(!healing_point_at(MAP_FOREST,2,1));
+    assert(!healing_point_at(MAP_CLEARING,2,1));
     Game g;
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
@@ -199,6 +202,29 @@ int main(void)
            g.party.members[0].uses[0]==attack_get(g.party.members[0].moves[0])->uses);
     render(&g,"previews/healing-complete.ppm");
     update(&g,(Input){.cancel=1},1);
+
+    /* Phase 26: limited, map-specific rest points are visible and reachable. */
+    const int rest_maps[]={MAP_FOREST,MAP_CAVE,MAP_MARSH};
+    const int rest_x[]={4,3,4},rest_y[]={1,1,1};
+    const char *rest_names[]={"FERNVEIL SPRING","HOLLOWSTONE CAMP","SUNTHREAD SHRINE"};
+    for(int i=0;i<3;++i) {
+        const HealingPoint *point=healing_point_at(rest_maps[i],rest_x[i],rest_y[i]);
+        assert(point && !strcmp(point->name,rest_names[i]));
+        place(&g,rest_maps[i],rest_x[i]+1,rest_y[i]);
+        g.player.facing=FACE_LEFT;g.transition=0;
+        g.party.members[0].hp=1;g.party.members[0].uses[0]=0;
+        update(&g,(Input){.confirm=1},1);
+        assert(g.healing_prompt.active && g.healing_prompt.point==point);
+        update(&g,(Input){.confirm=1},1);
+        assert(g.dialogue.active && g.party.members[0].hp==g.party.members[0].max_hp);
+        update(&g,(Input){.cancel=1},1);
+    }
+    place(&g,MAP_FOREST,5,1);g.player.facing=FACE_LEFT;g.transition=0;
+    render(&g,"previews/forest-healing-point.ppm");
+    place(&g,MAP_CAVE,4,1);g.player.facing=FACE_LEFT;g.transition=0;
+    render(&g,"previews/cave-healing-point.ppm");
+    place(&g,MAP_MARSH,5,1);g.player.facing=FACE_LEFT;g.transition=0;
+    render(&g,"previews/marsh-healing-point.ppm");
 
     g.party.members[0].hp=4;
     battle_begin_party_with_inventory(&g.battle,&g.party,&g.inventory,SPECIES_MOSSPRIG,3,91);

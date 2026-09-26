@@ -12,7 +12,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 25
+PSP_EBOOT_TITLE = Emberwake - Phase 26
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -29,7 +29,8 @@ src/graphics.o: include/graphics.h
 src/inventory.o: include/inventory.h
 src/save_data.o: include/save_data.h
 
-src/map.o: assets/maps/clearing.inc
+src/map.o: assets/maps/clearing.inc assets/maps/forest.inc assets/maps/lodge.inc \
+           assets/maps/cave.inc assets/maps/marsh.inc assets/maps/rest.inc
 PARAM.SFO: Makefile
 -include $(OBJS:.o=.d)
 
