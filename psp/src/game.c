@@ -359,7 +359,7 @@ static void game_step(Game *g, const Input *input, float seconds)
     if(g->menu_open) {
         PlayerMenuAction action=player_menu_update(&g->menu,&g->party,&g->inventory,&g->options,input);
         if (action==MENU_CLOSE) g->menu_open=0;
-        else if (action==MENU_MAP) world_map_open(&g->world_map);
+        else if (action==MENU_MAP) world_map_open(&g->world_map,g->map_id);
         else if (action==MENU_PARTY || action==MENU_COLLECTION) {
             party_menu_open(&g->roster);g->roster.tab=action==MENU_COLLECTION;g->roster_open=1;
         } else if (action==MENU_SAVE) start_save(g);

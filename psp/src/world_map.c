@@ -1,5 +1,6 @@
 #include <pspgu.h>
 #include "world_map.h"
+#include "map.h"
 #include "graphics.h"
 #include "text.h"
 #define C(r,g,b) GU_RGBA(r,g,b,255)
@@ -20,7 +21,25 @@ static void place(int x,int y,int w,int h,unsigned int fill,const char *name)
     graphics_rectangle(x+4,y+4,w-8,4,C(255,224,145));
     text_draw(x,y+h+9,name,C(239,225,184),1);
 }
-void world_map_open(WorldMap *map) { if(map) map->active=1; }
+void world_map_open(WorldMap *map,int map_id)
+{
+    if(!map) return;
+    map->active=1;map->map_id=map_id;
+}
+
+static void marker(int map_id)
+{
+    int x=44,y=135;
+    const char *name="HEARTH CLEARING";
+    if(map_id==MAP_FOREST) { x=148;y=103;name="FERNVEIL WOODS"; }
+    else if(map_id==MAP_CAVE) { x=246;y=135;name="HOLLOWSTONE CAVE"; }
+    else if(map_id==MAP_MARSH) { x=351;y=94;name="SUNTHREAD MARSH"; }
+    else if(map_id==MAP_LODGE) { x=119;y=76;name="WAYFARER LODGE"; }
+    else if(map_id==MAP_REST) { x=401;y=151;name="LANTERN REST"; }
+    graphics_rectangle(x-7,y-7,8,4,C(255,224,112));graphics_rectangle(x-7,y-7,4,8,C(255,224,112));
+    graphics_rectangle(x+51,y-7,8,4,C(255,224,112));graphics_rectangle(x+55,y-7,4,8,C(255,224,112));
+    text_draw(188,242,"YOU ARE IN",C(150,188,179),1);text_draw(267,242,name,C(246,213,158),1);
+}
 int world_map_update(WorldMap *map,const Input *input)
 {
     if(!map || !map->active) return 0;
@@ -47,5 +66,6 @@ void world_map_draw(const WorldMap *map)
     text_draw(93,54,"WAYFARER",C(235,211,166),1);
     graphics_rectangle(401,151,20,17,C(94,81,69));graphics_rectangle(404,147,14,7,C(171,142,95));
     text_draw(389,178,"LANTERN REST",C(235,211,166),1);
-    text_draw(24,242,"O RETURN TO FIELD KIT",C(169,195,182),1);
+    marker(map->map_id);
+    text_draw(24,259,"O RETURN",C(169,195,182),1);
 }
