@@ -8,7 +8,7 @@
 #include "inventory.h"
 
 #define SAVE_DATA_MAGIC 0x454D4252u
-#define SAVE_DATA_VERSION 3u
+#define SAVE_DATA_VERSION 4u
 
 typedef struct {
     int species;
@@ -42,6 +42,7 @@ typedef struct {
     int embermarks;
     uint32_t npc_defeated;
     uint32_t progression_flags;
+    uint32_t discovered_maps;
 } SavePayload;
 
 typedef enum {

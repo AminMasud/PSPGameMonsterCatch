@@ -21,10 +21,10 @@ static void place(int x,int y,int w,int h,unsigned int fill,const char *name)
     graphics_rectangle(x+4,y+4,w-8,4,C(255,224,145));
     text_draw(x,y+h+9,name,C(239,225,184),1);
 }
-void world_map_open(WorldMap *map,int map_id)
+void world_map_open(WorldMap *map,int map_id,uint32_t discovered)
 {
     if(!map) return;
-    map->active=1;map->map_id=map_id;map->cursor=map_id;map->previous_direction=0;
+    map->active=1;map->map_id=map_id;map->cursor=map_id;map->previous_direction=0;map->discovered=discovered;
 }
 
 static void marker(int map_id)
@@ -85,7 +85,7 @@ void world_map_draw(const WorldMap *map)
     marker(map->map_id);
     cursor_draw(map->cursor);
     text_draw(24,240,"SELECTED",C(150,188,179),1);
-    text_draw(92,240,map_name(map->cursor),C(246,213,158),1);
-    text_draw(280,240,map->cursor==map->map_id?"CURRENT":"KNOWN",C(235,211,166),1);
+    text_draw(92,240,(map->discovered&(1u<<map->cursor))?map_name(map->cursor):"UNKNOWN",C(246,213,158),1);
+    text_draw(280,240,map->cursor==map->map_id?"CURRENT":(map->discovered&(1u<<map->cursor))?"DISCOVERED":"UNKNOWN",C(235,211,166),1);
     text_draw(24,259,"D-PAD INSPECT   O RETURN",C(169,195,182),1);
 }

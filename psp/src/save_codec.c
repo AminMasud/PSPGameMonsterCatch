@@ -23,9 +23,20 @@ typedef struct {
     SaveParty party;
     int item_quantities[ITEM_COUNT],embermarks;
 } Phase2Payload;
+/* Frozen Phase 14-30 layout, before map discovery was saved. */
+typedef struct {
+    uint32_t magic,version;
+    int map_id,tile_x,tile_y,facing;
+    uint32_t encounter_random;
+    int encounter_safe_steps;
+    SaveParty party;
+    int item_quantities[ITEM_COUNT],embermarks;
+    uint32_t npc_defeated,progression_flags;
+} Phase3Payload;
 typedef char legacy_size_must_remain_1960[(sizeof(LegacyPayload)==1960)?1:-1];
 typedef char phase2_size_must_remain_2504[(sizeof(Phase2Payload)==2504)?1:-1];
-typedef char current_size_must_remain_2512[(sizeof(SavePayload)==2512)?1:-1];
+typedef char phase3_size_must_remain_2512[(sizeof(Phase3Payload)==2512)?1:-1];
+typedef char current_size_must_remain_2516[(sizeof(SavePayload)==2516)?1:-1];
 
 static int migrate_creature(SaveCreature *out,const SaveCreature *old)
 {
@@ -71,6 +82,18 @@ int save_data_decode(const void *bytes,size_t size,SavePayload *payload)
         if(size!=sizeof(*payload)) return 0;
         memcpy(payload,bytes,size);
         return 1; /* game.c validates current gameplay values before applying. */
+    }
+    if(header[1]==3) {
+        Phase3Payload old;SavePayload next={0};
+        if(size!=sizeof(old)) return 0;
+        memcpy(&old,bytes,sizeof(old));
+        next.magic=old.magic;next.version=SAVE_DATA_VERSION;
+        next.map_id=old.map_id;next.tile_x=old.tile_x;next.tile_y=old.tile_y;next.facing=old.facing;
+        next.encounter_random=old.encounter_random;next.encounter_safe_steps=old.encounter_safe_steps;
+        next.party=old.party;next.embermarks=old.embermarks;next.npc_defeated=old.npc_defeated;
+        next.progression_flags=old.progression_flags;next.discovered_maps=1u<<old.map_id;
+        for(int i=0;i<ITEM_COUNT;++i) next.item_quantities[i]=old.item_quantities[i];
+        *payload=next;return 1;
     }
     if(header[1]==2) {
         Phase2Payload old;

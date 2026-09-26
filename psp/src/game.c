@@ -10,6 +10,7 @@
 
 static void enter_map(Game *g, int id, int x, int y)
 {
+    g->discovered_maps|=1u<<id;
     g->map_id = id;
     g->map = map_get(id);
     player_init(&g->player,g->map);
@@ -100,6 +101,7 @@ static void save_snapshot(const Game *g, SavePayload *saved)
     saved->embermarks=g->inventory.embermarks;
     saved->npc_defeated=g->npc_battle_progress.defeated;
     saved->progression_flags=progression_save_bits(&g->progression);
+    saved->discovered_maps=g->discovered_maps;
 }
 static int valid_saved_creature(const SaveCreature *saved)
 {
@@ -149,6 +151,7 @@ static int apply_snapshot(Game *g, const SavePayload *saved)
     inventory.embermarks=saved->embermarks;
     g->npc_battle_progress.defeated=saved->npc_defeated;
     progression_load_bits(&g->progression,saved->progression_flags);
+    g->discovered_maps=saved->discovered_maps|(1u<<saved->map_id);
     npc_reconcile_progression(g->npc_battle_progress.defeated,&g->progression);
     enter_map(g,saved->map_id,saved->tile_x,saved->tile_y);
     g->player.facing=(Direction)(saved->facing>=FACE_DOWN && saved->facing<=FACE_UP ? saved->facing : FACE_DOWN);
@@ -359,7 +362,7 @@ static void game_step(Game *g, const Input *input, float seconds)
     if(g->menu_open) {
         PlayerMenuAction action=player_menu_update(&g->menu,&g->party,&g->inventory,&g->options,input);
         if (action==MENU_CLOSE) g->menu_open=0;
-        else if (action==MENU_MAP) world_map_open(&g->world_map,g->map_id);
+        else if (action==MENU_MAP) world_map_open(&g->world_map,g->map_id,g->discovered_maps);
         else if (action==MENU_PARTY || action==MENU_COLLECTION) {
             party_menu_open(&g->roster);g->roster.tab=action==MENU_COLLECTION;g->roster_open=1;
         } else if (action==MENU_SAVE) start_save(g);

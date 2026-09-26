@@ -58,6 +58,7 @@ typedef struct {
     ReadyPrompt ready_prompt;
     HealingPrompt healing_prompt;
     WorldMap world_map;
+    uint32_t discovered_maps;
     PendingBattle pending_battle;
     NpcBattleProgress npc_battle_progress;
     ProgressionState progression;

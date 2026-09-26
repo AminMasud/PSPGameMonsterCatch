@@ -73,7 +73,7 @@ static void migration_checks(void)
     SavePayload loaded;
     assert(save_data_decode(bytes,sizeof(bytes),&loaded));
     assert(!memcmp(bytes,original,sizeof(bytes)));
-    assert(loaded.version==3 && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
+    assert(loaded.version==SAVE_DATA_VERSION && loaded.party.count==4 && loaded.party.stored==24 && loaded.party.lead==2);
     assert(loaded.npc_defeated==0 && loaded.progression_flags==0);
     assert(loaded.map_id==4 && loaded.tile_x==2 && loaded.tile_y==10 && loaded.embermarks==321);
     assert(loaded.encounter_random==123 && loaded.encounter_safe_steps==3 && loaded.item_quantities[0]==2);
@@ -89,7 +89,7 @@ static void migration_checks(void)
     memcpy(active->dataBuf,bytes,sizeof(bytes));active->dataSize=sizeof(bytes);
     complete(0,1);
     assert(save_data_status()==SAVE_STATUS_SUCCEEDED && save_data_take_loaded(&loaded));
-    assert(loaded.version==3 && loaded.party.stored==24);
+    assert(loaded.version==SAVE_DATA_VERSION && loaded.party.stored==24);
     for(int level=20;level<=100;level+=80) {
         memcpy(bytes,original,sizeof(bytes));
         /* Old Emberlyn at a high level becomes the eligible final form. */
@@ -131,7 +131,7 @@ static void phase2_migration_checks(void)
 
 int main(void)
 {
-    assert(sizeof(SavePayload)==2512 && SAVE_DATA_VERSION==3);
+    assert(sizeof(SavePayload)==2516 && SAVE_DATA_VERSION==4);
     assert(SPECIES_CINDLET==0 && SPECIES_LUNARAE==29);
     SavePayload saved={.magic=SAVE_DATA_MAGIC, .version=SAVE_DATA_VERSION,
                        .map_id=1, .tile_x=7, .embermarks=123,
