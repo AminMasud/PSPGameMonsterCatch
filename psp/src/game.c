@@ -501,7 +501,7 @@ void game_update(Game *g,const Input *input,float seconds)
     if (seconds>0.05f) seconds=0.05f;
     if(g->startup!=STARTUP_GAME) {
         g->startup_time+=seconds;
-        if(g->startup==STARTUP_SPLASH && (g->startup_time>=1.0f || input->confirm)) {
+        if(g->startup==STARTUP_SPLASH && (g->startup_time>=0.99f || input->confirm)) {
             g->startup=STARTUP_TITLE;g->startup_time=0;
         } else if(g->startup==STARTUP_MENU) {
             title_load_update(g);
@@ -608,7 +608,16 @@ void game_draw(const Game *g)
     if(g->startup!=STARTUP_GAME) {
         if(g->startup==STARTUP_SPLASH) {
             graphics_rectangle(0,0,480,272,GU_RGBA(17,27,35,255));
-            text_draw(176,125,"EMBERWAKE",GU_RGBA(246,213,158,255),2);
+            graphics_rectangle(142,76,196,2,GU_RGBA(218,176,92,255));
+            text_draw(166,92,"VEYLINGS",GU_RGBA(246,213,158,255),3);
+            text_draw(168,128,"EMBERWAKE",GU_RGBA(164,203,184,255),2);
+            text_draw(184,162,"PRESENTS",GU_RGBA(177,194,188,255),1);
+            for(int i=0;i<3;++i) {
+                int bright=((int)(g->startup_time*6.0f)%3)==i;
+                graphics_rectangle(225+i*12,196,6,6,bright ?
+                    GU_RGBA(246,213,158,255) : GU_RGBA(67,85,80,255));
+            }
+            text_draw(158,230,"X SKIP",GU_RGBA(177,194,188,255),1);
             return;
         }
         graphics_texture_fullscreen(title_background);

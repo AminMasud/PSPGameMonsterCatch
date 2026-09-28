@@ -177,6 +177,10 @@ int main(void)
     assert(!healing_point_at(MAP_CLEARING,2,1));
     Game g;
     game_init(&g);assert(g.startup==STARTUP_SPLASH);
+    render(&g,"previews/startup-splash.ppm");
+    update(&g,(Input){0},39);assert(g.startup==STARTUP_SPLASH);
+    update(&g,(Input){0},1);assert(g.startup==STARTUP_TITLE);
+    game_init(&g);assert(g.startup==STARTUP_SPLASH);
     update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_TITLE);
     render(&g,"previews/title-screen.ppm");
     update(&g,(Input){.vertical=1},1);assert(g.title_cursor==1);

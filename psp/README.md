@@ -1,4 +1,4 @@
-# Emberwake — Phase 44 Continue Flow
+# Emberwake — Phase 45 Startup Splash Polish
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE44.PBP**, titled **Emberwake - Phase 44**. Copy it to:
+Use **EBOOT-PHASE45.PBP**, titled **Emberwake - Phase 45**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -35,7 +35,8 @@ builds are retained locally for comparison.
 - L: load while stationary or from the Field Kit.
 - HOME: PSP exit menu.
 
-The game opens with the supplied Veylings background and a New Game / Continue /
+The game opens with a one-second Veylings presentation that can be skipped with
+X, then shows the supplied Veylings background and a New Game / Continue /
 Options title menu. New Game resets the active session to a level-5 Cindlet at
 Hearth Clearing without touching the Memory Stick. Continue opens the PSP save
 utility and restores a valid save to its saved map and position. A missing,
