@@ -89,6 +89,13 @@ Glasswake. Read the [geography layout](docs/PHASE52_WORLD_GEOGRAPHY.md) for
 the route plan. The world-map overview reflects these future landmarks without
 adding playable map IDs or individual maps.
 
+## Vey lore foundation
+
+Phase 53 establishes the internal setting rules behind Vey, Veylings,
+ecology, partnership, evolution, and trail battles. The
+[Vey lore foundation](docs/PHASE53_VEY_LORE.md) is a writer reference rather
+than player-facing exposition.
+
 ## Ten evolution families
 
 Base forms evolve on level-up at **level 8**; middle forms evolve at **level 16**.
