@@ -51,6 +51,7 @@ int main(void)
                 assert(c.moves[i]>=-1 && c.moves[i]<MOVE_COUNT);
                 assert(c.uses[i]==(c.moves[i]<0?0:attack_get(c.moves[i])->uses));
                 for(int j=0;j<i;++j) assert(c.moves[i]<0 || c.moves[i]!=c.moves[j]);
+                assert(c.move_ranks[i]==(c.moves[i]<0?0:1));
             }
         }
     }

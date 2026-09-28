@@ -3,6 +3,7 @@
 #include "attacks.h"
 #define CREATURE_MOVES 4
 #define CREATURE_MAX_LEVEL 100
+#define MOVE_RANK_MAX 3
 typedef enum {
     SPECIES_CINDLET, SPECIES_EMBERYN, SPECIES_PYROVERN,
     SPECIES_BUBFIN, SPECIES_RIVAFIN, SPECIES_TIDERION,
@@ -34,7 +35,7 @@ typedef struct {
     const char *name; /* Derived cache of immutable species data, not save data. */
     Element element;
     int level, experience, max_hp, hp, attack, defense, speed;
-    int moves[CREATURE_MOVES], uses[CREATURE_MOVES];
+    int moves[CREATURE_MOVES], uses[CREATURE_MOVES], move_ranks[CREATURE_MOVES];
 } Creature;
 typedef struct {
     int old_level;
@@ -51,4 +52,5 @@ int creature_xp_for_level(int level);
 int creature_xp_remaining(const Creature *c);
 void creature_gain_xp(Creature *c,int amount,CreatureGrowth *growth);
 int creature_learn(Creature *c,int move,int slot);
+int creature_move_rank(const Creature *c,int slot);
 #endif

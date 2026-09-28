@@ -149,8 +149,13 @@ static int knows(const Creature *c,int move)
 int creature_learn(Creature *c,int move,int slot)
 {
     if(move<0 || move>=MOVE_COUNT || slot<0 || slot>=4 || knows(c,move)) return 0;
-    c->moves[slot]=move; c->uses[slot]=attack_get(move)->uses;
+    c->moves[slot]=move; c->uses[slot]=attack_get(move)->uses;c->move_ranks[slot]=1;
     return 1;
+}
+int creature_move_rank(const Creature *c,int slot)
+{
+    if(!c || slot<0 || slot>=CREATURE_MOVES || c->moves[slot]<0) return 0;
+    return c->move_ranks[slot]<1?1:c->move_ranks[slot]>MOVE_RANK_MAX?MOVE_RANK_MAX:c->move_ranks[slot];
 }
 void creature_create(Creature *c,int id,int level)
 {
@@ -158,7 +163,7 @@ void creature_create(Creature *c,int id,int level)
     c->species=species_get(id)->id;
     c->level=level<1?1:level>100?100:level;
     c->experience=creature_xp_for_level(c->level);
-    for(int i=0;i<4;++i) c->moves[i]=-1;
+    for(int i=0;i<4;++i) { c->moves[i]=-1;c->move_ranks[i]=0; }
     recalculate(c);
     const Species *s=species_get(c->species);
     int slot=0;
@@ -166,10 +171,10 @@ void creature_create(Creature *c,int id,int level)
         if(s->learnset[i].level<=c->level && !knows(c,s->learnset[i].move)) {
             /* Fresh wild creatures use their latest four unlocked attacks. */
             if(slot==4) {
-                for(int j=0;j<3;++j) c->moves[j]=c->moves[j+1];
+                for(int j=0;j<3;++j) { c->moves[j]=c->moves[j+1];c->move_ranks[j]=c->move_ranks[j+1]; }
                 slot=3;
             }
-            c->moves[slot++]=s->learnset[i].move;
+            c->moves[slot]=s->learnset[i].move;c->move_ranks[slot++]=1;
         }
     creature_restore(c);
 }

@@ -67,7 +67,7 @@ static void save_creature(SaveCreature *saved, const Creature *creature)
     snprintf(saved->nickname,sizeof(saved->nickname),"%s",creature->nickname);
     for (int i=0;i<CREATURE_MOVES;++i) {
         saved->moves[i]=creature->moves[i];
-        saved->uses[i]=creature->uses[i];
+        saved->uses[i]=creature->uses[i]|((creature_move_rank(creature,i)-1)<<8);
     }
 }
 static void load_creature(Creature *creature, const SaveCreature *saved)
@@ -78,7 +78,8 @@ static void load_creature(Creature *creature, const SaveCreature *saved)
     snprintf(creature->nickname,sizeof(creature->nickname),"%s",saved->nickname);
     for (int i=0;i<CREATURE_MOVES;++i) {
         creature->moves[i]=saved->moves[i];
-        creature->uses[i]=saved->uses[i];
+        creature->uses[i]=saved->uses[i]&255;
+        creature->move_ranks[i]=saved->moves[i]<0?0:((saved->uses[i]>>8)&3)+1;
     }
 }
 static void save_snapshot(const Game *g, SavePayload *saved)
@@ -113,8 +114,9 @@ static int valid_saved_creature(const SaveCreature *saved)
     max_hp=species_get(saved->species)->base_hp+saved->level*5;
     if (saved->experience<creature_xp_for_level(saved->level) || saved->hp<0 || saved->hp>max_hp) return 0;
     for (int i=0;i<CREATURE_MOVES;++i) {
-        if (saved->moves[i]<-1 || saved->moves[i]>=MOVE_COUNT || saved->uses[i]<0) return 0;
-        if (saved->moves[i]>=0 && saved->uses[i]>attack_get(saved->moves[i])->uses) return 0;
+        int uses=saved->uses[i]&255,rank=(saved->uses[i]>>8)&3;
+        if (saved->moves[i]<-1 || saved->moves[i]>=MOVE_COUNT || saved->uses[i]<0 || rank>=MOVE_RANK_MAX) return 0;
+        if (saved->moves[i]>=0 && uses>attack_get(saved->moves[i])->uses) return 0;
     }
     return 1;
 }
