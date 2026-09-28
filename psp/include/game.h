@@ -25,6 +25,7 @@ typedef enum {
     NPC_BATTLE_FLOW_READY,
     NPC_BATTLE_FLOW_ACTIVE
 } NpcBattleFlow;
+typedef enum { STARTUP_SPLASH, STARTUP_TITLE, STARTUP_MENU, STARTUP_GAME } StartupState;
 typedef struct {
     const NpcBattleData *data;
     uint32_t seed;
@@ -40,6 +41,8 @@ typedef struct {
     Player player;
     Camera camera;
     int map_id;
+    StartupState startup;
+    float startup_time;
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;

@@ -207,6 +207,7 @@ void game_init(Game *g)
     g->save_seen_status=SAVE_STATUS_IDLE;
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
+    g->startup=STARTUP_SPLASH;g->startup_time=0;
 }
 int game_offer_important_battle(Game *g,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed)
@@ -464,6 +465,19 @@ void game_update(Game *g,const Input *input,float seconds)
 {
     if (seconds<0) seconds=0;
     if (seconds>0.05f) seconds=0.05f;
+    if(g->startup!=STARTUP_GAME) {
+        g->startup_time+=seconds;
+        if(g->startup==STARTUP_SPLASH && (g->startup_time>=1.0f || input->confirm)) {
+            g->startup=STARTUP_TITLE;g->startup_time=0;
+        } else if(g->startup==STARTUP_TITLE && input->confirm) {
+            g->startup=STARTUP_MENU;g->startup_time=0;
+        } else if(g->startup==STARTUP_MENU && input->confirm) {
+            g->startup=STARTUP_GAME;g->startup_time=0;
+        } else if(g->startup==STARTUP_MENU && input->cancel) {
+            g->startup=STARTUP_TITLE;g->startup_time=0;
+        }
+        return;
+    }
     int busy=save_data_status()==SAVE_STATUS_BUSY;
     int modal=g->menu_open || g->world_map.active || g->roster_open || g->shop_open || g->dialogue.active ||
               g->ready_prompt.active || g->healing_prompt.active || g->in_battle;
@@ -546,6 +560,13 @@ static void draw_scene(const Game *g)
 }
 void game_draw(const Game *g)
 {
+    if(g->startup!=STARTUP_GAME) {
+        graphics_rectangle(0,0,480,272,GU_RGBA(17,27,35,255));
+        if(g->startup==STARTUP_SPLASH) text_draw(176,125,"EMBERWAKE",GU_RGBA(246,213,158,255),2);
+        else if(g->startup==STARTUP_TITLE) text_draw(161,125,"TITLE SCREEN",GU_RGBA(246,213,158,255),2);
+        else text_draw(177,125,"START MENU",GU_RGBA(246,213,158,255),2);
+        return;
+    }
     draw_scene(g);
     if (g->options.motion && g->transition>0 && save_data_status()!=SAVE_STATUS_BUSY) {
         /* A short shutter reveal uses only two opaque rectangles. */

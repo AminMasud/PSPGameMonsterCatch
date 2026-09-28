@@ -61,6 +61,7 @@ static void render(const Game *g,const char *path)
 static void place(Game *g,int id,int x,int y)
 {
     game_init(g); g->map_id=id; g->map=map_get(id);
+    g->startup=STARTUP_GAME;
     player_init(&g->player,g->map);
     g->player.tile_x=g->player.target_x=x;
     g->player.tile_y=g->player.target_y=y;
@@ -169,6 +170,12 @@ int main(void)
     }
     assert(!healing_point_at(MAP_CLEARING,2,1));
     Game g;
+    game_init(&g);assert(g.startup==STARTUP_SPLASH);
+    update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_TITLE);
+    update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_MENU);
+    update(&g,(Input){.cancel=1},1);assert(g.startup==STARTUP_TITLE);
+    update(&g,(Input){.confirm=1},1);update(&g,(Input){.confirm=1},1);
+    assert(g.startup==STARTUP_GAME);
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
     assert(g.map_id==MAP_LODGE);
