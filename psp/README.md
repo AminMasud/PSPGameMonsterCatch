@@ -1,4 +1,4 @@
-# Emberwake — Phase 47 Battle UX Pass
+# Emberwake — Phase 48 Hardware Stability Pass
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE47.PBP**, titled **Emberwake - Phase 47**. Copy it to:
+Use **EBOOT-PHASE48.PBP**, titled **Emberwake - Phase 48**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -50,6 +50,13 @@ Phase 47 verified player-first and enemy-first rounds, action spotlighting,
 voluntary and forced replacements, capture and escape choices, NPC and boss
 ready prompts, wild encounters without a ready prompt, and clean victory or
 defeat exits. Boss completion flags are granted only after a victory.
+
+## PSP stability
+
+The renderer enforces fixed framebuffer and title-texture size checks at build
+time, and the host world test runs under address and undefined-behavior
+sanitizers. Use the [hardware checklist](docs/PHASE48_HARDWARE_TEST.md) when
+testing the package on a PSP-3000.
 
 ## Ten evolution families
 

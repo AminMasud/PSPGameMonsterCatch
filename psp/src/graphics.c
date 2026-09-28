@@ -6,6 +6,13 @@
 
 #define BUFFER_WIDTH 512
 #define FRAME_BYTES (BUFFER_WIDTH * SCREEN_HEIGHT * 4)
+#define PSP_VRAM_BYTES (2 * 1024 * 1024)
+#define TITLE_TEXTURE_BYTES (512 * SCREEN_HEIGHT * 2)
+
+/* These textures and buffers are fixed-size. Keep layout changes within the
+   PSP's 2 MiB VRAM; embedded title art remains in system RAM. */
+typedef char FramebuffersFitVram[(2 * FRAME_BYTES <= PSP_VRAM_BYTES) ? 1 : -1];
+typedef char TitleTextureFits[(TITLE_TEXTURE_BYTES == 278528) ? 1 : -1];
 
 /* Aligned command buffer, reused only after the previous list completes. */
 /* Reserve 1 MiB for visible terrain, actors, and the bitmap dialogue font.
