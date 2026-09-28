@@ -1,4 +1,4 @@
-# Emberwake — Phase 50 Production Content Audit
+# Emberwake — Phase 51 World Structure
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE50.PBP**, titled **Emberwake - Phase 50**. Copy it to:
+Use **EBOOT-PHASE51.PBP**, titled **Emberwake - Phase 51**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -72,6 +72,13 @@ Phase 50 inventories the current maps, characters, Veylings, moves, gates,
 healing points, progression, dialogue, world map, and save data without
 changing gameplay. Read the [production content audit](docs/PHASE50_PRODUCTION_CONTENT_AUDIT.md)
 before planning the official world structure.
+
+## Official world structure
+
+Phase 51 defines the compact eight-region production world without building
+new maps. The [world structure](docs/PHASE51_WORLD_STRUCTURE.md) reuses
+Hearth, Fernveil, Sunthread, Lantern Rest, and Hollowstone, and plans
+Northwood Reach, Glasswake Expanse, and The Stillward for later phases.
 
 ## Ten evolution families
 
