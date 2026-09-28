@@ -71,13 +71,20 @@ void world_map_draw(const WorldMap *map)
     graphics_rectangle(16,58,448,174,C(38,76,78));
     graphics_rectangle(20,62,440,166,C(66,113,87));
     for(int i=0;i<9;++i) graphics_rectangle(25+i*49,67+(i%3)*45,19,11,C(55,102,77));
-    road(92,150,161,123);road(196,121,255,149);road(294,149,365,112);road(273,156,274,196);
-    road(143,126,129,91);road(373,113,406,154);
+    /* West valley road, marsh boardwalk, and the highland/cave story route. */
+    road(92,150,161,123);road(196,121,255,149);road(294,149,365,112);
+    road(173,104,272,96);road(373,113,406,154);road(274,111,272,145);
+    road(298,149,387,106);road(406,93,426,71);road(143,126,129,91);
     place(44,135,48,27,C(168,128,77),"HEARTH");
     place(148,103,50,34,C(44,96,59),"FERNVEIL");
     place(246,135,52,28,C(91,77,71),"HOLLOWSTONE");
     place(351,94,48,34,C(50,103,86),"SUNTHREAD");
-    place(244,184,60,23,C(79,63,88),"NORTHERN WOODS");
+    place(244,78,60,23,C(79,63,88),"NORTHWOOD REACH");
+    graphics_rectangle(382,92,46,22,C(63,81,90));
+    graphics_rectangle(386,96,38,4,C(111,157,158));
+    text_draw(366,121,"GLASSWAKE",C(174,202,195),1);
+    graphics_rectangle(419,54,29,16,C(82,86,102));
+    text_draw(396,45,"THE STILLWARD",C(174,202,195),1);
     graphics_rectangle(119,76,20,17,C(94,81,69));graphics_rectangle(122,72,14,7,C(171,142,95));
     text_draw(93,54,"WAYFARER",C(235,211,166),1);
     graphics_rectangle(401,151,20,17,C(94,81,69));graphics_rectangle(404,147,14,7,C(171,142,95));

@@ -80,6 +80,15 @@ new maps. The [world structure](docs/PHASE51_WORLD_STRUCTURE.md) reuses
 Hearth, Fernveil, Sunthread, Lantern Rest, and Hollowstone, and plans
 Northwood Reach, Glasswake Expanse, and The Stillward for later phases.
 
+## World geography
+
+Phase 52 places the regions in one connected valley: forest streams feed the
+Sunthread wetlands, Lantern Rest stands on dry high ground, Northwood rises
+above both routes, and Hollowstone is the only reliable passage into
+Glasswake. Read the [geography layout](docs/PHASE52_WORLD_GEOGRAPHY.md) for
+the route plan. The world-map overview reflects these future landmarks without
+adding playable map IDs or individual maps.
+
 ## Ten evolution families
 
 Base forms evolve on level-up at **level 8**; middle forms evolve at **level 16**.
