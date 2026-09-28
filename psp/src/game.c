@@ -397,7 +397,8 @@ static void game_step(Game *g, const Input *input, float seconds)
         }
         return;
     }
-    if((input->menu & INPUT_MENU_OPEN) && !g->player.moving) {
+    /* The Field Kit is a pause control: it must work even during a walk. */
+    if(input->menu & INPUT_MENU_OPEN) {
         player_menu_open(&g->menu);g->menu_open=1;g->transition=0;return;
     }
     if(input->details && !g->player.moving) {

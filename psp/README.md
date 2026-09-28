@@ -29,7 +29,7 @@ builds are retained locally for comparison.
 - D-pad: move; select menu entries. Release finishes the current tile.
 - X: talk, confirm, or advance a message.
 - Circle: close dialogue or return one menu page.
-- Triangle: open the Field Kit while stationary; close all player menus.
+- Triangle: open the Field Kit/pause menu at any time in the field; close all player menus.
 - Select: lead partner's stats, XP, and description while stationary.
 - Start: save while stationary or from the Field Kit.
 - L: load while stationary or from the Field Kit.

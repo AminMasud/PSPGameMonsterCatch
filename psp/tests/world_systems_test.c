@@ -693,8 +693,10 @@ int main(void)
     assert(!g.in_battle && g.party.count==4 && g.party.stored==1);
     assert(g.party.collection[0].species==SPECIES_MOSSPRIG && g.party.collection[0].level==3);
     assert(g.party.collection[0].hp==1); /* Captured Veylings keep their battle condition. */
+    g.player.moving=1;
     update(&g,(Input){.menu=1},1);
     assert(g.menu_open && !g.roster_open && g.transition==0);
+    g.player.moving=0;
     render(&g,"previews/player-menu.ppm");
     int map_x=g.player.tile_x,map_y=g.player.tile_y;
     for(int i=0;i<4;++i) { update(&g,(Input){.vertical=1},1);update(&g,(Input){0},1); }
