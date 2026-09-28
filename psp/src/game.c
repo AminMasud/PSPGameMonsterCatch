@@ -479,7 +479,7 @@ void game_update(Game *g,const Input *input,float seconds)
             }
             g->title_previous_direction=direction;
             if(!input->confirm) return;
-            g->startup=STARTUP_MENU;g->startup_time=0;
+            g->startup=STARTUP_GAME;g->startup_time=0;
             audio_play(SOUND_CONFIRM);
         } else if(g->startup==STARTUP_MENU && input->confirm) {
             g->startup=STARTUP_GAME;g->startup_time=0;
@@ -597,7 +597,7 @@ void game_draw(const Game *g)
             static const char *const choices[]={"NEW GAME","CONTINUE","OPTIONS"};
             graphics_rectangle(60,101,360,75,GU_RGBA(14,23,29,255));
             text_draw(161,113,choices[g->title_cursor],GU_RGBA(246,213,158,255),2);
-            text_draw(143,148,"X CONTINUE     O BACK",GU_RGBA(239,240,220,255),1);
+            text_draw(143,148,"X START        O BACK",GU_RGBA(239,240,220,255),1);
         }
         return;
     }

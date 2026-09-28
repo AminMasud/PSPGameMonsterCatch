@@ -182,9 +182,7 @@ int main(void)
     update(&g,(Input){.vertical=1},1);assert(g.title_cursor==1);
     update(&g,(Input){0},1);
     update(&g,(Input){.vertical=-1},1);assert(g.title_cursor==0);
-    update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_MENU);
-    update(&g,(Input){.cancel=1},1);assert(g.startup==STARTUP_TITLE);
-    update(&g,(Input){.confirm=1},1);update(&g,(Input){.confirm=1},1);
+    update(&g,(Input){.confirm=1},1);
     assert(g.startup==STARTUP_GAME);
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
