@@ -10,6 +10,12 @@ static unsigned char pixels[272][480][3];
 static unsigned int rectangles;
 static unsigned int textures;
 static unsigned int texture_tints[7];
+const uint16_t title_background[512*272]={0};
+void graphics_texture_fullscreen(const uint16_t *texture)
+{
+    assert(texture);
+    ++textures;
+}
 void graphics_texture_tinted(int x,int y,int w,int h,const uint16_t *texture,int flip,unsigned int tint)
 {
     assert(textures<7);texture_tints[textures]=tint;
@@ -172,6 +178,10 @@ int main(void)
     Game g;
     game_init(&g);assert(g.startup==STARTUP_SPLASH);
     update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_TITLE);
+    render(&g,"previews/title-screen.ppm");
+    update(&g,(Input){.vertical=1},1);assert(g.title_cursor==1);
+    update(&g,(Input){0},1);
+    update(&g,(Input){.vertical=-1},1);assert(g.title_cursor==0);
     update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_MENU);
     update(&g,(Input){.cancel=1},1);assert(g.startup==STARTUP_TITLE);
     update(&g,(Input){.confirm=1},1);update(&g,(Input){.confirm=1},1);

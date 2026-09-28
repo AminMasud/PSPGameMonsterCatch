@@ -28,7 +28,7 @@ for name in ('dialogue', 'ready-prompt', 'ready-prompt-no', 'npc-battle', 'boss-
              'capture', 'captured', 'party', 'collection', 'collection-swap', 'battle-switch',
              'collection-empty', 'collection-full', 'items', 'shop',
              'player-menu', 'field-items', 'options', 'marsh', 'lantern-rest',
-             'zappip', 'bubfin', 'battle-impact', 'spotlight-idle',
+             'zappip', 'bubfin', 'battle-impact', 'spotlight-idle', 'title-screen',
              'spotlight-ally', 'spotlight-enemy', 'saved-dialogue') + tuple(f'pet-{i:03d}' for i in range(1,31)):
     data = (output / (name + '.ppm')).read_bytes()
     magic, dimensions, maximum, pixels = data.split(b'\n', 3)

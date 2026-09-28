@@ -1,5 +1,5 @@
 TARGET = emberwake
-OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/world_map.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/boss.o src/healing.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/save_codec.o
+OBJS = src/main.o src/game.o src/input.o src/graphics.o src/map.o src/player.o src/camera.o src/world_draw.o src/world_map.o src/npc.o src/npc_battle.o src/npc_ai.o src/progression.o src/gate.o src/boss.o src/healing.o src/dialogue.o src/encounter.o src/text.o src/attacks.o src/battle.o src/battle_draw.o src/creature.o src/party.o src/capture.o src/party_menu.o src/inventory.o src/save_data.o src/player_menu.o src/ready_prompt.o src/audio.o src/audio_synth.o src/pet_draw.o src/pet_assets.o src/title_assets.o src/save_codec.o
 
 INCDIR = include
 CFLAGS = -O2 -G0 -std=c99 -Wall -Wextra -Werror -MMD -MP
@@ -12,7 +12,7 @@ LIBS = -lpspaudiolib -lpspgu -lpspge -lpspdisplay -lpspctrl -lpspaudio
 BUILD_PRX = 1
 PSP_FW_VERSION = 660
 EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = Emberwake - Phase 41
+PSP_EBOOT_TITLE = Emberwake - Phase 42
 
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
@@ -35,6 +35,9 @@ PARAM.SFO: Makefile
 -include $(OBJS:.o=.d)
 
 src/pet_assets.o: assets/generated/pets.rgba4444
+src/title_assets.o: assets/generated/title_bg.rgba4444
+assets/generated/title_bg.rgba4444: assets/pets/bg.png tools/build_title_bg.py
+	python3 tools/build_title_bg.py
 .PHONY: check-pets rebuild-pets
 check-pets:
 	python3 tools/check_pet_assets.py

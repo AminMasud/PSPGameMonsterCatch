@@ -43,6 +43,7 @@ typedef struct {
     int map_id;
     StartupState startup;
     float startup_time;
+    int title_cursor, title_previous_direction;
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;

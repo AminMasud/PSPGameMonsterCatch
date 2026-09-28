@@ -14,6 +14,7 @@ void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,in
 /* RGB tint is multiplied with the texture; alpha continues to come from it. */
 void graphics_texture_tinted(int x,int y,int width,int height,
                              const uint16_t *pixels,int flip,unsigned int tint);
+void graphics_texture_fullscreen(const uint16_t *pixels);
 void graphics_end(void);
 void graphics_shutdown(void);
 

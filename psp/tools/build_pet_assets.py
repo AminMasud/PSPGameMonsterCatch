@@ -9,7 +9,7 @@ import struct
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-FILES = sorted((ROOT / 'assets/pets').glob('*.png'))
+FILES = sorted((ROOT / 'assets/pets').glob('[0-9][0-9][0-9].*.png'))
 assert len(FILES) == 30, 'Expected exactly 30 numbered pet PNGs'
 output = ROOT / 'assets/generated'
 output.mkdir(exist_ok=True)

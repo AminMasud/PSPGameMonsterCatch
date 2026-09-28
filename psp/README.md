@@ -1,4 +1,4 @@
-# Emberwake — Phase 30 World Map Cursor
+# Emberwake — Phase 42 Veylings Title Screen
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE30.PBP**, titled **Emberwake - Phase 30**. Copy it to:
+Use **EBOOT-PHASE42.PBP**, titled **Emberwake - Phase 42**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -35,7 +35,9 @@ builds are retained locally for comparison.
 - L: load while stationary or from the Field Kit.
 - HOME: PSP exit menu.
 
-Start a new session with a level-5 Cindlet, or press L to load an existing save.
+The game opens with the supplied Veylings background and a New Game / Continue /
+Options title menu. Use the D-pad to select and X to confirm. Start a new session
+with a level-5 Cindlet, or press L to load an existing save.
 Saving/loading is unavailable during battles. Dialogue and menus pause movement
 and NPC patrols. Button actions use new-press detection.
 

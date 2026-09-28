@@ -11,7 +11,7 @@ ids = re.findall(r'\bSPECIES_([A-Z]+)\b', (root / 'include/creature.h').read_tex
 ids = ids[:ids.index('COUNT')]
 assert len(manifest) == len(ids) == 30
 assert len(binary) == 30 * 128 * 128 * 2
-files = sorted((root / 'assets/pets').glob('*.png'))
+files = sorted((root / 'assets/pets').glob('[0-9][0-9][0-9].*.png'))
 assert len(files) == 30
 for i, entry in enumerate(manifest):
     assert entry['id'] == i and entry['number'] == f'{i+1:03d}'

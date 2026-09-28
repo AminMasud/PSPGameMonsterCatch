@@ -7,6 +7,7 @@
 #include "graphics.h"
 #include "text.h"
 #include "audio.h"
+#include "title_assets.h"
 
 static void enter_map(Game *g, int id, int x, int y)
 {
@@ -208,6 +209,7 @@ void game_init(Game *g)
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
     g->startup=STARTUP_SPLASH;g->startup_time=0;
+    g->title_cursor=0;g->title_previous_direction=0;
 }
 int game_offer_important_battle(Game *g,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed)
@@ -469,10 +471,19 @@ void game_update(Game *g,const Input *input,float seconds)
         g->startup_time+=seconds;
         if(g->startup==STARTUP_SPLASH && (g->startup_time>=1.0f || input->confirm)) {
             g->startup=STARTUP_TITLE;g->startup_time=0;
-        } else if(g->startup==STARTUP_TITLE && input->confirm) {
+        } else if(g->startup==STARTUP_TITLE) {
+            int direction=input->vertical?input->vertical:input->horizontal;
+            if(direction && direction!=g->title_previous_direction) {
+                g->title_cursor=(g->title_cursor+(direction>0?1:2))%3;
+                audio_play(SOUND_CURSOR);
+            }
+            g->title_previous_direction=direction;
+            if(!input->confirm) return;
             g->startup=STARTUP_MENU;g->startup_time=0;
+            audio_play(SOUND_CONFIRM);
         } else if(g->startup==STARTUP_MENU && input->confirm) {
             g->startup=STARTUP_GAME;g->startup_time=0;
+            audio_play(SOUND_CONFIRM);
         } else if(g->startup==STARTUP_MENU && input->cancel) {
             g->startup=STARTUP_TITLE;g->startup_time=0;
         }
@@ -561,10 +572,33 @@ static void draw_scene(const Game *g)
 void game_draw(const Game *g)
 {
     if(g->startup!=STARTUP_GAME) {
-        graphics_rectangle(0,0,480,272,GU_RGBA(17,27,35,255));
-        if(g->startup==STARTUP_SPLASH) text_draw(176,125,"EMBERWAKE",GU_RGBA(246,213,158,255),2);
-        else if(g->startup==STARTUP_TITLE) text_draw(161,125,"TITLE SCREEN",GU_RGBA(246,213,158,255),2);
-        else text_draw(177,125,"START MENU",GU_RGBA(246,213,158,255),2);
+        if(g->startup==STARTUP_SPLASH) {
+            graphics_rectangle(0,0,480,272,GU_RGBA(17,27,35,255));
+            text_draw(176,125,"EMBERWAKE",GU_RGBA(246,213,158,255),2);
+            return;
+        }
+        graphics_texture_fullscreen(title_background);
+        graphics_rectangle(0,0,480,48,GU_RGBA(14,23,29,255));
+        text_draw(16,10,"VEYLINGS",GU_RGBA(246,213,158,255),3);
+        text_draw(18,34,"EMBERWAKE",GU_RGBA(164,203,184,255),1);
+        if(g->startup==STARTUP_TITLE) {
+            static const char *const choices[]={"NEW GAME","CONTINUE","OPTIONS"};
+            graphics_rectangle(276,126,190,111,GU_RGBA(14,23,29,255));
+            text_draw(292,136,"BEGIN YOUR JOURNEY",GU_RGBA(207,224,210,255),1);
+            for(int i=0;i<3;++i) {
+                int y=158+i*23;
+                if(i==g->title_cursor) {
+                    graphics_rectangle(286,y-2,160,18,GU_RGBA(218,176,92,255));
+                    text_draw(298,y,choices[i],GU_RGBA(19,31,35,255),1);
+                } else text_draw(298,y,choices[i],GU_RGBA(239,240,220,255),1);
+            }
+            text_draw(15,252,"D-PAD SELECT     X CONFIRM",GU_RGBA(239,240,220,255),1);
+        } else {
+            static const char *const choices[]={"NEW GAME","CONTINUE","OPTIONS"};
+            graphics_rectangle(60,101,360,75,GU_RGBA(14,23,29,255));
+            text_draw(161,113,choices[g->title_cursor],GU_RGBA(246,213,158,255),2);
+            text_draw(143,148,"X CONTINUE     O BACK",GU_RGBA(239,240,220,255),1);
+        }
         return;
     }
     draw_scene(g);

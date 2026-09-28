@@ -86,6 +86,17 @@ void graphics_texture_tinted(int x,int y,int width,int height,const uint16_t *pi
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
 }
+void graphics_texture_fullscreen(const uint16_t *pixels)
+{
+    typedef struct { float u,v; unsigned int color; float x,y,z; } TextureVertex;
+    TextureVertex *v=sceGuGetMemory(2*sizeof(TextureVertex));
+    v[0]=(TextureVertex){0,0,0xffffffffu,0,0,0};v[1]=(TextureVertex){480,272,0xffffffffu,480,272,0};
+    sceGuEnable(GU_TEXTURE_2D);sceGuEnable(GU_BLEND);
+    sceGuBlendFunc(GU_ADD,GU_SRC_ALPHA,GU_ONE_MINUS_SRC_ALPHA,0,0);
+    sceGuTexMode(GU_PSM_4444,0,0,0);sceGuTexImage(0,512,272,512,pixels);
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,v);
+    sceGuDisable(GU_BLEND);sceGuDisable(GU_TEXTURE_2D);
+}
 
 void graphics_texture(int x,int y,int width,int height,const uint16_t *pixels,int flip)
 {
