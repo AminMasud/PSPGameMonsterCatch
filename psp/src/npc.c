@@ -39,6 +39,7 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].open_y=10;
     } else if (map_id == 1) {
         const BossData *east_forest_guardian=boss_get(BOSS_EAST_FOREST_GUARDIAN);
+        const BossData *north_forest_guardian=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
         add(n,4,9,"SEN","THE DARK GRASS HIDES VEYLINGS.","THE LIT OPENING NORTHEAST LEADS\nINTO HOLLOWSTONE CAVE.",4);
         const Gate *sunthread=map_gate(MAP_FOREST,30,11);
         add(n,30,11,sunthread->gatekeeper,sunthread->locked_dialogue.first,
@@ -60,6 +61,13 @@ void npc_load(Npcs *n, int map_id)
         n->people[n->count-1].boss=east_forest_guardian;
         n->people[n->count-1].open_x=26;
         n->people[n->count-1].open_y=10;
+        add(n,14,2,north_forest_guardian->name,
+            "FERNVEIL'S GUARDIAN MUST RECOGNIZE YOUR BOND.",
+            "RETURN AFTER ELDER SYLVA YIELDS THE EASTERN WAY.",14);
+        n->people[n->count-1].actor.facing=FACE_DOWN;
+        n->people[n->count-1].boss=north_forest_guardian;
+        n->people[n->count-1].open_x=14;
+        n->people[n->count-1].open_y=3;
     } else if (map_id == 2) {
         add(n,7,3,"TAVI","WELCOME TO THE WAYFARER LODGE.","REST A MOMENT. THE SOUTH DOOR\nLEADS BACK TO THE CLEARING.",7);
     } else if (map_id == MAP_CAVE) {

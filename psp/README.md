@@ -1,4 +1,4 @@
-# Emberwake — Phase 45 Startup Splash Polish
+# Emberwake — Phase 46 Boss Progression Pass
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE45.PBP**, titled **Emberwake - Phase 45**. Copy it to:
+Use **EBOOT-PHASE46.PBP**, titled **Emberwake - Phase 46**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 

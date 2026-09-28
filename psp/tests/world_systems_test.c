@@ -324,7 +324,7 @@ int main(void)
     place(&g,MAP_FOREST,29,11);
     const Gate *sunthread_gate=map_gate(MAP_FOREST,30,11);
     assert(sunthread_gate && sunthread_gate->required_flag==PROGRESSION_EAST_FOREST_BOSS_DEFEATED);
-    assert(g.npcs.count==4 && g.npcs.people[1].gate==sunthread_gate);
+    assert(g.npcs.count==5 && g.npcs.people[1].gate==sunthread_gate);
     assert(!strcmp(g.npcs.people[1].name,"VAREL") && gate_is_locked(sunthread_gate,&g.progression));
     update(&g,(Input){.horizontal=1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_x==29);
@@ -359,7 +359,7 @@ int main(void)
     place(&g,MAP_FOREST,28,6);
     const Gate *cave_gate=map_gate(MAP_FOREST,28,5);
     assert(cave_gate && cave_gate->required_flag==PROGRESSION_CAVE_UNLOCKED);
-    assert(g.npcs.count==4 && g.npcs.people[2].gate==cave_gate &&
+    assert(g.npcs.count==5 && g.npcs.people[2].gate==cave_gate &&
            !strcmp(g.npcs.people[2].name,"MAREN"));
     update(&g,(Input){.vertical=-1},10);
     assert(g.map_id==MAP_FOREST && g.player.tile_y==6 && gate_is_locked(cave_gate,&g.progression));
@@ -386,7 +386,7 @@ int main(void)
     /* Phase 22: Elder Sylva guards Fernveil's east end and opens the next road. */
     place(&g,MAP_FOREST,25,11);
     sunthread_gate=map_gate(MAP_FOREST,30,11);
-    assert(g.npcs.count==4 && g.npcs.people[3].boss);
+    assert(g.npcs.count==5 && g.npcs.people[3].boss);
     const BossData *east_boss=g.npcs.people[3].boss;
     assert(east_boss==boss_get(BOSS_EAST_FOREST_GUARDIAN));
     assert(east_boss->id==BOSS_EAST_FOREST_GUARDIAN &&
@@ -422,6 +422,17 @@ int main(void)
     assert(g.npcs.people[3].actor.tile_x==26 && g.npcs.people[3].actor.tile_y==10);
     assert(g.npcs.people[1].actor.tile_x==29 && g.npcs.people[1].actor.tile_y==10);
     assert(gate_can_enter(sunthread_gate,&g.progression));
+    update(&g,(Input){.cancel=1},1);
+    const BossData *north_route_boss=boss_get(BOSS_NORTHERN_WOODS_GUARDIAN);
+    assert(g.npcs.people[4].boss==north_route_boss && boss_is_available(&g.progression,north_route_boss));
+    assert(game_offer_boss_battle(&g,north_route_boss,333));
+    update(&g,(Input){.confirm=1},2);assert(g.ready_prompt.active);
+    update(&g,(Input){.confirm=1},1);assert(g.in_battle);
+    g.battle.phase=BATTLE_DONE;g.battle.result=BATTLE_WIN;
+    update(&g,(Input){0},1);
+    assert(progression_has(&g.progression,PROGRESSION_NORTH_FOREST_BOSS_DEFEATED) &&
+           progression_has(&g.progression,PROGRESSION_CAVE_UNLOCKED) && gate_can_enter(cave_gate,&g.progression));
+    update(&g,(Input){.cancel=1},1);
     g.transition=0;
     render(&g,"previews/east-forest-boss-victory.ppm");
     update(&g,(Input){.cancel=1},1);
@@ -442,7 +453,8 @@ int main(void)
     update(&g,(Input){.confirm=1},1);
     assert(g.dialogue.active && g.boss_battle.flow==NPC_BATTLE_FLOW_NONE &&
            !g.ready_prompt.active && strstr(g.dialogue.pages[0],"RECOGNIZES YOUR BOND"));
-    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks);
+    assert(g.inventory.embermarks==boss_marks+east_boss->reward_embermarks+
+           north_route_boss->reward_embermarks);
     update(&g,(Input){.cancel=1},1);
     update(&g,(Input){.horizontal=1},40);
     assert(g.map_id==MAP_MARSH); /* Sylva's flag opens Varel's intended next region. */

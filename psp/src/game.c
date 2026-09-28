@@ -330,6 +330,8 @@ static void game_step(Game *g, const Input *input, float seconds)
                         int reward=boss_data->reward_embermarks;
                         g->inventory.embermarks=reward>INT_MAX-g->inventory.embermarks?
                             INT_MAX:g->inventory.embermarks+reward;
+                        if(boss_data->completion_flag==PROGRESSION_NORTH_FOREST_BOSS_DEFEATED)
+                            progression_set(&g->progression,PROGRESSION_CAVE_UNLOCKED);
                     }
                     npc_apply_progress(&g->npcs,g->npc_battle_progress.defeated,&g->progression);
                     dialogue_open(&g->dialogue,boss_data->name,
@@ -461,8 +463,9 @@ static void game_step(Game *g, const Input *input, float seconds)
                 g->player.facing == FACE_DOWN ? FACE_UP :
                 g->player.facing == FACE_LEFT ? FACE_RIGHT : FACE_LEFT;
             if (npc->boss) {
-                game_offer_boss_battle(g,npc->boss,
-                    g->encounter.random^(uint32_t)(npc->boss->id+1)*0x85ebca6bu);
+                if(!game_offer_boss_battle(g,npc->boss,
+                    g->encounter.random^(uint32_t)(npc->boss->id+1)*0x85ebca6bu))
+                    dialogue_open(&g->dialogue,npc->name,npc->first,npc->second);
             } else if (npc->gate && gate_is_locked(npc->gate,&g->progression) && npc->battle) {
                 game_offer_npc_battle(g,npc->battle,
                     g->encounter.random^(uint32_t)(npc->battle->id+1)*0x9e3779b9u);

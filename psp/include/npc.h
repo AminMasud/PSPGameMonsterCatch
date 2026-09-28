@@ -3,7 +3,7 @@
 #include "player.h"
 #include "npc_battle.h"
 #include "boss.h"
-#define NPC_MAX 4
+#define NPC_MAX 5
 typedef struct {
     Player actor;
     const char *name, *first, *second;
