@@ -16,7 +16,8 @@ static void victory(Battle *b,Creature *c)
 static void close_growth(Battle *b)
 {
     for(int i=0;i<30 && b->phase!=BATTLE_DONE;++i) {
-        if(b->phase==BATTLE_LEARN) battle_update(b,&(Input){0,0,0,1,0,0});
+        if(b->phase==BATTLE_EVOLUTION) { b->evolution_time=0.5f;battle_update(b,&(Input){0,0,1,0,0,0}); }
+        else if(b->phase==BATTLE_LEARN) battle_update(b,&(Input){0,0,0,1,0,0});
         else confirm(b);
     }
     assert(b->phase==BATTLE_DONE);

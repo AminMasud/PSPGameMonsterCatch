@@ -43,7 +43,7 @@ typedef struct {
     int escape_attempts;
     CreatureGrowth growth;
     int growth_stage, growth_move, learn_cursor, reward_given, experience_reward;
-    float animation, hit_time, ally_hp_shown, enemy_hp_shown;
+    float animation, hit_time, evolution_time, ally_hp_shown, enemy_hp_shown;
     int hit_side, acting_side; /* 0 ally, 1 enemy, -1 outside action messages. */
     char switch_message[80];
     char message[160];

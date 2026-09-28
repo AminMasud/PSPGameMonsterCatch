@@ -27,15 +27,23 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 void battle_draw(const Battle *b)
 {
     if(b->phase==BATTLE_EVOLUTION) {
+        float t=b->evolution_time;
+        int pulse=(int)(t*12)%2;
         graphics_rectangle(0,0,480,272,C(25,29,48));
-        graphics_rectangle(0,0,480,5,C(238,190,107));
+        graphics_rectangle(0,0,480,5,pulse?C(255,244,182):C(238,190,107));
         text_draw(146,20,"EVOLUTION",C(250,222,157),2);
-        text_draw(95,53,"YOUR VEYLING IS CHANGING!",C(182,205,195),1);
-        pet_draw(b->ally.species,192,72,128,1);
+        text_draw(95,53,t<1.2f?"YOUR VEYLING IS CHANGING!":"A NEW FORM EMERGES!",C(182,205,195),1);
+        for(int i=0;i<16;++i) {
+            int x=78+(i*71+(int)(t*55))%320,y=78+(i*43+(int)(t*37))%104;
+            graphics_rectangle(x,y,3+pulse,3+pulse,C(255,226,140));
+        }
+        if(t<0.7f) pet_draw_tinted(b->growth.old_species,184,72,128,1,C(200,214,225));
+        else if(t<1.2f) pet_draw_tinted(b->ally.species,184-pulse*4,68-pulse*4,128+pulse*8,1,C(255,255,235));
+        else pet_draw_tinted(b->ally.species,184,72,128,1,C(255,255,255));
         text_draw(112,210,species_get(b->growth.old_species)->name,C(178,192,190),1);
         text_draw(225,210,"BECAME",C(244,213,151),1);
         text_draw(302,210,creature_name(&b->ally),C(240,239,213),1);
-        text_draw(142,244,"X CONTINUE",C(180,205,195),1);
+        text_draw(142,244,t<0.5f?"THE LIGHT GATHERS...":"X REVEAL YOUR NEW FORM",C(180,205,195),1);
         return;
     }
     if(b->phase==BATTLE_SWITCH) {

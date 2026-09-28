@@ -171,13 +171,14 @@ static float approach_hp(float shown,int hp,float step)
 }
 void battle_animate(Battle *b,float seconds,int motion)
 {
+    if (seconds<0) seconds=0;
+    if (seconds>0.05f) seconds=0.05f;
+    if(b->phase==BATTLE_EVOLUTION) b->evolution_time+=seconds;
     if (!motion) {
         b->animation=0;b->hit_time=0;
         b->ally_hp_shown=(float)b->ally.hp;b->enemy_hp_shown=(float)b->enemy.hp;
         return;
     }
-    if (seconds<0) seconds=0;
-    if (seconds>0.05f) seconds=0.05f;
     b->animation+=seconds;
     if (b->animation>=8) b->animation-=8;
     if (b->hit_time>0) b->hit_time-=seconds;
@@ -230,7 +231,7 @@ static void growth_next(Battle *b)
     if(b->growth_stage==1) {
         b->growth_stage=2;
         if(b->growth.old_species!=b->ally.species) {
-            b->phase=BATTLE_EVOLUTION;return;
+            b->evolution_time=0;b->phase=BATTLE_EVOLUTION;return;
         }
     }
     if(b->growth_stage==2) {
@@ -266,7 +267,7 @@ void battle_update(Battle *b,const Input *input)
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
     if(b->phase==BATTLE_EVOLUTION) {
-        if(input->confirm) growth_next(b);
+        if(input->confirm && b->evolution_time>=0.5f) growth_next(b);
         return;
     }
     if(b->phase==BATTLE_CAPTURE) {
