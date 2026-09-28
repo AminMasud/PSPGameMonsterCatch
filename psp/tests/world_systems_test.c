@@ -182,6 +182,11 @@ int main(void)
     update(&g,(Input){.vertical=1},1);assert(g.title_cursor==1);
     update(&g,(Input){0},1);
     update(&g,(Input){.vertical=-1},1);assert(g.title_cursor==0);
+    update(&g,(Input){.vertical=1},1);assert(g.title_cursor==1);
+    update(&g,(Input){0},1);update(&g,(Input){.confirm=1},1);
+    assert(g.startup==STARTUP_MENU);
+    update(&g,(Input){0},1);assert(g.startup==STARTUP_TITLE && !strcmp(g.title_message,"NO VALID SAVE DATA FOUND"));
+    g.title_cursor=0;
     update(&g,(Input){.confirm=1},1);
     assert(g.startup==STARTUP_GAME);
     g.party.members[0].hp=1;g.party.count=1;g.inventory.embermarks=999;
@@ -938,6 +943,11 @@ int main(void)
         assert(a->species==b->species && a->level==b->level && a->hp==b->hp && a->experience==b->experience);
         assert(!memcmp(a->moves,b->moves,sizeof(a->moves)) && !memcmp(a->uses,b->uses,sizeof(a->uses)));
     }
+    g.startup=STARTUP_TITLE;g.title_cursor=1;g.title_previous_direction=0;
+    update(&g,(Input){.confirm=1},1);assert(g.startup==STARTUP_MENU);
+    update(&g,(Input){0},1);
+    assert(g.startup==STARTUP_GAME && g.map_id==MAP_MARSH && g.player.tile_x==2 && g.player.tile_y==10);
+    assert(g.party.count==4 && g.party.stored==32 && g.inventory.embermarks==4242);
     puts("PASS: Phase 24 data-driven forest bosses, routes, gatekeepers, persistence and drawing budget");
     return 0;
 }

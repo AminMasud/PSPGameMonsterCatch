@@ -44,6 +44,7 @@ typedef struct {
     StartupState startup;
     float startup_time;
     int title_cursor, title_previous_direction;
+    char title_message[80];
     Npcs npcs;
     Dialogue dialogue;
     Encounter encounter;

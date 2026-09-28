@@ -198,6 +198,30 @@ static void start_load(Game *g)
     g->menu_open=0;g->save_seen_status=SAVE_STATUS_BUSY;
     save_data_begin_load();
 }
+
+/* Title-screen loading never opens a field dialogue. The PSP utility handles
+   its own UI while busy; this receives only a fully validated payload. */
+static void title_load_update(Game *g)
+{
+    SaveStatus status;
+    save_data_update();
+    status=save_data_status();
+    if(status==SAVE_STATUS_BUSY) return;
+    if(status==SAVE_STATUS_SUCCEEDED) {
+        SavePayload saved;
+        if(save_data_take_loaded(&saved) && apply_snapshot(g,&saved)) {
+            g->startup=STARTUP_GAME;g->startup_time=0;
+            g->save_seen_status=status;
+            g->title_message[0]='\0';
+            audio_play(SOUND_CONFIRM);
+            return;
+        }
+    }
+    g->save_seen_status=status;
+    g->startup=STARTUP_TITLE;g->startup_time=0;g->title_previous_direction=0;
+    snprintf(g->title_message,sizeof(g->title_message),"NO VALID SAVE DATA FOUND");
+    audio_play(SOUND_ERROR);
+}
 /* Starts a fresh session without touching the Memory Stick. A later explicit
    save is the only operation that can replace an existing save slot. */
 static void new_game(Game *g)
@@ -207,7 +231,7 @@ static void new_game(Game *g)
     party_init(&g->party);
     inventory_init(&g->inventory);
     g->options=(GameOptions){1,1,1};
-    g->save_seen_status=SAVE_STATUS_IDLE;
+    g->save_seen_status=save_data_status();
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
     g->startup=STARTUP_GAME;g->startup_time=0;
@@ -479,6 +503,8 @@ void game_update(Game *g,const Input *input,float seconds)
         g->startup_time+=seconds;
         if(g->startup==STARTUP_SPLASH && (g->startup_time>=1.0f || input->confirm)) {
             g->startup=STARTUP_TITLE;g->startup_time=0;
+        } else if(g->startup==STARTUP_MENU) {
+            title_load_update(g);
         } else if(g->startup==STARTUP_TITLE) {
             int direction=input->vertical?input->vertical:input->horizontal;
             if(direction && direction!=g->title_previous_direction) {
@@ -490,12 +516,10 @@ void game_update(Game *g,const Input *input,float seconds)
             if(g->title_cursor==0) {
                 new_game(g);
                 audio_play(SOUND_CONFIRM);
+            } else if(g->title_cursor==1 && save_data_begin_load()==0) {
+                g->startup=STARTUP_MENU;g->startup_time=0;
+                g->save_seen_status=SAVE_STATUS_BUSY;
             }
-        } else if(g->startup==STARTUP_MENU && input->confirm) {
-            g->startup=STARTUP_GAME;g->startup_time=0;
-            audio_play(SOUND_CONFIRM);
-        } else if(g->startup==STARTUP_MENU && input->cancel) {
-            g->startup=STARTUP_TITLE;g->startup_time=0;
         }
         return;
     }
@@ -603,12 +627,12 @@ void game_draw(const Game *g)
                 } else text_draw(298,y,choices[i],GU_RGBA(239,240,220,255),1);
             }
             text_draw(15,252,g->title_cursor==0 ? "D-PAD SELECT     X NEW GAME" :
-                      "CONTINUE AND OPTIONS ARE COMING SOON",GU_RGBA(239,240,220,255),1);
+                      g->title_cursor==1 ? "X CONTINUE" : "OPTIONS ARE COMING SOON",GU_RGBA(239,240,220,255),1);
+            if(g->title_message[0]) text_draw(15,237,g->title_message,GU_RGBA(246,213,158,255),1);
         } else {
-            static const char *const choices[]={"NEW GAME","CONTINUE","OPTIONS"};
             graphics_rectangle(60,101,360,75,GU_RGBA(14,23,29,255));
-            text_draw(161,113,choices[g->title_cursor],GU_RGBA(246,213,158,255),2);
-            text_draw(143,148,"X START        O BACK",GU_RGBA(239,240,220,255),1);
+            text_draw(154,116,"LOADING SAVE",GU_RGBA(246,213,158,255),2);
+            text_draw(154,148,"PLEASE WAIT",GU_RGBA(239,240,220,255),1);
         }
         return;
     }
