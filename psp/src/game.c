@@ -472,6 +472,7 @@ void game_update(Game *g,const Input *input,float seconds)
     if (!busy && (input->confirm || input->cancel || (input->menu&INPUT_MENU_OPEN))) audio_play(SOUND_CONFIRM);
     g->previous_ui_direction=direction;
     int fighting=g->in_battle, ally_hp=g->battle.ally.hp, enemy_hp=g->battle.enemy.hp;
+    BattlePhase prior_phase=g->battle.phase;
     BattleResult result=g->battle.result;
     int reward=g->battle.reward_given;
     if (!busy) {
@@ -483,6 +484,10 @@ void game_update(Game *g,const Input *input,float seconds)
         }
     }
     game_step(g,input,seconds);
+    if(g->in_battle && prior_phase!=g->battle.phase) {
+        if(g->battle.phase==BATTLE_EVOLUTION) audio_play(SOUND_EVOLVE);
+        else if(prior_phase==BATTLE_EVOLUTION) audio_play(SOUND_REVEAL);
+    }
     if (g->in_battle && fighting) {
         if (g->battle.ally.hp<ally_hp || g->battle.enemy.hp<enemy_hp) audio_play(SOUND_HIT);
         if ((!reward && g->battle.reward_given) || (result!=BATTLE_CAUGHT && g->battle.result==BATTLE_CAUGHT))

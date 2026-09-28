@@ -62,6 +62,8 @@ void audio_synth_render(AudioSynth *s,int16_t *stereo,unsigned int frames,int mu
             case SOUND_BOND: hz=392+(t/2205)*65;duration=17640;break;
             case SOUND_VICTORY: hz=t<6615?523:t<13230?659:t<19845?784:1047;duration=26460;break;
             case SOUND_ERROR: hz=t<4410?220:165;duration=8820;break;
+            case SOUND_EVOLVE: hz=330+(t/110)*3;duration=17640;break;
+            case SOUND_REVEAL: hz=t<4410?784:t<8820?988:1175;duration=13230;break;
             default: break;
             }
             int effect_target=effects && t<duration?128:0;
