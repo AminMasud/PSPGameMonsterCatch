@@ -1,4 +1,4 @@
-# Emberwake — Phase 46 Boss Progression Pass
+# Emberwake — Phase 47 Battle UX Pass
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE46.PBP**, titled **Emberwake - Phase 46**. Copy it to:
+Use **EBOOT-PHASE47.PBP**, titled **Emberwake - Phase 47**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -43,6 +43,13 @@ utility and restores a valid save to its saved map and position. A missing,
 corrupt, or unsupported slot safely returns to the title screen.
 Saving/loading is unavailable during battles. Dialogue and menus pause movement
 and NPC patrols. Button actions use new-press detection.
+
+## Battle UX verification
+
+Phase 47 verified player-first and enemy-first rounds, action spotlighting,
+voluntary and forced replacements, capture and escape choices, NPC and boss
+ready prompts, wild encounters without a ready prompt, and clean victory or
+defeat exits. Boss completion flags are granted only after a victory.
 
 ## Ten evolution families
 
