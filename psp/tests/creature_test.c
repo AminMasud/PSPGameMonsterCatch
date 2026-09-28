@@ -73,6 +73,7 @@ int main(void)
     creature_create(&c,SPECIES_CINDLET,14);
     creature_gain_xp(&c,creature_xp_for_level(15)-c.experience,&g);
     assert(g.rank_slot==0 && c.move_ranks[0]==2 && g.rank_before==1);
+    creature_restore(&c);assert(c.uses[0]==attack_get(c.moves[0])->uses+2);
     creature_create(&c,SPECIES_CINDLET,5);
     int hp=c.hp;c.hp-=7;
     creature_gain_xp(&c,179,&g);assert(c.level==5 && g.move_count==0);

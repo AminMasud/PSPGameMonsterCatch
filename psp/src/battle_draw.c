@@ -112,7 +112,7 @@ void battle_draw(const Battle *b)
                 char line[64];
                 const Attack *move=attack_get(b->ally.moves[i]);
                 if(i==b->move_cursor) graphics_rectangle(14,183+i*15,261,14,C(79,92,86));
-                snprintf(line,sizeof(line),"%s R%d  %d/%d",b->ally.moves[i]<0?"EMPTY":move->name,creature_move_rank(&b->ally,i),b->ally.uses[i],b->ally.moves[i]<0?0:move->uses);
+                snprintf(line,sizeof(line),"%s R%d  %d/%d",b->ally.moves[i]<0?"EMPTY":move->name,creature_move_rank(&b->ally,i),b->ally.uses[i],b->ally.moves[i]<0?0:move->uses+(creature_move_rank(&b->ally,i)-1)*2);
                 text_draw(20,187+i*15,line,b->ally.uses[i]?C(239,227,200):C(155,155,155),1);
             }
             const Attack *selected=attack_get(b->ally.moves[b->move_cursor]);

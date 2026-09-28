@@ -130,6 +130,13 @@ static void resolve_attack(Battle *b)
     /* PRESS ON is an unlimited weak fallback, only when every move is spent. */
     const Attack fallback={"PRESS ON",15,100,ELEMENT_PLAIN,0};
     const Attack *move=slot<0?&fallback:attack_get(a->moves[slot]);
+    Attack ranked=*move;
+    int rank=slot<0?1:creature_move_rank(a,slot);
+    if(rank>1) {
+        ranked.power+=5*(rank-1);
+        ranked.accuracy=ranked.accuracy+3*(rank-1)>100?100:ranked.accuracy+3*(rank-1);
+        move=&ranked;
+    }
     if(slot>=0) --a->uses[slot];
     int hit=(int)(random_next(b)%100)<move->accuracy;
     if(!hit) {
@@ -140,7 +147,8 @@ static void resolve_attack(Battle *b)
         d->hp-=damage;
         b->hit_side=1-side;b->hit_time=0.24f;
         int effect=attack_effectiveness(move->element,d->element);
-        snprintf(b->message,sizeof(b->message),"%s USED %s.\n%d DAMAGE. %s",creature_name(a),move->name,damage,
+        snprintf(b->message,sizeof(b->message),"%s USED %s%s.\n%d DAMAGE. %s",creature_name(a),move->name,
+                 rank>1?"+":"",damage,
                  effect==4?"STRONG MATCH.":effect==1?"RESISTED.":"");
     }
     b->phase=BATTLE_MESSAGE; b->after=AFTER_TURN;

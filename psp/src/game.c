@@ -116,7 +116,7 @@ static int valid_saved_creature(const SaveCreature *saved)
     for (int i=0;i<CREATURE_MOVES;++i) {
         int uses=saved->uses[i]&255,rank=(saved->uses[i]>>8)&3;
         if (saved->moves[i]<-1 || saved->moves[i]>=MOVE_COUNT || saved->uses[i]<0 || rank>=MOVE_RANK_MAX) return 0;
-        if (saved->moves[i]>=0 && uses>attack_get(saved->moves[i])->uses) return 0;
+        if (saved->moves[i]>=0 && uses>attack_get(saved->moves[i])->uses+rank*2) return 0;
     }
     return 1;
 }

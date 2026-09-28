@@ -139,7 +139,7 @@ static void recalculate(Creature *c)
 void creature_restore(Creature *c)
 {
     c->hp=c->max_hp;
-    for(int i=0;i<4;++i) c->uses[i]=c->moves[i]<0?0:attack_get(c->moves[i])->uses;
+    for(int i=0;i<4;++i) c->uses[i]=c->moves[i]<0?0:attack_get(c->moves[i])->uses+(creature_move_rank(c,i)-1)*2;
 }
 static int knows(const Creature *c,int move)
 {
