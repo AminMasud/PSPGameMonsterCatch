@@ -107,11 +107,19 @@ the player restores a failing network of regional Vey patterns. The
 guardians, gates, and Hollowstone Cave clear narrative purposes without adding
 story scenes yet.
 
-## Ten evolution families
+## Three-act story structure
 
-Base forms evolve on level-up at **level 8**; middle forms evolve at **level 16**.
-Large XP awards can cross both thresholds. Nicknames and known moves survive
-evolution. Every form, including evolved forms, can also be caught in the wild.
+Phase 55 connects the main premise to the route progression in
+[the three-act structure](docs/PHASE55_THREE_ACT_STRUCTURE.md). Each major
+event names its location, characters, prerequisite, result, and route or
+content it unlocks; individual dialogue remains deferred.
+
+## Twenty evolution families
+
+Every base and middle form evolves on level-up at its family-specific growth
+threshold. Large XP awards can cross both thresholds. Nicknames and known moves
+survive evolution. Every form, including evolved forms, can also be caught in
+the wild.
 
 | PNG numbers | Base → middle → final | Element | Habitat |
 | --- | --- | --- | --- |
