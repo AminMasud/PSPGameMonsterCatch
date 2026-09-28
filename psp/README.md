@@ -1,4 +1,4 @@
-# Emberwake — Phase 49 Final Integration
+# Emberwake — Phase 50 Production Content Audit
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE49.PBP**, titled **Emberwake - Phase 49**. Copy it to:
+Use **EBOOT-PHASE50.PBP**, titled **Emberwake - Phase 50**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -65,6 +65,13 @@ challenger, Fernveil access, wild encounters and capture, training and
 evolution, guardian progression, maps, save/load, restart, and Continue.
 See [the final integration record](docs/PHASE49_FINAL_INTEGRATION.md) for the
 coverage and remaining limitations.
+
+## Production audit
+
+Phase 50 inventories the current maps, characters, Veylings, moves, gates,
+healing points, progression, dialogue, world map, and save data without
+changing gameplay. Read the [production content audit](docs/PHASE50_PRODUCTION_CONTENT_AUDIT.md)
+before planning the official world structure.
 
 ## Ten evolution families
 
