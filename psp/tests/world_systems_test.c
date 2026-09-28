@@ -184,6 +184,17 @@ int main(void)
     update(&g,(Input){.vertical=-1},1);assert(g.title_cursor==0);
     update(&g,(Input){.confirm=1},1);
     assert(g.startup==STARTUP_GAME);
+    g.party.members[0].hp=1;g.party.count=1;g.inventory.embermarks=999;
+    g.discovered_maps=0xffffffffu;g.npc_battle_progress.defeated=0xffffffffu;
+    progression_load_bits(&g.progression,0xffffffffu);
+    g.startup=STARTUP_TITLE;g.title_cursor=0;
+    update(&g,(Input){.confirm=1},1);
+    assert(g.startup==STARTUP_GAME && g.map_id==MAP_CLEARING && g.player.tile_x==5 && g.player.tile_y==11);
+    assert(g.party.count==1 && g.party.members[0].species==SPECIES_CINDLET && g.party.members[0].level==5);
+    assert(g.party.members[0].hp==g.party.members[0].max_hp && g.inventory.embermarks==250 &&
+           g.inventory.quantities[ITEM_PULSE_TONIC]==3 && g.inventory.quantities[ITEM_HEARTH_RESTORE]==1);
+    assert(g.discovered_maps==(1u<<MAP_CLEARING) && g.npc_battle_progress.defeated==0 &&
+           progression_save_bits(&g.progression)==0);
     place(&g,MAP_CLEARING,5,10);
     update(&g,(Input){0,-1,0,0,0,0},10);
     assert(g.map_id==MAP_LODGE);

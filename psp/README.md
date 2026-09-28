@@ -36,8 +36,9 @@ builds are retained locally for comparison.
 - HOME: PSP exit menu.
 
 The game opens with the supplied Veylings background and a New Game / Continue /
-Options title menu. Use the D-pad to select and X to confirm. Start a new session
-with a level-5 Cindlet, or press L to load an existing save.
+Options title menu. Use the D-pad to select New Game and X to reset the active
+session to a level-5 Cindlet at Hearth Clearing. New Game does not touch the
+Memory Stick; an existing save is replaced only when you later choose Save.
 Saving/loading is unavailable during battles. Dialogue and menus pause movement
 and NPC patrols. Button actions use new-press detection.
 

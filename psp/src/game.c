@@ -198,7 +198,9 @@ static void start_load(Game *g)
     g->menu_open=0;g->save_seen_status=SAVE_STATUS_BUSY;
     save_data_begin_load();
 }
-void game_init(Game *g)
+/* Starts a fresh session without touching the Memory Stick. A later explicit
+   save is the only operation that can replace an existing save slot. */
+static void new_game(Game *g)
 {
     *g = (Game){0};
     encounter_init(&g->encounter,0x19236u);
@@ -208,8 +210,13 @@ void game_init(Game *g)
     g->save_seen_status=SAVE_STATUS_IDLE;
     enter_map(g,MAP_CLEARING,5,11);
     g->transition=0;g->area_label=0;
-    g->startup=STARTUP_SPLASH;g->startup_time=0;
+    g->startup=STARTUP_GAME;g->startup_time=0;
     g->title_cursor=0;g->title_previous_direction=0;
+}
+void game_init(Game *g)
+{
+    new_game(g);
+    g->startup=STARTUP_SPLASH;
 }
 int game_offer_important_battle(Game *g,const char *opponent,
                                 SpeciesId species,int level,uint32_t seed)
@@ -480,8 +487,10 @@ void game_update(Game *g,const Input *input,float seconds)
             }
             g->title_previous_direction=direction;
             if(!input->confirm) return;
-            g->startup=STARTUP_GAME;g->startup_time=0;
-            audio_play(SOUND_CONFIRM);
+            if(g->title_cursor==0) {
+                new_game(g);
+                audio_play(SOUND_CONFIRM);
+            }
         } else if(g->startup==STARTUP_MENU && input->confirm) {
             g->startup=STARTUP_GAME;g->startup_time=0;
             audio_play(SOUND_CONFIRM);
@@ -593,7 +602,8 @@ void game_draw(const Game *g)
                     text_draw(298,y,choices[i],GU_RGBA(19,31,35,255),1);
                 } else text_draw(298,y,choices[i],GU_RGBA(239,240,220,255),1);
             }
-            text_draw(15,252,"D-PAD SELECT     X CONFIRM",GU_RGBA(239,240,220,255),1);
+            text_draw(15,252,g->title_cursor==0 ? "D-PAD SELECT     X NEW GAME" :
+                      "CONTINUE AND OPTIONS ARE COMING SOON",GU_RGBA(239,240,220,255),1);
         } else {
             static const char *const choices[]={"NEW GAME","CONTINUE","OPTIONS"};
             graphics_rectangle(60,101,360,75,GU_RGBA(14,23,29,255));
