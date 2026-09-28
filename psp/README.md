@@ -1,4 +1,4 @@
-# Emberwake — Phase 48 Hardware Stability Pass
+# Emberwake — Phase 49 Final Integration
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
 placeholder creatures with the user's 30 PNGs: ten families with three forms
@@ -17,7 +17,7 @@ their own supplied artwork.
 
 ## Play this build
 
-Use **EBOOT-PHASE48.PBP**, titled **Emberwake - Phase 48**. Copy it to:
+Use **EBOOT-PHASE49.PBP**, titled **Emberwake - Phase 49**. Copy it to:
 
     ms0:/PSP/GAME/EMBERWAKE/EBOOT.PBP
 
@@ -57,6 +57,14 @@ The renderer enforces fixed framebuffer and title-texture size checks at build
 time, and the host world test runs under address and undefined-behavior
 sanitizers. Use the [hardware checklist](docs/PHASE48_HARDWARE_TEST.md) when
 testing the package on a PSP-3000.
+
+## Final integration
+
+The final automated integration pass covers New Game, healing, the first
+challenger, Fernveil access, wild encounters and capture, training and
+evolution, guardian progression, maps, save/load, restart, and Continue.
+See [the final integration record](docs/PHASE49_FINAL_INTEGRATION.md) for the
+coverage and remaining limitations.
 
 ## Ten evolution families
 
