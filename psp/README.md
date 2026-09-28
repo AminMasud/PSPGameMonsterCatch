@@ -121,6 +121,12 @@ whose personal connection to the failing trail gives the journey its stake.
 Read the [protagonist identity](docs/PHASE56_PROTAGONIST_IDENTITY.md) for the
 player-facing role and cast relationships.
 
+## Core character cast
+
+Phase 57 defines six recurring characters who anchor Hearth, Fernveil, Lantern,
+Northwood, and Hollowstone. The [core cast](docs/PHASE57_CORE_CHARACTER_CAST.md)
+records their roles, route appearances, motivations, and story functions.
+
 ## Twenty evolution families
 
 Every base and middle form evolves on level-up at its family-specific growth
