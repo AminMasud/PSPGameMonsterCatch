@@ -96,6 +96,14 @@ ecology, partnership, evolution, and trail battles. The
 [Vey lore foundation](docs/PHASE53_VEY_LORE.md) is a writer reference rather
 than player-facing exposition.
 
+## Main story premise
+
+Phase 54 defines **The Quieting Current**, a compact wilderness story in which
+the player restores a failing network of regional Vey patterns. The
+[main story premise](docs/PHASE54_MAIN_STORY_PREMISE.md) gives existing
+guardians, gates, and Hollowstone Cave clear narrative purposes without adding
+story scenes yet.
+
 ## Ten evolution families
 
 Base forms evolve on level-up at **level 8**; middle forms evolve at **level 16**.
