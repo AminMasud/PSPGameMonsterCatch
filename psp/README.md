@@ -114,6 +114,13 @@ Phase 55 connects the main premise to the route progression in
 event names its location, characters, prerequisite, result, and route or
 content it unlocks; individual dialogue remains deferred.
 
+## Protagonist identity
+
+Phase 56 defines the player as a flexible 16–18-year-old from Hearth Clearing
+whose personal connection to the failing trail gives the journey its stake.
+Read the [protagonist identity](docs/PHASE56_PROTAGONIST_IDENTITY.md) for the
+player-facing role and cast relationships.
+
 ## Twenty evolution families
 
 Every base and middle form evolves on level-up at its family-specific growth
