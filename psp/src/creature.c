@@ -191,6 +191,7 @@ static void queue_moves(const Creature *c,const Species *s,int exact,CreatureGro
 void creature_gain_xp(Creature *c,int amount,CreatureGrowth *g)
 {
     *g=(CreatureGrowth){0};
+    g->rank_slot=-1;
     g->old_level=c->level;g->old_species=c->species;
     if(amount<=0 || c->level>=100) return;
     int cap=creature_xp_for_level(100);
@@ -206,4 +207,10 @@ void creature_gain_xp(Creature *c,int amount,CreatureGrowth *g)
         }
         recalculate(c);
     }
+    /* Data-driven milestones: only one known move improves per reward. */
+    static const int rank_levels[]={15,30};
+    for(int i=0;i<2 && g->rank_slot<0;++i) if(c->level>=rank_levels[i] && g->old_level<rank_levels[i])
+        for(int slot=0;slot<CREATURE_MOVES;++slot) if(c->moves[slot]>=0 && c->move_ranks[slot]<MOVE_RANK_MAX) {
+            g->rank_slot=slot;g->rank_before=c->move_ranks[slot];++c->move_ranks[slot];break;
+        }
 }

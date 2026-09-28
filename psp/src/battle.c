@@ -227,6 +227,15 @@ static void growth_next(Battle *b)
             b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
         }
     }
+    if(b->growth_stage==2) {
+        b->growth_stage=3;
+        if(b->growth.rank_slot>=0) {
+            int move=b->ally.moves[b->growth.rank_slot];
+            snprintf(b->message,sizeof(b->message),"%s GREW STRONGER!\n%s RANK %d TO RANK %d.",attack_get(move)->name,
+                     creature_name(&b->ally),b->growth.rank_before,b->growth.rank_before+1);
+            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+        }
+    }
     while(b->growth_move<b->growth.move_count) {
         int move=b->growth.moves[b->growth_move];
         int empty=-1,known=0;

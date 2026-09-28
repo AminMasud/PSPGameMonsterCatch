@@ -41,6 +41,7 @@ typedef struct {
     int old_level;
     SpeciesId old_species;
     int moves[MOVE_COUNT], move_count;
+    int rank_slot, rank_before;
 } CreatureGrowth;
 const Species *species_get(int id);
 EvolutionRequirement species_evolution_requirement(const Species *species);
