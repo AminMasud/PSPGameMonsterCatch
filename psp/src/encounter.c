@@ -1,9 +1,12 @@
 #include "encounter.h"
 /* Choose a family, then its stage: base 90%, middle 9%, final 1%.
    Every supplied form is obtainable in the wild as well as by evolution. */
-static const SpeciesId forest[]={SPECIES_MOSSPRIG,SPECIES_GUSTLET,SPECIES_TOXLET,SPECIES_GLIMGRUB};
-static const SpeciesId cave[]={SPECIES_CINDLET,SPECIES_GRUBBL,SPECIES_VEILFIN};
-static const SpeciesId marsh[]={SPECIES_BUBFIN,SPECIES_ZAPPIP,SPECIES_PEBCHICK};
+static const SpeciesId forest[]={SPECIES_MOSSPRIG,SPECIES_GUSTLET,SPECIES_TOXLET,SPECIES_GLIMGRUB,
+    SPECIES_PETALIMP,SPECIES_HUMMLET,SPECIES_PIPBEAK};
+static const SpeciesId cave[]={SPECIES_CINDLET,SPECIES_GRUBBL,SPECIES_VEILFIN,SPECIES_PEBBLER,
+    SPECIES_EMBERHORN,SPECIES_INKLET,SPECIES_SCALLET};
+static const SpeciesId marsh[]={SPECIES_BUBFIN,SPECIES_ZAPPIP,SPECIES_PEBCHICK,SPECIES_GILLIP,SPECIES_TIDETOT,
+    SPECIES_PINCHLET};
 static uint32_t next(Encounter *e)
 {
     uint32_t x = e->random;
@@ -20,7 +23,7 @@ int encounter_step(Encounter *e, int area, EncounterResult *result)
     if (e->safe_steps > 0) { --e->safe_steps; return 0; }
     if (area < 1 || area > 3 || next(e)%100 >= 18) return 0;
     const SpeciesId *table = area == 1 ? forest : area == 2 ? cave : marsh;
-    int count=area==1?4:3;
+    int count=area==1?7:area==2?7:6;
     int family=(int)(next(e)%(unsigned int)count);
     int roll = (int)(next(e)%100);
     int stage=roll<90?0:roll<99?1:2;

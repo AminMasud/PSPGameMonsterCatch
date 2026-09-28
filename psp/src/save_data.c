@@ -79,7 +79,7 @@ static void savedata_prepare(int mode)
         service.params.newData=&service.new_data;
         snprintf(service.params.sfoParam.title,sizeof(service.params.sfoParam.title),"EMBERWAKE");
         snprintf(service.params.sfoParam.savedataTitle,sizeof(service.params.sfoParam.savedataTitle),"%s",SAVE_NAME);
-        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PET ROSTER - 30 FORMS");
+        snprintf(service.params.sfoParam.detail,sizeof(service.params.sfoParam.detail),"EMBERWAKE PET ROSTER - 60 FORMS");
         service.params.sfoParam.parentalLevel=1;
     }
 }

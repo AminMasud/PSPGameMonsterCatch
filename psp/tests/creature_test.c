@@ -25,8 +25,10 @@ static void close_growth(Battle *b)
 int main(void)
 {
     const int evolution_levels[SPECIES_COUNT]={10,22,0,12,24,0,13,28,0,14,30,0,20,42,0,
-                                                22,46,0,15,32,0,11,23,0,16,34,0,18,36,0};
-    assert(SPECIES_COUNT==30);
+                                                22,46,0,15,32,0,11,23,0,16,34,0,18,36,0,
+                                                12,25,0,13,27,0,18,34,0,15,31,0,11,24,0,
+                                                17,35,0,16,33,0,12,26,0,14,29,0,19,37,0};
+    assert(SPECIES_COUNT==60);
     for(int id=0;id<SPECIES_COUNT;++id) {
         const Species *s=species_get(id);
         assert((int)s->id==id && s->name[0] && s->description[0]);
@@ -56,7 +58,7 @@ int main(void)
             }
         }
     }
-    for(int family=0;family<10;++family) {
+    for(int family=0;family<20;++family) {
         Creature pet;CreatureGrowth growth;
         int middle=species_get(family*3)->evolution_level;
         int final=species_get(family*3+1)->evolution_level;
@@ -123,6 +125,6 @@ int main(void)
     battle_begin(&b,&c,SPECIES_MOSSPRIG,3,2);confirm(&b);
     b.cursor=4;b.escape_attempts=2;confirm(&b);confirm(&b);
     assert(b.phase==BATTLE_DONE && b.ally.experience==c.experience);
-    puts("PASS: 30 forms, all 10 three-stage evolution lines, 100 levels, XP boundaries/cap, stats, nicknames, move choices, single rewards");
+    puts("PASS: 60 forms, all 20 three-stage evolution lines, 100 levels, XP boundaries/cap, stats, nicknames, move choices, single rewards");
     return 0;
 }

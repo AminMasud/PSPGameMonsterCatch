@@ -641,7 +641,8 @@ int main(void)
     float before_x=g.player.x,before_y=g.player.y;
     update(&g,(Input){1,0,0,0,0,0},40);
     assert(g.player.x==before_x && g.player.y==before_y);
-    update(&g,(Input){0,0,1,0,0,0},1);
+    /* A newly added fast forest Veyling may take the opening turn first. */
+    for(int i=0;i<3 && g.battle.phase!=BATTLE_MENU;++i) update(&g,(Input){0,0,1,0,0,0},1);
     assert(g.battle.phase==BATTLE_MENU);
     render(&g,"previews/battle-menu.ppm");
     g.battle.ally.hp-=10;
@@ -851,9 +852,9 @@ int main(void)
         for(int i=0;i<200000;++i) if(encounter_step(&e,area,&result)) {
             int family=result.species/3,stage=result.species%3;
             assert(result.species>=0 && result.species<SPECIES_COUNT);
-            if(area==1) assert(family==2 || family==7 || family==8 || family==9);
-            if(area==2) assert(family==0 || family==4 || family==5);
-            if(area==3) assert(family==1 || family==3 || family==6);
+            if(area==1) assert(family==2 || family==7 || family==8 || family==9 || family==11 || family==14 || family==17);
+            if(area==2) assert(family==0 || family==4 || family==5 || family==12 || family==13 || family==15 || family==19);
+            if(area==3) assert(family==1 || family==3 || family==6 || family==10 || family==16 || family==18);
             int minimum=stage==2?16:stage==1?8:area==1?2:area==2?3:5;
             assert(result.level>=minimum && result.level<=minimum+2);
             ++species_seen[result.species];
@@ -907,7 +908,7 @@ int main(void)
     g.in_battle=0;
     dialogue_open(&g.dialogue,"SESSION SAVED","YOUR PROGRESS IS SAFE ON THE MEMORY STICK.","KEEP MOVING.");
     render(&g,"previews/saved-dialogue.ppm");
-    /* Round-trip all 30 forms and the expanded full collection through the
+    /* Round-trip all 60 forms and the expanded full collection through the
        real game snapshot/application paths using an in-memory utility. */
     place(&g,MAP_MARSH,2,10);
     for(int i=1;i<PARTY_MAX+COLLECTION_MAX;++i) {

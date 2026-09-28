@@ -1,7 +1,7 @@
 # Emberwake — Phase 51 World Structure
 
 PSP homebrew creature-catching RPG in C / PSPSDK. This build replaces the old
-placeholder creatures with the user's 30 PNGs: ten families with three forms
+placeholder creatures with the user's 60 PNGs: twenty families with three forms
 apiece, a round-based battle controller in which a faster enemy acts before
 player command selection, a clear spotlight on the Veyling performing each
 action, a full-screen battle party selector, the reusable ready prompt, a
@@ -12,8 +12,11 @@ Hollowstone Cave entrance, a reusable boss battle framework with optional
 special presentation, Elder Sylva, Fernveil's first in-world Guardian,
 data-linked boss-gated routes, and a reusable forest boss catalog, plus limited, map-placed healing locations across the journey.
 The PNG number minus one is the internal
-species ID. All 30 forms have stats, descriptions, attacks, capture support, and
+species ID. All 60 forms have stats, descriptions, attacks, capture support, and
 their own supplied artwork.
+
+The [60-Veyling roster expansion](docs/ROSTER_EXPANSION_60.md) records the ten
+new families, their habitats, and the save-compatible ID extension.
 
 ## Play this build
 
@@ -122,6 +125,16 @@ evolution. Every form, including evolved forms, can also be caught in the wild.
 | 022–024 | Gustlet → Galetalon → Skyraptor | Wind | Fernveil Woods |
 | 025–027 | Toxlet → Venofrog → Dreadart | Toxin | Fernveil Woods |
 | 028–030 | Glimgrub → Cocoglow → Lunarae | Grove; final form Wind | Fernveil Woods |
+| 031–033 | Gillip → Regenol → Axoreign | Tide | Sunthread Marsh |
+| 034–036 | Petalimp → Orchidra → Bloomantis | Grove | Fernveil Woods |
+| 037–039 | Pebbler → Cragcrab → Forticrab | Stone | Hollowstone Cave |
+| 040–042 | Emberhorn → Scorchspine → Calderhorn | Ember | Hollowstone Cave |
+| 043–045 | Hummlet → Glimwing → Prismawing | Wind | Fernveil Woods |
+| 046–048 | Inklet → Octosage → Abyssapien | Veil | Hollowstone Cave |
+| 049–051 | Pinchlet → Toxiclaw → Empersting | Toxin | Sunthread Marsh |
+| 052–054 | Pipbeak → Rchobill → Resoncan | Wind | Fernveil Woods |
+| 055–057 | Tidetot → Coralyn → Neptuneer | Tide | Sunthread Marsh |
+| 058–060 | Scallet → Ironscale → Aegolin | Stone | Hollowstone Cave |
 
 The party screen displays stage 1/3, 2/3, or 3/3, list portraits, and a larger
 portrait of the selected creature. Battles use the supplied images. The ally's
