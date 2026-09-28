@@ -127,6 +127,12 @@ Phase 57 defines six recurring characters who anchor Hearth, Fernveil, Lantern,
 Northwood, and Hollowstone. The [core cast](docs/PHASE57_CORE_CHARACTER_CAST.md)
 records their roles, route appearances, motivations, and story functions.
 
+## Story progression flags
+
+Phase 58 maps every major story beat to a compact persistent flag set. The
+[story progression flags](docs/PHASE58_STORY_PROGRESSION_FLAGS.md) distinguish
+implemented gates from stable planned milestones for later map events.
+
 ## Twenty evolution families
 
 Every base and middle form evolves on level-up at its family-specific growth
