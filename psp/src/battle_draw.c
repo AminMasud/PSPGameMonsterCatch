@@ -26,6 +26,18 @@ static void status(const Battler *unit,int x,int y,int width,float shown_hp)
 }
 void battle_draw(const Battle *b)
 {
+    if(b->phase==BATTLE_EVOLUTION) {
+        graphics_rectangle(0,0,480,272,C(25,29,48));
+        graphics_rectangle(0,0,480,5,C(238,190,107));
+        text_draw(146,20,"EVOLUTION",C(250,222,157),2);
+        text_draw(95,53,"YOUR VEYLING IS CHANGING!",C(182,205,195),1);
+        pet_draw(b->ally.species,192,72,128,1);
+        text_draw(112,210,species_get(b->growth.old_species)->name,C(178,192,190),1);
+        text_draw(225,210,"BECAME",C(244,213,151),1);
+        text_draw(302,210,creature_name(&b->ally),C(240,239,213),1);
+        text_draw(142,244,"X CONTINUE",C(180,205,195),1);
+        return;
+    }
     if(b->phase==BATTLE_SWITCH) {
         party_menu_draw_battle(&b->party,b->active,b->switch_cursor,b->forced_switch,b->switch_message);
         return;

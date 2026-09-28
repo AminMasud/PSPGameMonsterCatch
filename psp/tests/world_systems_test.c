@@ -640,7 +640,7 @@ int main(void)
     battle_begin(&g.battle,&g.party.members[g.party.lead],SPECIES_MOSSPRIG,3,42);g.in_battle=1;
     g.battle.enemy.hp=1;g.battle.ally.speed=999;g.battle.ally.moves[0]=MOVE_NUDGE;
     update(&g,(Input){0,0,1,0,0,0},6);
-    assert(g.battle.ally.species==SPECIES_EMBERYN && strstr(g.battle.message,"EVOLUTION"));
+    assert(g.battle.ally.species==SPECIES_EMBERYN && g.battle.phase==BATTLE_EVOLUTION);
     render(&g,"previews/evolution.ppm");
     for(int i=0;i<25 && g.in_battle;++i) {
         if(g.battle.phase==BATTLE_LEARN) update(&g,(Input){0,0,0,1,0,0},1);

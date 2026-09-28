@@ -230,9 +230,7 @@ static void growth_next(Battle *b)
     if(b->growth_stage==1) {
         b->growth_stage=2;
         if(b->growth.old_species!=b->ally.species) {
-            snprintf(b->message,sizeof(b->message),"EVOLUTION.\n%s BECAME %s.\nA NEW FORM. A STRONGER PARTNER.",
-                     species_get(b->growth.old_species)->name,b->ally.name);
-            b->phase=BATTLE_MESSAGE;b->after=AFTER_GROWTH;return;
+            b->phase=BATTLE_EVOLUTION;return;
         }
     }
     if(b->growth_stage==2) {
@@ -267,6 +265,10 @@ void battle_update(Battle *b,const Input *input)
 {
     int nav=navigation(b,input);
     if(b->phase==BATTLE_DONE) return;
+    if(b->phase==BATTLE_EVOLUTION) {
+        if(input->confirm) growth_next(b);
+        return;
+    }
     if(b->phase==BATTLE_CAPTURE) {
         if(b->npc_battle) { message(b,"AN NPC'S VEYLING CANNOT BE CAPTURED.",AFTER_MENU);return; }
         if(input->cancel) { b->acting_side=-1;b->phase=BATTLE_MENU;return; }
