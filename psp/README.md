@@ -139,6 +139,12 @@ Phase 59 verifies dialogue coverage for NPCs, battles, progression, choices,
 and story events. The [dialogue review](docs/PHASE59_DIALOGUE_PRODUCTION_REVIEW.md)
 records the production rules and the new three-page story dialogue API.
 
+## Starting settlement layout
+
+Phase 60 designs the compact production version of Hearth Clearing before map
+construction. Read the [Hearth layout](docs/PHASE60_HEARTH_CLEARING_LAYOUT.md)
+for its routes, services, NPC placements, and Phase 61 implementation notes.
+
 ## Twenty evolution families
 
 Every base and middle form evolves on level-up at its family-specific growth
