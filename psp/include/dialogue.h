@@ -7,5 +7,6 @@ typedef struct {
     char pages[DIALOGUE_PAGES][160];
 } Dialogue;
 void dialogue_open(Dialogue *d, const char *title, const char *first, const char *second);
+void dialogue_open_pages(Dialogue *d, const char *title, const char *const pages[], int count);
 void dialogue_advance(Dialogue *d);
 #endif

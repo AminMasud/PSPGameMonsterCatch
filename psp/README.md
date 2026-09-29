@@ -133,6 +133,12 @@ Phase 58 maps every major story beat to a compact persistent flag set. The
 [story progression flags](docs/PHASE58_STORY_PROGRESSION_FLAGS.md) distinguish
 implemented gates from stable planned milestones for later map events.
 
+## Dialogue production review
+
+Phase 59 verifies dialogue coverage for NPCs, battles, progression, choices,
+and story events. The [dialogue review](docs/PHASE59_DIALOGUE_PRODUCTION_REVIEW.md)
+records the production rules and the new three-page story dialogue API.
+
 ## Twenty evolution families
 
 Every base and middle form evolves on level-up at its family-specific growth

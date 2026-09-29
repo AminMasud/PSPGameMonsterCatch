@@ -18,6 +18,9 @@ cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Itests/host -Iin
     tests/host/save_data_stub.c tests/host/audio_stub.c -o previews/world-test
 previews/world-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
+    tests/dialogue_test.c src/dialogue.c -o previews/dialogue-test
+previews/dialogue-test
+cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
     tests/battle_test.c src/battle.c src/npc_ai.c src/attacks.c src/creature.c src/party.c src/capture.c src/inventory.c -o previews/battle-test
 previews/battle-test
 cc -std=c99 -Wall -Wextra -Werror -fsanitize=address,undefined -Iinclude \
